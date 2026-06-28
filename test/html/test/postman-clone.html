@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API Client</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: '#FF6C37',
+        sidebar: '#F8F8F8',
+      }
+    }
+  }
+}
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans text-sm h-screen flex flex-col overflow-hidden">
+
+<!-- TOP NAV -->
+<header class="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-white shrink-0">
+  <div class="flex items-center gap-1.5 font-bold text-brand text-base select-none">
+    <i data-lucide="zap" class="w-4 h-4"></i>
+    <span>APIClient</span>
+  </div>
+  <div class="flex-1"></div>
+  <button onclick="newTab()" class="flex items-center gap-1 text-xs text-gray-500 hover:text-brand px-2 py-1 rounded hover:bg-gray-100">
+    <i data-lucide="plus" class="w-3.5 h-3.5"></i> New
+  </button>
+  <select id="envSelect" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-600 focus:outline-none focus:border-brand">
+    <option value="">No environment</option>
+    <option value="dev">Development</option>
+    <option value="prod">Production</option>
+  </select>
+  <button class="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700">
+    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+  </button>
+</header>
+
+<!-- MAIN -->
+<div class="flex flex-1 overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-56 border-r border-gray-200 bg-sidebar flex flex-col shrink-0 overflow-hidden transition-all duration-200">
+    <div class="flex items-center gap-1 px-2 py-2 border-b border-gray-200">
+      <div class="flex-1 flex items-center gap-1 bg-white border border-gray-200 rounded px-2 py-1">
+        <i data-lucide="search" class="w-3 h-3 text-gray-400 shrink-0"></i>
+        <input type="text" placeholder="Search..." class="text-xs flex-1 outline-none bg-transparent placeholder-gray-400" id="sidebarSearch" oninput="filterCollections(this.value)"/>
+      </div>
+      <button onclick="newTab()" class="p-1 rounded hover:bg-gray-200 text-gray-500"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto py-1" id="collectionTree">
+      <!-- Collections -->
+      <div class="px-2 py-1">
+        <button onclick="toggleSection('colSection')" class="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-full hover:text-gray-600">
+          <i data-lucide="chevron-down" class="w-3 h-3" id="colChev"></i> Collections
+        </button>
+        <div id="colSection" class="mt-1 space-y-0.5">
+          <!-- Fábrica abstracta -->
+          <div>
+            <button onclick="toggleFolder('fabrica')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-gray-200 text-left text-xs font-medium text-gray-700">
+              <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" id="fabricaChev"></i>
+              <i data-lucide="folder" class="w-3.5 h-3.5 text-brand"></i>
+              Fábrica abstracta
+            </button>
+            <div id="fabricaTree" class="hidden ml-4 space-y-0.5 mt-0.5">
+              <!-- seguridad -->
+              <div>
+                <button onclick="toggleFolder('seguridad')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-gray-200 text-left text-xs text-gray-600">
+                  <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" id="seguridadChev"></i>
+                  <i data-lucide="folder" class="w-3 h-3 text-gray-400"></i>
+                  seguridad
+                </button>
+                <div id="seguridadTree" class="hidden ml-4 mt-0.5 space-y-0.5">
+                  <button onclick="loadRequest('POST','sign-up','https://api.example.com/sign-up')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-brand/10 text-left text-xs">
+                    <span class="text-[10px] font-bold text-amber-500 w-7 shrink-0">POST</span> sign-up
+                  </button>
+                  <button onclick="loadRequest('POST','sign-in','https://api.example.com/sign-in')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-brand/10 text-left text-xs">
+                    <span class="text-[10px] font-bold text-amber-500 w-7 shrink-0">POST</span> sign-in
+                  </button>
+                </div>
+              </div>
+              <!-- pedidos -->
+              <div>
+                <button onclick="toggleFolder('pedidos')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-gray-200 text-left text-xs text-gray-600">
+                  <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" id="pedidosChev"></i>
+                  <i data-lucide="folder" class="w-3 h-3 text-gray-400"></i>
+                  pedidos
+                </button>
+                <div id="pedidosTree" class="hidden ml-4 mt-0.5 space-y-0.5">
+                  <button onclick="loadRequest('GET','get-pedidos','https://api.example.com/pedidos')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-brand/10 text-left text-xs">
+                    <span class="text-[10px] font-bold text-green-600 w-7 shrink-0">GET</span> get-pedidos
+                  </button>
+                  <button onclick="loadRequest('POST','crear-pedido','https://api.example.com/pedidos')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-brand/10 text-left text-xs">
+                    <span class="text-[10px] font-bold text-amber-500 w-7 shrink-0">POST</span> crear-pedido
+                  </button>
+                </div>
+              </div>
+              <!-- reservas -->
+              <div>
+                <button onclick="toggleFolder('reservas')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-gray-200 text-left text-xs text-gray-600">
+                  <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" id="reservasChev"></i>
+                  <i data-lucide="folder" class="w-3 h-3 text-gray-400"></i>
+                  reservas
+                </button>
+                <div id="reservasTree" class="hidden ml-4 mt-0.5 space-y-0.5">
+                  <button onclick="loadRequest('GET','get-reservas','https://api.example.com/reservas')" class="flex items-center gap-1.5 w-full px-1 py-0.5 rounded hover:bg-brand/10 text-left text-xs">
+                    <span class="text-[10px] font-bold text-green-600 w-7 shrink-0">GET</span> get-reservas
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environments -->
+      <div class="px-2 py-1 mt-1">
+        <button onclick="toggleSection('envSection')" class="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-full hover:text-gray-600">
+          <i data-lucide="chevron-right" class="w-3 h-3" id="envChev"></i> Environments
+        </button>
+        <div id="envSection" class="hidden mt-1 text-xs text-gray-500 px-1">No environments</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- WORKSPACE -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- TABS -->
+    <div class="flex items-center border-b border-gray-200 bg-white shrink-0 overflow-x-auto" id="tabBar">
+      <!-- tabs injected by JS -->
+    </div>
+
+    <!-- REQUEST PANEL -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-white" id="requestPanel">
+
+      <!-- URL BAR -->
+      <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-200 shrink-0">
+        <select id="methodSelect" onchange="updateTabMethod()" class="text-xs font-bold border border-gray-200 rounded px-2 py-1.5 bg-white focus:outline-none focus:border-brand" style="min-width:70px">
+          <option class="text-green-600 font-bold">GET</option>
+          <option class="text-amber-500 font-bold">POST</option>
+          <option class="text-blue-600 font-bold">PUT</option>
+          <option class="text-red-500 font-bold">DELETE</option>
+          <option class="text-purple-600 font-bold">PATCH</option>
+        </select>
+        <input id="urlInput" type="text" placeholder="Enter URL or paste text" class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-brand placeholder-gray-400"/>
+        <button onclick="sendRequest()" class="flex items-center gap-1.5 bg-brand text-white text-xs font-semibold px-4 py-1.5 rounded hover:bg-orange-600 transition-colors">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Send
+        </button>
+      </div>
+
+      <!-- TABS: Params / Auth / Headers / Body / Scripts -->
+      <div class="flex items-center gap-0 border-b border-gray-200 px-3 shrink-0 overflow-x-auto">
+        <button onclick="switchTab('params')" id="tab-params" class="tab-btn text-xs px-3 py-2 border-b-2 border-brand text-brand font-medium">Params</button>
+        <button onclick="switchTab('auth')" id="tab-auth" class="tab-btn text-xs px-3 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Authorization</button>
+        <button onclick="switchTab('headers')" id="tab-headers" class="tab-btn text-xs px-3 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Headers</button>
+        <button onclick="switchTab('body')" id="tab-body" class="tab-btn text-xs px-3 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Body</button>
+        <button onclick="switchTab('scripts')" id="tab-scripts" class="tab-btn text-xs px-3 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Scripts</button>
+      </div>
+
+      <!-- SPLIT: Request config + Response -->
+      <div class="flex-1 flex overflow-hidden">
+
+        <!-- LEFT: Params/Auth/Headers/Body/Scripts -->
+        <div class="w-1/2 border-r border-gray-200 flex flex-col overflow-hidden">
+
+          <!-- PARAMS -->
+          <div id="panel-params" class="panel flex-1 overflow-auto p-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-gray-600">Query Params</span>
+              <button onclick="addParam()" class="text-xs text-brand hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-3 h-3"></i> Add</button>
+            </div>
+            <table class="w-full text-xs" id="paramsTable">
+              <thead>
+                <tr class="text-gray-400 border-b border-gray-100">
+                  <th class="text-left py-1 font-medium w-5"></th>
+                  <th class="text-left py-1 font-medium">Key</th>
+                  <th class="text-left py-1 font-medium">Value</th>
+                  <th class="text-left py-1 font-medium w-6"></th>
+                </tr>
+              </thead>
+              <tbody id="paramRows"></tbody>
+            </table>
+            <button onclick="addParam()" class="mt-1 w-full text-xs text-gray-400 hover:text-brand py-1 border border-dashed border-gray-200 rounded hover:border-brand">+ Add param</button>
+          </div>
+
+          <!-- AUTH -->
+          <div id="panel-auth" class="panel hidden flex-1 overflow-auto p-3">
+            <label class="text-xs font-semibold text-gray-600 block mb-1.5">Auth Type</label>
+            <select id="authType" onchange="renderAuth()" class="text-xs border border-gray-200 rounded px-2 py-1.5 w-full focus:outline-none focus:border-brand bg-white mb-3">
+              <option value="none">No Auth</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="basic">Basic Auth</option>
+              <option value="apikey">API Key</option>
+            </select>
+            <div id="authFields"></div>
+          </div>
+
+          <!-- HEADERS -->
+          <div id="panel-headers" class="panel hidden flex-1 overflow-auto p-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-gray-600">Headers</span>
+              <button onclick="addHeader()" class="text-xs text-brand hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-3 h-3"></i> Add</button>
+            </div>
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-gray-400 border-b border-gray-100">
+                  <th class="text-left py-1 font-medium w-5"></th>
+                  <th class="text-left py-1 font-medium">Key</th>
+                  <th class="text-left py-1 font-medium">Value</th>
+                  <th class="w-6"></th>
+                </tr>
+              </thead>
+              <tbody id="headerRows"></tbody>
+            </table>
+            <button onclick="addHeader()" class="mt-1 w-full text-xs text-gray-400 hover:text-brand py-1 border border-dashed border-gray-200 rounded hover:border-brand">+ Add header</button>
+          </div>
+
+          <!-- BODY -->
+          <div id="panel-body" class="panel hidden flex-1 flex flex-col overflow-hidden p-2 gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-gray-600">Body</span>
+              <select id="bodyType" onchange="switchBodyType()" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:border-brand">
+                <option value="none">none</option>
+                <option value="formdata">form-data</option>
+                <option value="urlencoded">x-www-form-urlencoded</option>
+                <option value="raw">raw</option>
+                <option value="binary">binary</option>
+                <option value="graphql">GraphQL</option>
+              </select>
+              <select id="rawFormat" class="hidden text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:border-brand">
+                <option>JSON</option><option>Text</option><option>XML</option><option>HTML</option>
+              </select>
+            </div>
+            <div id="bodyNone" class="text-xs text-gray-400 italic">This request has no body.</div>
+            <textarea id="bodyRaw" class="hidden flex-1 font-mono text-xs border border-gray-200 rounded p-2 resize-none focus:outline-none focus:border-brand bg-gray-50 min-h-0" placeholder='{"key": "value"}'></textarea>
+            <div id="bodyFormdata" class="hidden flex-1 overflow-auto">
+              <table class="w-full text-xs"><thead><tr class="text-gray-400 border-b border-gray-100"><th class="text-left py-1 w-5"></th><th class="text-left py-1">Key</th><th class="text-left py-1">Value</th><th class="w-6"></th></tr></thead><tbody id="formdataRows"></tbody></table>
+              <button onclick="addFormdata()" class="mt-1 w-full text-xs text-gray-400 hover:text-brand py-1 border border-dashed border-gray-200 rounded hover:border-brand">+ Add field</button>
+            </div>
+            <div id="bodyUrlencoded" class="hidden flex-1 overflow-auto">
+              <table class="w-full text-xs"><thead><tr class="text-gray-400 border-b border-gray-100"><th class="text-left py-1 w-5"></th><th class="text-left py-1">Key</th><th class="text-left py-1">Value</th><th class="w-6"></th></tr></thead><tbody id="urlencodedRows"></tbody></table>
+              <button onclick="addUrlencoded()" class="mt-1 w-full text-xs text-gray-400 hover:text-brand py-1 border border-dashed border-gray-200 rounded hover:border-brand">+ Add field</button>
+            </div>
+            <div id="bodyGraphql" class="hidden flex-1 flex flex-col gap-1 min-h-0">
+              <textarea id="gqlQuery" class="flex-1 font-mono text-xs border border-gray-200 rounded p-2 resize-none focus:outline-none focus:border-brand bg-gray-50 min-h-0" placeholder="query { ... }"></textarea>
+            </div>
+            <input type="file" id="bodyBinary" class="hidden mt-1 text-xs text-gray-500"/>
+          </div>
+
+          <!-- SCRIPTS -->
+          <div id="panel-scripts" class="panel hidden flex-1 flex flex-col overflow-hidden p-2 gap-2">
+            <div class="flex gap-2">
+              <button onclick="switchScript('pre')" id="script-pre-btn" class="text-xs px-2 py-1 rounded bg-brand text-white">Pre-request</button>
+              <button onclick="switchScript('post')" id="script-post-btn" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">Post-response</button>
+            </div>
+            <textarea id="scriptPre" class="flex-1 font-mono text-xs border border-gray-200 rounded p-2 resize-none focus:outline-none focus:border-brand bg-gray-50" placeholder="// Pre-request script&#10;// pm.environment.set('key', 'value');"></textarea>
+            <textarea id="scriptPost" class="hidden flex-1 font-mono text-xs border border-gray-200 rounded p-2 resize-none focus:outline-none focus:border-brand bg-gray-50" placeholder="// Post-response script&#10;// pm.test('Status is 200', () => pm.response.to.have.status(200));"></textarea>
+          </div>
+        </div>
+
+        <!-- RIGHT: Response -->
+        <div class="w-1/2 flex flex-col overflow-hidden">
+          <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-100 shrink-0">
+            <span class="text-xs font-semibold text-gray-600">Response</span>
+            <div id="responseStatus" class="hidden items-center gap-2 text-xs">
+              <span id="statusBadge" class="font-bold"></span>
+              <span id="statusTime" class="text-gray-400"></span>
+              <span id="statusSize" class="text-gray-400"></span>
+            </div>
+            <div class="flex-1"></div>
+            <button onclick="copyResponse()" id="copyBtn" class="hidden text-xs text-gray-400 hover:text-brand flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copy</button>
+            <button onclick="clearResponse()" class="text-xs text-gray-400 hover:text-brand flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Clear</button>
+          </div>
+
+          <!-- Response tabs -->
+          <div class="flex items-center border-b border-gray-100 px-3 shrink-0">
+            <button onclick="switchResTab('body')" id="res-body-btn" class="text-xs px-2 py-1.5 border-b-2 border-brand text-brand">Body</button>
+            <button onclick="switchResTab('headers')" id="res-headers-btn" class="text-xs px-2 py-1.5 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Headers</button>
+            <button onclick="switchResTab('cookies')" id="res-cookies-btn" class="text-xs px-2 py-1.5 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Cookies</button>
+          </div>
+
+          <div id="res-loading" class="hidden flex-1 flex items-center justify-center">
+            <div class="text-center text-gray-400">
+              <i data-lucide="loader-circle" class="w-6 h-6 mx-auto mb-2 animate-spin text-brand"></i>
+              <p class="text-xs">Sending request...</p>
+            </div>
+          </div>
+
+          <div id="res-empty" class="flex-1 flex items-center justify-center">
+            <div class="text-center text-gray-400 max-w-xs px-4">
+              <i data-lucide="arrow-right-circle" class="w-8 h-8 mx-auto mb-3 text-gray-300"></i>
+              <p class="text-xs text-gray-500 mb-1 font-medium">Enter a URL and click Send</p>
+              <p class="text-[11px] text-gray-400">The response will appear here</p>
+            </div>
+          </div>
+
+          <div id="res-body-panel" class="hidden flex-1 overflow-auto p-2">
+            <pre id="responseBody" class="text-xs font-mono whitespace-pre-wrap break-words text-gray-800"></pre>
+          </div>
+
+          <div id="res-headers-panel" class="hidden flex-1 overflow-auto p-2">
+            <table class="w-full text-xs" id="responseHeadersTable">
+              <thead><tr class="text-gray-400 border-b border-gray-100"><th class="text-left py-1 font-medium">Key</th><th class="text-left py-1 font-medium">Value</th></tr></thead>
+              <tbody id="responseHeadersBody"></tbody>
+            </table>
+          </div>
+
+          <div id="res-cookies-panel" class="hidden flex-1 overflow-auto p-2">
+            <p class="text-xs text-gray-400 italic">No cookies returned.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM STATUS BAR -->
+<footer class="flex items-center gap-3 px-3 py-1 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 shrink-0">
+  <button class="flex items-center gap-1 hover:text-gray-600"><i data-lucide="git-branch" class="w-3 h-3"></i> Connect Git</button>
+  <button class="flex items-center gap-1 hover:text-gray-600"><i data-lucide="terminal" class="w-3 h-3"></i> Console</button>
+  <div class="flex-1"></div>
+  <span id="statusBar" class="text-gray-400"></span>
+</footer>
+
+<script>
+// ---- State ----
+let tabs = [];
+let activeTab = null;
+let tabCounter = 0;
+let activePanel = 'params';
+let activeResPanel = 'body';
+
+// ---- Init ----
+function init() {
+  newTab();
+  lucide.createIcons();
+}
+
+// ---- Tabs ----
+function newTab(method, name, url) {
+  tabCounter++;
+  const id = 'tab_' + tabCounter;
+  const tab = { id, name: name || 'Untitled Request', method: method || 'GET', url: url || '', params: [], headers: [], bodyType: 'none', bodyRaw: '', response: null };
+  tabs.push(tab);
+  activateTab(id);
+  renderTabs();
+}
+
+function activateTab(id) {
+  activeTab = id;
+  const tab = getTab();
+  if (!tab) return;
+  document.getElementById('methodSelect').value = tab.method;
+  document.getElementById('urlInput').value = tab.url;
+  renderParams();
+  renderHeaders();
+  document.getElementById('bodyType').value = tab.bodyType;
+  switchBodyType();
+  document.getElementById('bodyRaw').value = tab.bodyRaw || '';
+  if (tab.response) showResponse(tab.response); else clearResponse();
+  renderTabs();
+}
+
+function getTab(id) {
+  return tabs.find(t => t.id === (id || activeTab));
+}
+
+function closeTab(id, e) {
+  e.stopPropagation();
+  tabs = tabs.filter(t => t.id !== id);
+  if (tabs.length === 0) newTab();
+  else if (activeTab === id) activateTab(tabs[tabs.length - 1].id);
+  else renderTabs();
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = '';
+  tabs.forEach(t => {
+    const active = t.id === activeTab;
+    const methodColor = { GET: 'text-green-600', POST: 'text-amber-500', PUT: 'text-blue-600', DELETE: 'text-red-500', PATCH: 'text-purple-600' }[t.method] || 'text-gray-600';
+    const el = document.createElement('div');
+    el.className = `flex items-center gap-1.5 px-3 py-1.5 border-r border-gray-200 cursor-pointer text-xs ${active ? 'bg-white border-t-2 border-t-brand' : 'bg-gray-50 hover:bg-gray-100'}`;
+    el.onclick = () => activateTab(t.id);
+    el.innerHTML = `<span class="font-bold text-[10px] ${methodColor}">${t.method}</span><span class="max-w-[80px] truncate text-gray-700">${t.name}</span><button onclick="closeTab('${t.id}', event)" class="ml-1 text-gray-400 hover:text-gray-700 p-0.5 rounded hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+    bar.appendChild(el);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'flex items-center gap-1 px-2 py-1.5 text-gray-400 hover:text-brand hover:bg-gray-100';
+  addBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+  addBtn.onclick = () => { newTab(); };
+  bar.appendChild(addBtn);
+}
+
+function updateTabMethod() {
+  const tab = getTab();
+  if (tab) { tab.method = document.getElementById('methodSelect').value; renderTabs(); }
+}
+
+function loadRequest(method, name, url) {
+  newTab(method, name, url);
+  switchTab('body');
+  document.getElementById('bodyType').value = method !== 'GET' ? 'raw' : 'none';
+  switchBodyType();
+}
+
+// ---- Sidebar toggles ----
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById(id.replace('Section','Chev'));
+  if (el) el.classList.toggle('hidden');
+  if (chev) chev.style.transform = el.classList.contains('hidden') ? '' : 'rotate(90deg)';
+  lucide.createIcons();
+}
+
+function toggleFolder(id) {
+  const el = document.getElementById(id + 'Tree');
+  const chev = document.getElementById(id + 'Chev');
+  if (el) el.classList.toggle('hidden');
+  if (chev) chev.style.transform = el.classList.contains('hidden') ? '' : 'rotate(90deg)';
+}
+
+// ---- Panel tabs ----
+function switchTab(name) {
+  activePanel = name;
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('border-brand', 'text-brand'); b.classList.add('border-transparent', 'text-gray-500'); });
+  const panel = document.getElementById('panel-' + name);
+  const btn = document.getElementById('tab-' + name);
+  if (panel) { panel.classList.remove('hidden'); panel.classList.add('flex'); }
+  if (btn) { btn.classList.add('border-brand', 'text-brand'); btn.classList.remove('border-transparent', 'text-gray-500'); }
+}
+
+// ---- Params ----
+function renderParams() {
+  const tab = getTab();
+  const tbody = document.getElementById('paramRows');
+  tbody.innerHTML = '';
+  (tab?.params || []).forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-gray-50';
+    tr.innerHTML = `<td class="py-0.5"><input type="checkbox" ${p.enabled ? 'checked' : ''} onchange="toggleParam(${i})" class="accent-brand"/></td><td class="py-0.5"><input value="${p.key}" oninput="updateParam(${i},'key',this.value)" class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded" placeholder="Key"/></td><td class="py-0.5"><input value="${p.value}" oninput="updateParam(${i},'value',this.value)" class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded" placeholder="Value"/></td><td class="py-0.5"><button onclick="removeParam(${i})" class="text-gray-300 hover:text-red-400 p-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function addParam() { const tab = getTab(); tab.params.push({key:'',value:'',enabled:true}); renderParams(); }
+function removeParam(i) { const tab = getTab(); tab.params.splice(i,1); renderParams(); }
+function toggleParam(i) { const tab = getTab(); tab.params[i].enabled = !tab.params[i].enabled; }
+function updateParam(i, k, v) { const tab = getTab(); tab.params[i][k] = v; }
+
+// ---- Headers ----
+function renderHeaders() {
+  const tab = getTab();
+  const tbody = document.getElementById('headerRows');
+  tbody.innerHTML = '';
+  (tab?.headers || []).forEach((h, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-gray-50';
+    tr.innerHTML = `<td class="py-0.5"><input type="checkbox" ${h.enabled ? 'checked' : ''} onchange="toggleHeader(${i})" class="accent-brand"/></td><td class="py-0.5"><input value="${h.key}" oninput="updateHeader(${i},'key',this.value)" class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded" placeholder="Key"/></td><td class="py-0.5"><input value="${h.value}" oninput="updateHeader(${i},'value',this.value)" class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded" placeholder="Value"/></td><td class="py-0.5"><button onclick="removeHeader(${i})" class="text-gray-300 hover:text-red-400 p-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addHeader() { const tab = getTab(); tab.headers.push({key:'',value:'',enabled:true}); renderHeaders(); }
+function removeHeader(i) { const tab = getTab(); tab.headers.splice(i,1); renderHeaders(); }
+function toggleHeader(i) { const tab = getTab(); tab.headers[i].enabled = !tab.headers[i].enabled; }
+function updateHeader(i, k, v) { const tab = getTab(); tab.headers[i][k] = v; }
+
+// ---- Body type ----
+function switchBodyType() {
+  const type = document.getElementById('bodyType').value;
+  ['none','raw','formdata','urlencoded','graphql'].forEach(t => {
+    const el = document.getElementById('body' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.classList.toggle('hidden', t !== type);
+  });
+  document.getElementById('rawFormat').classList.toggle('hidden', type !== 'raw');
+  const binEl = document.getElementById('bodyBinary');
+  if (binEl) binEl.classList.toggle('hidden', type !== 'binary');
+  if (type === 'binary') binEl.classList.remove('hidden');
+  const tab = getTab();
+  if (tab) tab.bodyType = type;
+}
+
+function addFormdata() {
+  const tbody = document.getElementById('formdataRows');
+  const tr = document.createElement('tr');
+  tr.className = 'border-b border-gray-50';
+  tr.innerHTML = `<td class="py-0.5"><input type="checkbox" checked class="accent-brand"/></td><td class="py-0.5"><input class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded text-xs" placeholder="Key"/></td><td class="py-0.5"><input class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded text-xs" placeholder="Value"/></td><td class="py-0.5"><button onclick="this.closest('tr').remove()" class="text-gray-300 hover:text-red-400 p-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>`;
+  tbody.appendChild(tr);
+}
+function addUrlencoded() {
+  const tbody = document.getElementById('urlencodedRows');
+  const tr = document.createElement('tr');
+  tr.className = 'border-b border-gray-50';
+  tr.innerHTML = `<td class="py-0.5"><input type="checkbox" checked class="accent-brand"/></td><td class="py-0.5"><input class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded text-xs" placeholder="Key"/></td><td class="py-0.5"><input class="w-full border-0 bg-transparent outline-none focus:bg-gray-50 px-1 rounded text-xs" placeholder="Value"/></td><td class="py-0.5"><button onclick="this.closest('tr').remove()" class="text-gray-300 hover:text-red-400 p-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>`;
+  tbody.appendChild(tr);
+}
+
+// ---- Auth ----
+function renderAuth() {
+  const type = document.getElementById('authType').value;
+  const fields = document.getElementById('authFields');
+  const inp = 'class="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-brand bg-white"';
+  const label = (t) => `<label class="text-xs text-gray-500 block mb-1">${t}</label>`;
+  if (type === 'none') { fields.innerHTML = '<p class="text-xs text-gray-400 italic">No authentication</p>'; return; }
+  if (type === 'bearer') { fields.innerHTML = label('Token') + `<input type="text" ${inp} placeholder="Enter token"/>`; return; }
+  if (type === 'basic') { fields.innerHTML = label('Username') + `<input type="text" ${inp} placeholder="Username" class="mb-2 w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-brand bg-white"/>` + label('Password') + `<input type="password" ${inp} placeholder="Password"/>`; return; }
+  if (type === 'apikey') { fields.innerHTML = label('Key') + `<input type="text" ${inp} placeholder="api_key" class="mb-2 w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-brand bg-white"/>` + label('Value') + `<input type="text" ${inp} placeholder="value"/>`; return; }
+}
+
+// ---- Scripts ----
+function switchScript(type) {
+  document.getElementById('scriptPre').classList.toggle('hidden', type !== 'pre');
+  document.getElementById('scriptPost').classList.toggle('hidden', type !== 'post');
+  document.getElementById('script-pre-btn').className = `text-xs px-2 py-1 rounded ${type === 'pre' ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+  document.getElementById('script-post-btn').className = `text-xs px-2 py-1 rounded ${type === 'post' ? 'bg-brand text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+}
+
+// ---- Send ----
+async function sendRequest() {
+  const tab = getTab();
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { document.getElementById('urlInput').classList.add('border-red-400'); setTimeout(() => document.getElementById('urlInput').classList.remove('border-red-400'), 1500); return; }
+  tab.url = url;
+
+  // Build URL with params
+  let fullUrl = url;
+  const params = (tab.params || []).filter(p => p.enabled && p.key);
+  if (params.length) {
+    const qs = params.map(p => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`).join('&');
+    fullUrl += (url.includes('?') ? '&' : '?') + qs;
+  }
+
+  // Build headers
+  const fetchHeaders = {};
+  (tab.headers || []).filter(h => h.enabled && h.key).forEach(h => { fetchHeaders[h.key] = h.value; });
+  const bodyType = document.getElementById('bodyType').value;
+  if (bodyType === 'raw') fetchHeaders['Content-Type'] = 'application/' + (document.getElementById('rawFormat').value || 'json').toLowerCase();
+
+  // Build body
+  let body = undefined;
+  if (tab.method !== 'GET' && tab.method !== 'DELETE') {
+    if (bodyType === 'raw') body = document.getElementById('bodyRaw').value;
+    else if (bodyType === 'graphql') body = JSON.stringify({ query: document.getElementById('gqlQuery').value });
+  }
+
+  // Show loading
+  document.getElementById('res-empty').classList.add('hidden');
+  document.getElementById('res-body-panel').classList.add('hidden');
+  document.getElementById('res-headers-panel').classList.add('hidden');
+  document.getElementById('res-loading').classList.remove('hidden');
+  document.getElementById('statusBar').textContent = 'Sending...';
+
+  const start = Date.now();
+  try {
+    const res = await fetch(fullUrl, { method: tab.method, headers: fetchHeaders, body });
+    const elapsed = Date.now() - start;
+    const text = await res.text();
+    let pretty = text;
+    try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+    const resHeaders = {};
+    res.headers.forEach((v, k) => { resHeaders[k] = v; });
+    const response = { status: res.status, statusText: res.statusText, body: pretty, headers: resHeaders, time: elapsed, size: new Blob([text]).size };
+    tab.response = response;
+    showResponse(response);
+  } catch (err) {
+    document.getElementById('res-loading').classList.add('hidden');
+    document.getElementById('res-body-panel').classList.remove('hidden');
+    document.getElementById('responseBody').textContent = '⚠ ' + err.message;
+    document.getElementById('responseBody').className = 'text-xs font-mono whitespace-pre-wrap break-words text-red-500';
+    document.getElementById('statusBar').textContent = 'Error';
+  }
+}
+
+function showResponse(r) {
+  document.getElementById('res-loading').classList.add('hidden');
+  document.getElementById('res-empty').classList.add('hidden');
+  const isOk = r.status >= 200 && r.status < 300;
+  const statusEl = document.getElementById('statusBadge');
+  statusEl.textContent = r.status + ' ' + r.statusText;
+  statusEl.className = 'font-bold ' + (isOk ? 'text-green-600' : r.status >= 400 ? 'text-red-500' : 'text-amber-500');
+  document.getElementById('statusTime').textContent = r.time + ' ms';
+  document.getElementById('statusSize').textContent = formatSize(r.size);
+  document.getElementById('responseStatus').classList.remove('hidden');
+  document.getElementById('responseStatus').classList.add('flex');
+  document.getElementById('copyBtn').classList.remove('hidden');
+  // Body
+  document.getElementById('responseBody').textContent = r.body;
+  document.getElementById('responseBody').className = 'text-xs font-mono whitespace-pre-wrap break-words text-gray-800';
+  // Headers
+  const hBody = document.getElementById('responseHeadersBody');
+  hBody.innerHTML = Object.entries(r.headers).map(([k,v]) => `<tr class="border-b border-gray-50"><td class="py-1 pr-2 text-gray-500 font-medium">${k}</td><td class="py-1 break-all text-gray-700">${v}</td></tr>`).join('');
+  switchResTab(activeResPanel);
+  document.getElementById('statusBar').textContent = r.status + ' · ' + r.time + 'ms · ' + formatSize(r.size);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  return (bytes / 1024).toFixed(1) + ' KB';
+}
+
+function clearResponse() {
+  document.getElementById('res-empty').classList.remove('hidden');
+  document.getElementById('res-body-panel').classList.add('hidden');
+  document.getElementById('res-headers-panel').classList.add('hidden');
+  document.getElementById('res-cookies-panel').classList.add('hidden');
+  document.getElementById('res-loading').classList.add('hidden');
+  document.getElementById('responseStatus').classList.add('hidden');
+  document.getElementById('copyBtn').classList.add('hidden');
+  document.getElementById('statusBar').textContent = '';
+}
+
+function copyResponse() {
+  const text = document.getElementById('responseBody').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Copied!';
+    btn.classList.add('text-green-600');
+    setTimeout(() => { btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy'; btn.classList.remove('text-green-600'); }, 1500);
+  });
+}
+
+function switchResTab(name) {
+  activeResPanel = name;
+  ['body','headers','cookies'].forEach(t => {
+    document.getElementById(`res-${t}-panel`).classList.add('hidden');
+    const btn = document.getElementById(`res-${t}-btn`);
+    btn.className = `text-xs px-2 py-1.5 border-b-2 ${t === name ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700'}`;
+  });
+  const tab = getTab();
+  if (tab?.response) document.getElementById(`res-${name}-panel`).classList.remove('hidden');
+}
+
+function filterCollections(q) {
+  // Simple filter - highlight matching items
+  const all = document.querySelectorAll('#collectionTree button');
+  all.forEach(el => { el.style.opacity = q && !el.textContent.toLowerCase().includes(q.toLowerCase()) ? '0.3' : '1'; });
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendRequest();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); newTab(); }
+});
+
+init();
+</script>
+</body>
+</html>

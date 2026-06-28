@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cifra — Monitoreo para tu calculadora SaaS</title>
+
+<!-- CDNs: sin build, sin bundlers -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+  :root{
+    --bg: #14171c;
+    --panel: #1b1f27;
+    --panel-2: #20242e;
+    --line: #2b303b;
+    --amber: #ff9d3d;
+    --amber-dim: #a56526;
+    --mint: #7ee787;
+    --paper: #eee6d3;
+    --ink: #e8e6df;
+    --muted: #8a8f9c;
+  }
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope', ui-sans-serif, system-ui, sans-serif;
+  }
+  .mono{font-family:'JetBrains Mono', ui-monospace, monospace;}
+
+  .glow-amber{ text-shadow: 0 0 18px rgba(255,157,61,.45); }
+
+  .bg-noise{
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  /* ---- Recibo / cinta de calculadora ---- */
+  .tape{
+    background: linear-gradient(180deg, var(--paper), #e3d9c1);
+    color:#1a1a1a;
+    border-radius: 6px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.06);
+    position:relative;
+  }
+  .tape::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:-9px; height:18px;
+    background:
+      linear-gradient(135deg, transparent 50%, var(--bg) 50%) 0 0/14px 18px repeat-x,
+      linear-gradient(-135deg, transparent 50%, var(--bg) 50%) 0 0/14px 18px repeat-x;
+    background-color: var(--paper);
+    filter: none;
+  }
+  .tape-row{
+    display:flex; justify-content:space-between; gap:1rem;
+    border-bottom: 1px dashed rgba(0,0,0,.15);
+    padding: .55rem .1rem;
+  }
+  .tape-row:last-child{border-bottom:none;}
+
+  @keyframes tick-in{
+    0%{ opacity:0; transform: translateY(6px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+  .tick{ animation: tick-in .5s ease both; }
+
+  @keyframes blink{
+    0%,100%{opacity:1} 50%{opacity:.25}
+  }
+  .live-dot{ animation: blink 1.6s ease-in-out infinite; }
+
+  .op-divider{
+    width:3.25rem; height:3.25rem;
+    border-radius: 9999px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800; font-size:1.35rem;
+    background: var(--panel-2);
+    border:1px solid var(--line);
+    color: var(--amber);
+  }
+
+  .card{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .btn-primary{
+    background: var(--amber);
+    color: #17130a;
+    font-weight:700;
+  }
+  .btn-primary:hover{ background:#ffb15c; }
+
+  .btn-ghost{
+    border:1px solid var(--line);
+    color: var(--ink);
+  }
+  .btn-ghost:hover{ border-color: var(--amber-dim); }
+
+  .plan-featured{
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px var(--amber), 0 30px 60px -30px rgba(255,157,61,.35);
+  }
+
+  ::selection{ background: var(--amber); color:#17130a; }
+
+  @media (prefers-reduced-motion: reduce){
+    .tick, .live-dot { animation: none !important; }
+  }
+</style>
+</head>
+
+<body class="bg-noise">
+
+<!-- NAV -->
+<header class="sticky top-0 z-50 backdrop-blur bg-[#14171c]/85 border-b border-[var(--line)]">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2">
+      <span class="mono text-xl font-extrabold text-[var(--amber)]">Cifra</span>
+      <span class="hidden sm:inline text-xs text-[var(--muted)] mono">v1</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-sm text-[var(--muted)]">
+      <a href="#como-funciona" class="hover:text-[var(--ink)] transition">Cómo funciona</a>
+      <a href="#producto" class="hover:text-[var(--ink)] transition">Producto</a>
+      <a href="#precios" class="hover:text-[var(--ink)] transition">Precios</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#" class="hidden sm:inline text-sm text-[var(--muted)] hover:text-[var(--ink)] transition">Iniciar sesión</a>
+      <a href="#precios" class="btn-primary text-sm px-4 py-2 rounded-lg transition">Prueba gratis</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="max-w-6xl mx-auto px-6 pt-16 pb-24 grid lg:grid-cols-2 gap-14 items-center">
+  <div>
+    <span class="inline-flex items-center gap-2 text-xs mono text-[var(--mint)] border border-[var(--line)] bg-[var(--panel)] rounded-full px-3 py-1">
+      <span class="w-1.5 h-1.5 rounded-full bg-[var(--mint)] live-dot"></span>
+      Monitoreo en vivo
+    </span>
+    <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold leading-[1.08] tracking-tight">
+      El panel que vigila<br class="hidden sm:block">
+      cada <span class="text-[var(--amber)] glow-amber">cálculo</span> de tu app.
+    </h1>
+    <p class="mt-5 text-lg text-[var(--muted)] max-w-md">
+      Cifra convierte tu calculadora SaaS en un producto medible: operaciones, uso por cliente,
+      errores y salud del servicio, en un solo lugar.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#precios" class="btn-primary rounded-lg px-6 py-3 text-sm transition">Empezar gratis</a>
+      <a href="#producto" class="btn-ghost rounded-lg px-6 py-3 text-sm transition">Ver el panel</a>
+    </div>
+    <p class="mt-4 text-xs text-[var(--muted)] mono">Sin tarjeta · Integración en 5 minutos</p>
+  </div>
+
+  <!-- Cinta de recibo con métricas en vivo -->
+  <div class="tape px-6 pt-6 pb-10 max-w-sm mx-auto w-full mono text-[13px]">
+    <div class="text-center border-b border-dashed border-black/20 pb-3 mb-2">
+      <p class="font-extrabold tracking-widest text-[15px]">CIFRA · TICKET</p>
+      <p class="text-black/50 text-[11px] mt-1" id="tape-date">01 JUL 2026 · 00:00:00</p>
+    </div>
+
+    <div class="tape-row tick" style="animation-delay:.05s">
+      <span>OPERACIONES HOY</span>
+      <span class="font-bold" id="m-ops">1,204,392</span>
+    </div>
+    <div class="tape-row tick" style="animation-delay:.15s">
+      <span>UPTIME 30D</span>
+      <span class="font-bold">99.98%</span>
+    </div>
+    <div class="tape-row tick" style="animation-delay:.25s">
+      <span>LATENCIA PROM.</span>
+      <span class="font-bold" id="m-lat">42 ms</span>
+    </div>
+    <div class="tape-row tick" style="animation-delay:.35s">
+      <span>CLIENTES ACTIVOS</span>
+      <span class="font-bold">386</span>
+    </div>
+    <div class="tape-row tick" style="animation-delay:.45s">
+      <span>ERRORES /1K</span>
+      <span class="font-bold">0.03</span>
+    </div>
+
+    <div class="border-t border-dashed border-black/20 mt-3 pt-3 flex justify-between font-extrabold text-[14px]">
+      <span>=</span>
+      <span id="m-total">TODO OPERANDO</span>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona" class="border-y border-[var(--line)] bg-[var(--panel)]/40">
+  <div class="max-w-6xl mx-auto px-6 py-20">
+    <h2 class="text-3xl font-extrabold tracking-tight max-w-xl">Cómo funciona, en cuatro operaciones.</h2>
+    <p class="text-[var(--muted)] mt-3 max-w-lg">De instalar el SDK a tomar decisiones con datos, sin pasos ocultos.</p>
+
+    <div class="mt-14 grid md:grid-cols-4 gap-8">
+      <div class="flex flex-col items-start gap-4">
+        <span class="op-divider">+</span>
+        <h3 class="font-bold">Suma tu calculadora</h3>
+        <p class="text-sm text-[var(--muted)]">Agrega una línea del SDK de Cifra a tu app. No cambia tu lógica de cálculo.</p>
+      </div>
+      <div class="flex flex-col items-start gap-4">
+        <span class="op-divider">×</span>
+        <h3 class="font-bold">Multiplica la visibilidad</h3>
+        <p class="text-sm text-[var(--muted)]">Cada operación, cliente y plan queda registrado en tiempo real.</p>
+      </div>
+      <div class="flex flex-col items-start gap-4">
+        <span class="op-divider">÷</span>
+        <h3 class="font-bold">Divide por plan y cliente</h3>
+        <p class="text-sm text-[var(--muted)]">Separa el uso por plan, cuenta o API key para saber quién consume qué.</p>
+      </div>
+      <div class="flex flex-col items-start gap-4">
+        <span class="op-divider">=</span>
+        <h3 class="font-bold">Obtén el resultado</h3>
+        <p class="text-sm text-[var(--muted)]">Un panel con alertas, tendencias y exportes listos para decidir.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTO / DEMO -->
+<section id="producto" class="max-w-6xl mx-auto px-6 py-24">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-extrabold tracking-tight">Tu operación, en un solo panel.</h2>
+      <p class="text-[var(--muted)] mt-3 max-w-lg">Así se ve Cifra monitoreando una calculadora en producción.</p>
+    </div>
+  </div>
+
+  <div class="mt-10 card p-5 sm:p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2 mono text-xs text-[var(--muted)]">
+        <span class="w-2 h-2 rounded-full bg-[#ff5f57]"></span>
+        <span class="w-2 h-2 rounded-full bg-[#febc2e]"></span>
+        <span class="w-2 h-2 rounded-full bg-[#28c840]"></span>
+        <span class="ml-3">panel.cifra.app</span>
+      </div>
+      <span class="inline-flex items-center gap-2 text-xs mono text-[var(--mint)]">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--mint)] live-dot"></span>
+        en vivo
+      </span>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-[var(--panel-2)] border border-[var(--line)] rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-semibold">Operaciones por hora</p>
+          <p class="text-xs text-[var(--muted)] mono">últimas 12h</p>
+        </div>
+        <canvas id="chartOps" height="150"></canvas>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-1 gap-4">
+        <div class="bg-[var(--panel-2)] border border-[var(--line)] rounded-xl p-4">
+          <p class="text-xs text-[var(--muted)]">Plan más usado</p>
+          <p class="text-2xl font-extrabold mono mt-1">Pro</p>
+          <p class="text-xs text-[var(--mint)] mt-1">+12% vs. semana pasada</p>
+        </div>
+        <div class="bg-[var(--panel-2)] border border-[var(--line)] rounded-xl p-4">
+          <p class="text-xs text-[var(--muted)]">Alertas abiertas</p>
+          <p class="text-2xl font-extrabold mono mt-1">0</p>
+          <p class="text-xs text-[var(--muted)] mt-1">Todo dentro del umbral</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="card p-6">
+      <i data-lucide="activity" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Monitoreo en tiempo real</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Observa cada operación apenas ocurre, sin retrasos ni muestreos.</p>
+    </div>
+    <div class="card p-6">
+      <i data-lucide="bell-ring" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Alertas automáticas</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Recibe un aviso cuando la latencia, los errores o el uso se salen de rango.</p>
+    </div>
+    <div class="card p-6">
+      <i data-lucide="scroll-text" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Registro de operaciones</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Historial completo de cada cálculo, con filtros por cliente y fecha.</p>
+    </div>
+    <div class="card p-6">
+      <i data-lucide="users" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Uso por cliente y plan</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Descubre quién consume más y detecta candidatos a subir de plan.</p>
+    </div>
+    <div class="card p-6">
+      <i data-lucide="shield-check" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Panel de administración</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Gestiona cuentas, límites y permisos desde un solo lugar.</p>
+    </div>
+    <div class="card p-6">
+      <i data-lucide="download" class="text-[var(--amber)] w-5 h-5"></i>
+      <h3 class="font-bold mt-4">Exportes listos</h3>
+      <p class="text-sm text-[var(--muted)] mt-2">Descarga reportes en CSV para finanzas, producto o soporte.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRECIOS -->
+<section id="precios" class="border-t border-[var(--line)] bg-[var(--panel)]/40">
+  <div class="max-w-6xl mx-auto px-6 py-24">
+    <div class="text-center max-w-xl mx-auto">
+      <h2 class="text-3xl font-extrabold tracking-tight">Planes que suman según tu operación.</h2>
+      <p class="text-[var(--muted)] mt-3">Empieza gratis y sube de plan cuando el volumen lo pida.</p>
+    </div>
+
+    <div class="mt-14 grid md:grid-cols-3 gap-6 items-start">
+
+      <div class="card p-8 flex flex-col">
+        <p class="mono text-xs text-[var(--muted)]">STARTER</p>
+        <p class="text-4xl font-extrabold mt-2 mono">$0</p>
+        <p class="text-xs text-[var(--muted)] mt-1">para siempre</p>
+        <ul class="mt-6 space-y-3 text-sm text-[var(--muted)] flex-1">
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Hasta 10,000 operaciones/mes</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>1 calculadora conectada</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Panel en tiempo real</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Historial de 7 días</li>
+        </ul>
+        <a href="#" class="btn-ghost rounded-lg px-5 py-3 text-sm text-center mt-8 transition">Crear cuenta</a>
+      </div>
+
+      <div class="card plan-featured p-8 flex flex-col relative">
+        <span class="absolute -top-3 left-8 bg-[var(--amber)] text-[#17130a] text-xs font-bold px-3 py-1 rounded-full">Más elegido</span>
+        <p class="mono text-xs text-[var(--muted)]">PRO</p>
+        <p class="text-4xl font-extrabold mt-2 mono">$19<span class="text-base text-[var(--muted)] font-normal">/mes</span></p>
+        <p class="text-xs text-[var(--muted)] mt-1">facturado mensualmente</p>
+        <ul class="mt-6 space-y-3 text-sm text-[var(--ink)] flex-1">
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Hasta 500,000 operaciones/mes</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Hasta 10 calculadoras</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Alertas por correo y Slack</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Historial de 90 días</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Exportes en CSV</li>
+        </ul>
+        <a href="#" class="btn-primary rounded-lg px-5 py-3 text-sm text-center mt-8 transition">Empezar prueba de 14 días</a>
+      </div>
+
+      <div class="card p-8 flex flex-col">
+        <p class="mono text-xs text-[var(--muted)]">BUSINESS</p>
+        <p class="text-4xl font-extrabold mt-2 mono">$59<span class="text-base text-[var(--muted)] font-normal">/mes</span></p>
+        <p class="text-xs text-[var(--muted)] mt-1">facturado mensualmente</p>
+        <ul class="mt-6 space-y-3 text-sm text-[var(--muted)] flex-1">
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Operaciones ilimitadas</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Calculadoras ilimitadas</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Roles y permisos por equipo</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Historial ilimitado</li>
+          <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-[var(--mint)] shrink-0"></i>Soporte prioritario</li>
+        </ul>
+        <a href="#" class="btn-ghost rounded-lg px-5 py-3 text-sm text-center mt-8 transition">Hablar con ventas</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="max-w-6xl mx-auto px-6 py-24 text-center">
+  <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight max-w-2xl mx-auto">
+    Deja de adivinar cómo se usa tu calculadora.
+  </h2>
+  <p class="text-[var(--muted)] mt-4 max-w-md mx-auto">Conecta Cifra hoy y ten tu primer reporte en menos de cinco minutos.</p>
+  <a href="#precios" class="btn-primary inline-block rounded-lg px-7 py-3.5 text-sm mt-8 transition">Prueba Cifra gratis</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-[var(--line)]">
+  <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <span class="mono text-sm font-extrabold text-[var(--amber)]">Cifra</span>
+    <p class="text-xs text-[var(--muted)]">© 2026 Cifra. Monitoreo para calculadoras SaaS.</p>
+    <div class="flex gap-5 text-xs text-[var(--muted)]">
+      <a href="#" class="hover:text-[var(--ink)] transition">Privacidad</a>
+      <a href="#" class="hover:text-[var(--ink)] transition">Términos</a>
+      <a href="#" class="hover:text-[var(--ink)] transition">Contacto</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  lucide.createIcons();
+
+  // Fecha/hora del ticket
+  const dateEl = document.getElementById('tape-date');
+  function fmtDate(){
+    const d = new Date();
+    const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getDate())} ${meses[d.getMonth()]} ${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  if(dateEl){
+    dateEl.textContent = fmtDate();
+    setInterval(()=> dateEl.textContent = fmtDate(), 1000);
+  }
+
+  // Contador de operaciones "en vivo"
+  const opsEl = document.getElementById('m-ops');
+  const latEl = document.getElementById('m-lat');
+  let ops = 1204392;
+  if(opsEl){
+    setInterval(()=>{
+      ops += Math.floor(Math.random()*9)+1;
+      opsEl.textContent = ops.toLocaleString('es-PE');
+      if(latEl){ latEl.textContent = (38 + Math.floor(Math.random()*9)) + ' ms'; }
+    }, 1800);
+  }
+
+  // Gráfico de operaciones por hora
+  const ctx = document.getElementById('chartOps');
+  if(ctx){
+    const hours = Array.from({length:12}, (_,i)=> `${(new Date().getHours()-11+i+24)%24}:00`);
+    const data = [4200,3900,4100,5300,6800,8900,11200,13100,12400,10800,9600,10200];
+    new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: hours,
+        datasets:[{
+          data,
+          borderColor:'#ff9d3d',
+          backgroundColor:'rgba(255,157,61,0.12)',
+          fill:true,
+          tension:.35,
+          pointRadius:0,
+          borderWidth:2
+        }]
+      },
+      options:{
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{display:false}, ticks:{ color:'#8a8f9c', font:{size:10} } },
+          y:{ grid:{color:'#2b303b'}, ticks:{ color:'#8a8f9c', font:{size:10} } }
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

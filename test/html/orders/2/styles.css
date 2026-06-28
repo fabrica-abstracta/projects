@@ -1,0 +1,115 @@
+:root{
+  --ink:#1C1917;
+  --ink-soft:#3A342C;
+  --paper:#FAF6ED;
+  --paper-soft:#F1EBDD;
+  --paper-dim:#E9E1CC;
+  --ember:#E85D2C;
+  --ember-dark:#C44A1F;
+  --sage:#6F8F63;
+  --sage-dark:#57724E;
+  --slate:#46647A;
+  --slate-dark:#33495B;
+  --line:#DDD3BE;
+  --line-strong:#C7BB9F;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--ink);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.font-display{font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+
+/* Grano de papel sutil */
+.paper-grain{
+  background-color:var(--paper);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(28,25,23,0.035) 1px, transparent 0);
+  background-size:14px 14px;
+}
+
+/* Textura de fondo tipo mesa de cocina */
+.kitchen-bg{
+  background-color:var(--ink);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size:32px 32px;
+}
+
+/* Ticket / comanda con borde perforado */
+.ticket{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:2px;
+  position:relative;
+  box-shadow:0 1px 0 rgba(0,0,0,.04), 0 8px 20px -12px rgba(0,0,0,.35);
+}
+.ticket::before{
+  content:"";
+  position:absolute; left:0; right:0; top:0;
+  height:8px;
+  background-image: radial-gradient(circle at 6px 0px, var(--ink) 4px, transparent 4.5px);
+  background-size:12px 8px;
+  background-repeat:repeat-x;
+  background-position:top;
+  transform:translateY(-4px);
+  opacity:.9;
+}
+.tear-line{
+  border-top:1.5px dashed var(--line-strong);
+}
+
+.scrollbar-thin::-webkit-scrollbar{height:8px;width:8px}
+.scrollbar-thin::-webkit-scrollbar-track{background:transparent}
+.scrollbar-thin::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px}
+
+.badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  letter-spacing:.03em;
+  padding:2px 7px;
+  border-radius:3px;
+  font-weight:600;
+}
+.badge-local{ background:rgba(70,100,122,.12); color:var(--slate-dark); border:1px solid rgba(70,100,122,.25); }
+.badge-online{ background:rgba(232,93,44,.12); color:var(--ember-dark); border:1px solid rgba(232,93,44,.28); }
+.badge-llevar{ background:rgba(111,143,99,.14); color:var(--sage-dark); border:1px solid rgba(111,143,99,.28); }
+
+.btn-ember{ background:var(--ember); color:var(--paper); }
+.btn-ember:hover{ background:var(--ember-dark); }
+.btn-sage{ background:var(--sage); color:var(--paper); }
+.btn-sage:hover{ background:var(--sage-dark); }
+.btn-slate{ background:var(--slate); color:var(--paper); }
+.btn-slate:hover{ background:var(--slate-dark); }
+
+.focus-ring:focus-visible{
+  outline:2px solid var(--ember);
+  outline-offset:2px;
+}
+
+.stock-day{
+  width:34px;height:34px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;font-weight:700;
+  border:1.5px solid var(--line-strong);
+  color:var(--ink-soft);
+  cursor:pointer;
+  transition:all .15s ease;
+  background:var(--paper);
+}
+.stock-day.active{
+  background:var(--sage);
+  border-color:var(--sage-dark);
+  color:var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+}

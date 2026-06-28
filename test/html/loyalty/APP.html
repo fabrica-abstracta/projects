@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoyaltyPro — Plataforma de Fidelización</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'DM Sans', sans-serif; }
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --primary-dark: #3730A3;
+    --accent: #06B6D4;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --sidebar-w: 240px;
+    --sidebar-collapsed: 64px;
+  }
+  body { background: #F1F5F9; overflow-x: hidden; }
+  .sidebar { width: var(--sidebar-w); transition: width 0.25s cubic-bezier(.4,0,.2,1); }
+  .sidebar.collapsed { width: var(--sidebar-collapsed); }
+  .sidebar.collapsed .nav-label, .sidebar.collapsed .brand-name, .sidebar.collapsed .sidebar-section { display: none !important; }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 0.6rem; }
+  .main-content { margin-left: var(--sidebar-w); transition: margin-left 0.25s cubic-bezier(.4,0,.2,1); }
+  .main-content.expanded { margin-left: var(--sidebar-collapsed); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .nav-item { transition: background 0.15s, color 0.15s; }
+  .nav-item:hover { background: rgba(79,70,229,0.08); }
+  .nav-item.active { background: var(--primary-light); color: var(--primary); }
+  .nav-item.active .nav-icon { color: var(--primary); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
+  .badge-green { background: #DCFCE7; color: #15803D; }
+  .badge-red { background: #FEE2E2; color: #DC2626; }
+  .badge-blue { background: #DBEAFE; color: #1D4ED8; }
+  .badge-yellow { background: #FEF9C3; color: #A16207; }
+  .badge-purple { background: #EDE9FE; color: #6D28D9; }
+  .badge-gray { background: #F1F5F9; color: #64748B; }
+  .badge-cyan { background: #CFFAFE; color: #0E7490; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: #F1F5F9; color: #475569; }
+  .btn-secondary:hover { background: #E2E8F0; }
+  .btn-danger { background: #FEE2E2; color: #DC2626; }
+  .btn-danger:hover { background: #FECACA; }
+  .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .input { width: 100%; padding: 9px 12px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 13px; color: #1E293B; outline: none; transition: border 0.15s; background: #fff; }
+  .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+  .label { display: block; font-size: 12px; font-weight: 600; color: #64748B; margin-bottom: 5px; letter-spacing: 0.03em; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #F8FAFC; color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 16px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+  td { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; font-size: 13px; color: #334155; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #FAFAFA; }
+  .sello { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #CBD5E1; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
+  .sello.filled { background: var(--primary); border: 2px solid var(--primary); color: #fff; }
+  /* Ruleta */
+  #rouletteCanvas { border-radius: 50%; box-shadow: 0 8px 32px rgba(79,70,229,0.25); }
+  .spin-btn { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; border: none; padding: 14px 40px; border-radius: 50px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(79,70,229,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+  .spin-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,70,229,0.4); }
+  .spin-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  /* Progress bars */
+  .progress-bar { height: 6px; background: #E2E8F0; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 99px; transition: width 0.4s ease; }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+  /* Tabs */
+  .tab-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: #64748B; border: none; background: transparent; transition: all 0.15s; }
+  .tab-btn.active { background: var(--primary); color: #fff; }
+  /* Animations */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .screen.active { animation: fadeIn 0.2s ease; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { animation: spin 1s linear infinite; }
+  /* Tooltip */
+  [title]:hover::after { content: attr(title); position: absolute; background: #1E293B; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; top: 100%; left: 50%; transform: translateX(-50%); z-index: 999; margin-top: 4px; }
+  /* Switches */
+  .switch { position: relative; width: 40px; height: 22px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #CBD5E1; border-radius: 99px; cursor: pointer; transition: .3s; }
+  .slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; }
+  input:checked + .slider { background: var(--primary); }
+  input:checked + .slider:before { transform: translateX(18px); }
+  /* Color swatch */
+  .color-swatch { width: 32px; height: 32px; border-radius: 8px; border: 2px solid #E2E8F0; cursor: pointer; }
+  /* Grid catalog */
+  .product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .product-card { transition: transform 0.2s, box-shadow 0.2s; }
+  /* Roles screen */
+  .permission-check { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ======================== SIDEBAR ======================== -->
+<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full bg-white border-r border-slate-100 z-50 flex flex-col overflow-hidden">
+  <!-- Brand -->
+  <div class="flex items-center gap-3 px-4 py-4 border-b border-slate-100">
+    <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center" style="background:var(--primary)">
+      <i data-lucide="zap" style="width:16px;height:16px;color:#fff;stroke-width:2.5"></i>
+    </div>
+    <span class="brand-name font-bold text-slate-800 text-base">LoyaltyPro</span>
+    <button onclick="toggleSidebar()" class="ml-auto p-1 rounded-lg hover:bg-slate-100 transition-colors flex-shrink-0" title="Colapsar">
+      <i data-lucide="panel-left-close" style="width:16px;height:16px;color:#94A3B8;stroke-width:2"></i>
+    </button>
+  </div>
+  <!-- Toggle when collapsed -->
+  <button id="expandBtn" onclick="toggleSidebar()" class="hidden items-center justify-center p-4 hover:bg-slate-50 transition-colors">
+    <i data-lucide="panel-left-open" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i>
+  </button>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto py-3 px-2">
+    <div class="sidebar-section text-xs font-bold text-slate-400 px-3 py-2 uppercase tracking-widest">Principal</div>
+    <a onclick="navigate('dashboard')" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="dashboard">
+      <i data-lucide="layout-dashboard" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Dashboard</span>
+    </a>
+    <a onclick="navigate('clientes')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="clientes">
+      <i data-lucide="users" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Clientes</span>
+    </a>
+    <div class="sidebar-section text-xs font-bold text-slate-400 px-3 py-2 mt-2 uppercase tracking-widest">Fidelización</div>
+    <a onclick="navigate('cartillas')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="cartillas">
+      <i data-lucide="stamp" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Cartillas de Sellos</span>
+    </a>
+    <a onclick="navigate('ruleta')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="ruleta">
+      <i data-lucide="circle-dot" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Ruleta</span>
+    </a>
+    <a onclick="navigate('sorteos')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="sorteos">
+      <i data-lucide="trophy" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Sorteos</span>
+    </a>
+    <div class="sidebar-section text-xs font-bold text-slate-400 px-3 py-2 mt-2 uppercase tracking-widest">Negocio</div>
+    <a onclick="navigate('catalogo')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="catalogo">
+      <i data-lucide="package" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Catálogo</span>
+    </a>
+    <a onclick="navigate('pagweb')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="pagweb">
+      <i data-lucide="globe" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Página Web</span>
+    </a>
+    <div class="sidebar-section text-xs font-bold text-slate-400 px-3 py-2 mt-2 uppercase tracking-widest">Campañas</div>
+    <a onclick="navigate('plantillas')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="plantillas">
+      <i data-lucide="file-text" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Plantillas</span>
+    </a>
+    <a onclick="navigate('segmentacion')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="segmentacion">
+      <i data-lucide="filter" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Segmentación</span>
+    </a>
+    <a onclick="navigate('envios')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="envios">
+      <i data-lucide="send" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Envíos Masivos</span>
+    </a>
+    <div class="sidebar-section text-xs font-bold text-slate-400 px-3 py-2 mt-2 uppercase tracking-widest">Sistema</div>
+    <a onclick="navigate('usuarios')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="usuarios">
+      <i data-lucide="user-cog" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Usuarios & Roles</span>
+    </a>
+    <a onclick="navigate('configuracion')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer mb-0.5" data-screen="configuracion">
+      <i data-lucide="settings" class="nav-icon flex-shrink-0" style="width:18px;height:18px;stroke-width:2;color:#94A3B8"></i>
+      <span class="nav-label text-sm font-medium">Configuración</span>
+    </a>
+  </nav>
+
+  <!-- User -->
+  <div class="border-t border-slate-100 p-3 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">A</div>
+    <div class="flex-1 min-w-0 sidebar-section">
+      <p class="text-xs font-semibold text-slate-700 truncate">Admin</p>
+      <p class="text-xs text-slate-400 truncate">admin@loyalty.pro</p>
+    </div>
+  </div>
+</aside>
+
+<!-- ======================== MAIN ======================== -->
+<div id="mainContent" class="main-content min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-100 px-6 py-3.5 flex items-center gap-4 sticky top-0 z-40">
+    <h1 id="pageTitle" class="text-base font-bold text-slate-800">Dashboard</h1>
+    <div class="ml-auto flex items-center gap-3">
+      <button class="relative p-2 rounded-lg hover:bg-slate-50 transition-colors">
+        <i data-lucide="bell" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background:#EF4444"></span>
+      </button>
+      <button class="p-2 rounded-lg hover:bg-slate-50 transition-colors">
+        <i data-lucide="help-circle" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i>
+      </button>
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">A</div>
+    </div>
+  </header>
+
+  <!-- Screens container -->
+  <div class="p-6">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="screen-dashboard" class="screen active">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total Clientes</span>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#EEF2FF">
+              <i data-lucide="users" style="width:17px;height:17px;color:#4F46E5;stroke-width:2"></i>
+            </div>
+          </div>
+          <p class="text-2xl font-bold text-slate-800">1,248</p>
+          <p class="text-xs text-emerald-600 mt-1 font-medium">↑ 12% este mes</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Clientes Activos</span>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#DCFCE7">
+              <i data-lucide="user-check" style="width:17px;height:17px;color:#16A34A;stroke-width:2"></i>
+            </div>
+          </div>
+          <p class="text-2xl font-bold text-slate-800">876</p>
+          <p class="text-xs text-emerald-600 mt-1 font-medium">↑ 8% este mes</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Sellos Entregados</span>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#CFFAFE">
+              <i data-lucide="stamp" style="width:17px;height:17px;color:#0E7490;stroke-width:2"></i>
+            </div>
+          </div>
+          <p class="text-2xl font-bold text-slate-800">9,341</p>
+          <p class="text-xs text-emerald-600 mt-1 font-medium">↑ 23% este mes</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Campañas Enviadas</span>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#FEF9C3">
+              <i data-lucide="send" style="width:17px;height:17px;color:#A16207;stroke-width:2"></i>
+            </div>
+          </div>
+          <p class="text-2xl font-bold text-slate-800">47</p>
+          <p class="text-xs text-slate-400 mt-1 font-medium">→ Sin cambios</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <!-- Chart -->
+        <div class="card p-5 col-span-2">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-bold text-slate-800">Fidelización por Mes</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Clientes que regresaron vs total</p>
+            </div>
+            <span class="badge badge-purple">2025</span>
+          </div>
+          <div class="flex items-end gap-3 h-36">
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:60%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">Ene</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:75%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">Feb</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:55%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">Mar</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:80%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">Abr</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:70%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">May</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:90%;background:linear-gradient(180deg,#4F46E5,#818CF8)"></div>
+              <span class="text-xs text-slate-400">Jun</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:85%;background:linear-gradient(180deg,#06B6D4,#22D3EE)"></div>
+              <span class="text-xs text-slate-400">Jul</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+              <div class="w-full rounded-t-md" style="height:95%;background:linear-gradient(180deg,#06B6D4,#22D3EE)"></div>
+              <span class="text-xs text-slate-400">Ago</span>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-4">
+            <div>
+              <p class="text-xs text-slate-400">Tasa Fidelización</p>
+              <p class="text-lg font-bold text-slate-800">70.2%</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400">Promedio Visitas</p>
+              <p class="text-lg font-bold text-slate-800">4.3/mes</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400">Ticket Promedio</p>
+              <p class="text-lg font-bold text-slate-800">S/ 87.40</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card p-5">
+          <h3 class="font-bold text-slate-800 mb-4">Actividad Reciente</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">MG</div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">María García recibió un sello</p>
+                <p class="text-xs text-slate-400">Cartilla Café Premium • hace 5m</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#10B981,#34D399)">JR</div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">Juan Ríos canjeó premio</p>
+                <p class="text-xs text-slate-400">Café gratis • hace 12m</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#F59E0B,#FCD34D)">LP</div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">Lucía Pérez ganó en ruleta</p>
+                <p class="text-xs text-slate-400">10% descuento • hace 28m</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#8B5CF6,#A78BFA)">CC</div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">Carlos Cruz se registró</p>
+                <p class="text-xs text-slate-400">Nuevo cliente • hace 1h</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#EF4444,#F87171)">AM</div>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">Campaña SMS enviada</p>
+                <p class="text-xs text-slate-400">347 destinatarios • hace 2h</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="card p-5">
+          <h3 class="font-bold text-slate-800 mb-4">Top Segmentos</h3>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-xs text-slate-600">Clientes VIP</span>
+                <span class="text-xs font-bold text-slate-700">234</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:78%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-xs text-slate-600">Activos Frecuentes</span>
+                <span class="text-xs font-bold text-slate-700">412</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-xs text-slate-600">En Riesgo</span>
+                <span class="text-xs font-bold text-slate-700">89</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:22%;background:linear-gradient(90deg,#EF4444,#F87171)"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-xs text-slate-600">Cumpleañeros</span>
+                <span class="text-xs font-bold text-slate-700">18</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:10%;background:linear-gradient(90deg,#F59E0B,#FCD34D)"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-bold text-slate-800 mb-4">Cartillas Populares</h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl" style="background:#EEF2FF">☕</div>
+              <div class="flex-1">
+                <p class="text-xs font-semibold text-slate-700">Café Premium</p>
+                <p class="text-xs text-slate-400">9 sellos • 342 activos</p>
+              </div>
+              <span class="badge badge-green">Alta</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl" style="background:#FEF9C3">🍕</div>
+              <div class="flex-1">
+                <p class="text-xs font-semibold text-slate-700">Pizza Club</p>
+                <p class="text-xs text-slate-400">8 sellos • 198 activos</p>
+              </div>
+              <span class="badge badge-blue">Media</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl" style="background:#DCFCE7">🥗</div>
+              <div class="flex-1">
+                <p class="text-xs font-semibold text-slate-700">Ensaladas Fit</p>
+                <p class="text-xs text-slate-400">10 sellos • 87 activos</p>
+              </div>
+              <span class="badge badge-gray">Baja</span>
+            </div>
+          </div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-bold text-slate-800 mb-4">Próximas Acciones</h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#EEF2FF">
+              <i data-lucide="calendar" style="width:15px;height:15px;color:#4F46E5;stroke-width:2"></i>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">18 cumpleaños mañana</p>
+                <p class="text-xs text-slate-400">Enviar mensaje automático</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#FEF9C3">
+              <i data-lucide="alert-triangle" style="width:15px;height:15px;color:#D97706;stroke-width:2"></i>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">89 clientes inactivos</p>
+                <p class="text-xs text-slate-400">Crear campaña de reactivación</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#DCFCE7">
+              <i data-lucide="trophy" style="width:15px;height:15px;color:#16A34A;stroke-width:2"></i>
+              <div>
+                <p class="text-xs font-semibold text-slate-700">Sorteo finaliza en 3 días</p>
+                <p class="text-xs text-slate-400">Seleccionar ganadores</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIENTES ===== -->
+    <div id="screen-clientes" class="screen">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <p class="text-sm text-slate-400">Gestiona tu base de clientes</p>
+        </div>
+        <button onclick="openModal('modalCliente')" class="btn btn-primary">
+          <i data-lucide="user-plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Cliente
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="card p-4 mb-4 flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-48">
+          <i data-lucide="search" style="width:15px;height:15px;color:#94A3B8;position:absolute;left:10px;top:50%;transform:translateY(-50%);stroke-width:2"></i>
+          <input id="searchCliente" oninput="filterClientes()" type="text" placeholder="Buscar por nombre o email..." class="input pl-8" style="padding-left:34px">
+        </div>
+        <select id="filterEstado" onchange="filterClientes()" class="input" style="width:auto">
+          <option value="">Todos los estados</option>
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+          <option value="VIP">VIP</option>
+        </select>
+        <span id="clienteCount" class="badge badge-gray">— clientes</span>
+      </div>
+
+      <!-- Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Puntos</th>
+                <th>Sellos</th>
+                <th>Estado</th>
+                <th>Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaClientes"></tbody>
+          </table>
+        </div>
+        <div id="emptyClientes" class="hidden py-16 text-center">
+          <i data-lucide="users" style="width:40px;height:40px;color:#CBD5E1;margin:0 auto 12px"></i>
+          <p class="text-slate-400 font-medium">No se encontraron clientes</p>
+          <p class="text-sm text-slate-300 mt-1">Prueba con otro filtro o añade un nuevo cliente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CARTILLAS ===== -->
+    <div id="screen-cartillas" class="screen">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm text-slate-400">Cartillas digitales de sellos</p>
+        <button onclick="openModal('modalCartilla')" class="btn btn-primary">
+          <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nueva Cartilla
+        </button>
+      </div>
+      <div id="listaCartillas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ===== RULETA ===== -->
+    <div id="screen-ruleta" class="screen">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Ruleta visual -->
+        <div class="card p-6 flex flex-col items-center">
+          <div class="relative mb-6">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-2xl">▼</div>
+            <canvas id="rouletteCanvas" width="300" height="300"></canvas>
+          </div>
+          <button id="spinBtn" onclick="spinRuleta()" class="spin-btn">
+            <i data-lucide="play" style="width:18px;height:18px;display:inline;margin-right:8px;stroke-width:2.5"></i>¡Girar Ruleta!
+          </button>
+          <div id="resultadoRuleta" class="mt-5 hidden text-center">
+            <p class="text-slate-400 text-sm mb-1">Resultado:</p>
+            <p id="premioGanado" class="text-xl font-bold text-slate-800"></p>
+          </div>
+        </div>
+
+        <!-- Premios y configuración -->
+        <div class="space-y-4">
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-800">Premios de la Ruleta</h3>
+              <button onclick="openModal('modalPremio')" class="btn btn-outline" style="padding:6px 12px;font-size:12px">
+                <i data-lucide="plus" style="width:13px;height:13px;stroke-width:2.5"></i> Añadir
+              </button>
+            </div>
+            <div id="listaPremios" class="space-y-2"></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-bold text-slate-800 mb-4">Historial de Ganadores</h3>
+            <div id="historialRuleta" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SORTEOS ===== -->
+    <div id="screen-sorteos" class="screen">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm text-slate-400">Gestiona tus sorteos y ganadores</p>
+        <button onclick="openModal('modalSorteo')" class="btn btn-primary">
+          <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Sorteo
+        </button>
+      </div>
+      <div id="listaSorteos" class="space-y-4"></div>
+    </div>
+
+    <!-- ===== CATÁLOGO ===== -->
+    <div id="screen-catalogo" class="screen">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-slate-400">Catálogo de productos del negocio</p>
+        <div class="flex gap-2">
+          <button onclick="toggleVistaProductos()" id="btnVistaCatalogo" class="btn btn-secondary">
+            <i data-lucide="grid-3x3" style="width:15px;height:15px;stroke-width:2"></i> Vista Grid
+          </button>
+          <button onclick="openModal('modalProducto')" class="btn btn-primary">
+            <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Producto
+          </button>
+        </div>
+      </div>
+      <div class="card p-4 mb-4 flex flex-wrap gap-3">
+        <div class="relative flex-1 min-w-48">
+          <i data-lucide="search" style="width:15px;height:15px;color:#94A3B8;position:absolute;left:10px;top:50%;transform:translateY(-50%)"></i>
+          <input id="searchProducto" oninput="renderProductos()" type="text" placeholder="Buscar producto..." class="input" style="padding-left:34px">
+        </div>
+        <select id="filterCategoria" onchange="renderProductos()" class="input" style="width:auto">
+          <option value="">Todas las categorías</option>
+          <option value="Bebidas">Bebidas</option>
+          <option value="Comida">Comida</option>
+          <option value="Postres">Postres</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+      <div id="catalogoGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      <div id="catalogoTable" class="card overflow-hidden hidden">
+        <table>
+          <thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tablaProductos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA WEB ===== -->
+    <div id="screen-pagweb" class="screen">
+      <div class="flex gap-4">
+        <div class="tabs flex gap-2 mb-4 flex-wrap">
+          <button class="tab-btn active" onclick="switchPagWebTab('config', this)">Configurar</button>
+          <button class="tab-btn" onclick="switchPagWebTab('preview', this)">Vista Previa</button>
+        </div>
+      </div>
+      <div id="pagweb-config">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="card p-5 space-y-4">
+            <h3 class="font-bold text-slate-800">Información del Negocio</h3>
+            <div><label class="label">Nombre del Negocio</label><input id="pw_nombre" class="input" value="Café del Centro" oninput="updatePreview()"></div>
+            <div><label class="label">Logo (URL de imagen)</label><input id="pw_logo" class="input" value="https://via.placeholder.com/120x60/4F46E5/fff?text=LOGO" oninput="updatePreview()"></div>
+            <div><label class="label">Descripción</label><textarea id="pw_desc" class="input" rows="3" oninput="updatePreview()">El mejor café de la ciudad. Ven y disfruta de nuestros productos con calidad premium.</textarea></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="label">Teléfono</label><input id="pw_tel" class="input" value="+51 994 123 456" oninput="updatePreview()"></div>
+              <div><label class="label">Email</label><input id="pw_email" class="input" value="hola@cafedelcentro.pe" oninput="updatePreview()"></div>
+            </div>
+            <div><label class="label">Dirección</label><input id="pw_dir" class="input" value="Jr. Pizarro 345, Trujillo" oninput="updatePreview()"></div>
+            <div><label class="label">Horario</label><input id="pw_horario" class="input" value="Lun-Dom 7:00am - 10:00pm" oninput="updatePreview()"></div>
+          </div>
+          <div class="card p-5 space-y-4">
+            <h3 class="font-bold text-slate-800">Personalización</h3>
+            <div><label class="label">Color Principal</label>
+              <div class="flex items-center gap-3">
+                <input type="color" id="pw_color" value="#4F46E5" class="color-swatch" oninput="updatePreview()">
+                <input id="pw_colortext" class="input" value="#4F46E5" style="max-width:120px" oninput="syncColor()">
+              </div>
+            </div>
+            <div><label class="label">Texto Botón Principal</label><input id="pw_ctaText" class="input" value="Únete al programa de fidelización" oninput="updatePreview()"></div>
+            <div><label class="label">URL Personalizada (simulada)</label>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-slate-400 flex-shrink-0">loyaltypro.app/</span>
+                <input id="pw_slug" class="input" value="cafedelcentro" oninput="updatePreview()">
+              </div>
+              <p class="text-xs text-slate-400 mt-1">URL: <span id="urlPreview" class="font-mono" style="color:var(--primary)">loyaltypro.app/cafedelcentro</span></p>
+            </div>
+            <div><label class="label">Instagram</label><input id="pw_ig" class="input" value="@cafedelcentro" oninput="updatePreview()"></div>
+            <div><label class="label">Facebook</label><input id="pw_fb" class="input" value="fb.com/cafedelcentro" oninput="updatePreview()"></div>
+            <button onclick="savePagWeb()" class="btn btn-primary w-full mt-2">
+              <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview mode -->
+      <div id="pagweb-preview" class="hidden">
+        <div class="card overflow-hidden">
+          <div id="previewContent" class="rounded-xl overflow-hidden border border-slate-200"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PLANTILLAS ===== -->
+    <div id="screen-plantillas" class="screen">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm text-slate-400">Plantillas de mensajes para campañas</p>
+        <button onclick="openModal('modalPlantilla')" class="btn btn-primary">
+          <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nueva Plantilla
+        </button>
+      </div>
+      <div id="listaPlantillas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ===== SEGMENTACIÓN ===== -->
+    <div id="screen-segmentacion" class="screen">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm text-slate-400">Crea y gestiona segmentos de clientes</p>
+        <button onclick="openModal('modalSegmento')" class="btn btn-primary">
+          <i data-lucide="plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Segmento
+        </button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-1 space-y-3" id="listaSegmentos"></div>
+        <div class="lg:col-span-2">
+          <div class="card p-5">
+            <h3 class="font-bold text-slate-800 mb-4" id="segmentoTitulo">Selecciona un segmento</h3>
+            <div id="tablaSegmentoWrap">
+              <div class="py-12 text-center text-slate-300">
+                <i data-lucide="filter" style="width:36px;height:36px;margin:0 auto 10px"></i>
+                <p>Haz clic en un segmento para ver los clientes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ENVÍOS MASIVOS ===== -->
+    <div id="screen-envios" class="screen">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <!-- Wizard -->
+        <div class="lg:col-span-2 card p-5 space-y-5">
+          <h3 class="font-bold text-slate-800">Nueva Campaña</h3>
+          <div>
+            <label class="label">Nombre de la campaña</label>
+            <input id="envio_nombre" class="input" placeholder="Ej: Promo Verano 2025">
+          </div>
+          <div>
+            <label class="label">Plantilla</label>
+            <select id="envio_plantilla" class="input" onchange="updateEnvioResumen()">
+              <option value="">Seleccionar plantilla...</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Segmento</label>
+            <select id="envio_segmento" class="input" onchange="updateEnvioResumen()">
+              <option value="">Seleccionar segmento...</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Canal</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors" id="canalSMS">
+                <input type="radio" name="canal" value="SMS" onchange="selectCanal('SMS')" class="hidden">
+                <i data-lucide="message-square" style="width:20px;height:20px;stroke-width:2;color:#4F46E5"></i>
+                <span class="text-xs font-semibold">SMS</span>
+              </label>
+              <label class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors" id="canalEmail">
+                <input type="radio" name="canal" value="Email" onchange="selectCanal('Email')" class="hidden">
+                <i data-lucide="mail" style="width:20px;height:20px;stroke-width:2;color:#06B6D4"></i>
+                <span class="text-xs font-semibold">Email</span>
+              </label>
+              <label class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors" id="canalWA">
+                <input type="radio" name="canal" value="WhatsApp" onchange="selectCanal('WhatsApp')" class="hidden">
+                <i data-lucide="message-circle" style="width:20px;height:20px;stroke-width:2;color:#16A34A"></i>
+                <span class="text-xs font-semibold">WhatsApp</span>
+              </label>
+            </div>
+          </div>
+          <!-- Resumen -->
+          <div id="envioResumen" class="rounded-xl p-4 space-y-2" style="background:#F8FAFC;border:1.5px solid #E2E8F0">
+            <p class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">Resumen de Envío</p>
+            <div class="flex justify-between text-sm"><span class="text-slate-400">Plantilla:</span><span id="res_plantilla" class="font-medium text-slate-700">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-slate-400">Segmento:</span><span id="res_segmento" class="font-medium text-slate-700">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-slate-400">Destinatarios:</span><span id="res_dest" class="font-medium text-slate-700">—</span></div>
+            <div class="flex justify-between text-sm"><span class="text-slate-400">Canal:</span><span id="res_canal" class="font-medium text-slate-700">—</span></div>
+            <div class="flex justify-between text-sm border-t border-slate-200 pt-2 mt-2"><span class="text-slate-400">Costo estimado:</span><span id="res_costo" class="font-bold" style="color:var(--primary)">—</span></div>
+          </div>
+          <button onclick="enviarCampana()" class="btn btn-primary w-full" style="justify-content:center;padding:12px">
+            <i data-lucide="send" style="width:16px;height:16px;stroke-width:2.5"></i> Enviar Campaña
+          </button>
+        </div>
+
+        <!-- Historial -->
+        <div class="lg:col-span-3">
+          <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 class="font-bold text-slate-800">Historial de Campañas</h3>
+              <span id="campanaCount" class="badge badge-gray">0 campañas</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table>
+                <thead><tr><th>Campaña</th><th>Canal</th><th>Destinatarios</th><th>Estado</th><th>Fecha</th></tr></thead>
+                <tbody id="tablaCampanas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== USUARIOS & ROLES ===== -->
+    <div id="screen-usuarios" class="screen">
+      <div class="flex gap-2 mb-5">
+        <button class="tab-btn active" onclick="switchUsuariosTab('usuarios', this)">Usuarios</button>
+        <button class="tab-btn" onclick="switchUsuariosTab('roles', this)">Roles & Permisos</button>
+      </div>
+
+      <!-- Tab: Usuarios -->
+      <div id="tab-usuarios">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm text-slate-400">Gestiona los usuarios del sistema</p>
+          <button onclick="openModal('modalUsuario')" class="btn btn-primary">
+            <i data-lucide="user-plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Usuario
+          </button>
+        </div>
+        <div class="card overflow-hidden">
+          <table>
+            <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th>Acciones</th></tr></thead>
+            <tbody id="tablaUsuarios"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Roles -->
+      <div id="tab-roles" class="hidden">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm text-slate-400">Configura los permisos por rol</p>
+          <button onclick="openModal('modalRol')" class="btn btn-primary">
+            <i data-lucide="shield-plus" style="width:15px;height:15px;stroke-width:2.5"></i> Nuevo Rol
+          </button>
+        </div>
+        <div id="listaRoles" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- ===== CONFIGURACIÓN ===== -->
+    <div id="screen-configuracion" class="screen">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card p-5 space-y-4">
+          <h3 class="font-bold text-slate-800">General</h3>
+          <div><label class="label">Nombre de la Empresa</label><input class="input" value="Café del Centro S.A.C."></div>
+          <div><label class="label">Moneda</label>
+            <select class="input"><option>PEN - Sol Peruano</option><option>USD - Dólar Americano</option></select>
+          </div>
+          <div><label class="label">Zona Horaria</label>
+            <select class="input"><option>America/Lima (GMT-5)</option><option>America/Bogota (GMT-5)</option></select>
+          </div>
+          <div><label class="label">Idioma</label>
+            <select class="input"><option>Español</option><option>English</option></select>
+          </div>
+          <button class="btn btn-primary"><i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar</button>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-bold text-slate-800 mb-4">Notificaciones</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div><p class="text-sm font-medium text-slate-700">Nuevos clientes</p><p class="text-xs text-slate-400">Alerta cuando se registra un nuevo cliente</p></div>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div><p class="text-sm font-medium text-slate-700">Cartilla completada</p><p class="text-xs text-slate-400">Notificar cuando un cliente completa su cartilla</p></div>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div><p class="text-sm font-medium text-slate-700">Sorteo finalizado</p><p class="text-xs text-slate-400">Alertas de fin de sorteos</p></div>
+              <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div><p class="text-sm font-medium text-slate-700">Campaña enviada</p><p class="text-xs text-slate-400">Confirmación de envío de campañas</p></div>
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="card p-5 col-span-1 lg:col-span-2">
+          <h3 class="font-bold text-slate-800 mb-4">Integraciones</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border-2 border-slate-100">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#25D366">
+                    <i data-lucide="message-circle" style="width:16px;height:16px;color:#fff;stroke-width:2"></i>
+                  </div>
+                  <span class="font-semibold text-sm text-slate-700">WhatsApp API</span>
+                </div>
+                <span class="badge badge-green">Conectado</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">Meta Business API v18.0</p>
+              <button class="btn btn-secondary w-full" style="font-size:12px;justify-content:center">Configurar</button>
+            </div>
+            <div class="p-4 rounded-xl border-2 border-slate-100">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#4F46E5">
+                    <i data-lucide="mail" style="width:16px;height:16px;color:#fff;stroke-width:2"></i>
+                  </div>
+                  <span class="font-semibold text-sm text-slate-700">Email SMTP</span>
+                </div>
+                <span class="badge badge-yellow">Pendiente</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">Sin configurar</p>
+              <button class="btn btn-outline w-full" style="font-size:12px;justify-content:center">Conectar</button>
+            </div>
+            <div class="p-4 rounded-xl border-2 border-slate-100">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#0EA5E9">
+                    <i data-lucide="smartphone" style="width:16px;height:16px;color:#fff;stroke-width:2"></i>
+                  </div>
+                  <span class="font-semibold text-sm text-slate-700">SMS Provider</span>
+                </div>
+                <span class="badge badge-green">Conectado</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-3">Twilio • +51 XXX XXX XXX</p>
+              <button class="btn btn-secondary w-full" style="font-size:12px;justify-content:center">Configurar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /p-6 -->
+</div><!-- /main-content -->
+
+<!-- ============================================================ -->
+<!-- MODALS -->
+<!-- ============================================================ -->
+
+<!-- Modal Cliente -->
+<div id="modalCliente" class="modal-overlay" onclick="closeOnOverlay(event,'modalCliente')">
+  <div class="card p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalClienteTitulo" class="font-bold text-slate-800 text-lg">Nuevo Cliente</h2>
+      <button onclick="closeModal('modalCliente')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="clienteEditId">
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Nombre Completo</label><input id="c_nombre" class="input" placeholder="Ej: María García"></div>
+        <div><label class="label">Teléfono</label><input id="c_tel" class="input" placeholder="+51 999 000 000"></div>
+      </div>
+      <div><label class="label">Email</label><input id="c_email" class="input" placeholder="correo@ejemplo.com"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Fecha de Nacimiento</label><input id="c_nacimiento" class="input" type="date"></div>
+        <div><label class="label">Estado</label>
+          <select id="c_estado" class="input"><option>Activo</option><option>Inactivo</option><option>VIP</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Puntos</label><input id="c_puntos" class="input" type="number" value="0" min="0"></div>
+        <div><label class="label">Sellos</label><input id="c_sellos" class="input" type="number" value="0" min="0"></div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalCliente')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarCliente()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ver Cliente -->
+<div id="modalVerCliente" class="modal-overlay" onclick="closeOnOverlay(event,'modalVerCliente')">
+  <div class="card p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-slate-800 text-lg">Detalle del Cliente</h2>
+      <button onclick="closeModal('modalVerCliente')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <div id="detalleClienteContent"></div>
+  </div>
+</div>
+
+<!-- Modal Cartilla -->
+<div id="modalCartilla" class="modal-overlay" onclick="closeOnOverlay(event,'modalCartilla')">
+  <div class="card p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalCartillaTitulo" class="font-bold text-slate-800 text-lg">Nueva Cartilla</h2>
+      <button onclick="closeModal('modalCartilla')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="cartillaEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre de la Cartilla</label><input id="car_nombre" class="input" placeholder="Ej: Café Premium"></div>
+      <div><label class="label">Emoji / Ícono</label><input id="car_emoji" class="input" value="☕" placeholder="☕"></div>
+      <div><label class="label">Total de Sellos</label><input id="car_sellos" class="input" type="number" value="9" min="3" max="20"></div>
+      <div><label class="label">Premio Final</label><input id="car_premio" class="input" placeholder="Ej: 1 Café gratis"></div>
+      <div><label class="label">Estado</label>
+        <select id="car_estado" class="input"><option>Activo</option><option>Inactivo</option></select>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalCartilla')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarCartilla()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Premio Ruleta -->
+<div id="modalPremio" class="modal-overlay" onclick="closeOnOverlay(event,'modalPremio')">
+  <div class="card p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-slate-800 text-lg">Añadir Premio</h2>
+      <button onclick="closeModal('modalPremio')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="label">Nombre del Premio</label><input id="pr_nombre" class="input" placeholder="Ej: 10% Descuento"></div>
+      <div><label class="label">Color</label><input id="pr_color" type="color" class="input h-10 p-1" value="#4F46E5"></div>
+      <div><label class="label">Probabilidad (%)</label><input id="pr_prob" class="input" type="number" value="20" min="1" max="100"></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalPremio')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarPremio()" class="btn btn-primary flex-1" style="justify-content:center">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sorteo -->
+<div id="modalSorteo" class="modal-overlay" onclick="closeOnOverlay(event,'modalSorteo')">
+  <div class="card p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalSorteoTitulo" class="font-bold text-slate-800 text-lg">Nuevo Sorteo</h2>
+      <button onclick="closeModal('modalSorteo')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="sorteoEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre del Sorteo</label><input id="s_nombre" class="input" placeholder="Ej: Gran Sorteo de Verano"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Fecha Inicio</label><input id="s_inicio" class="input" type="date"></div>
+        <div><label class="label">Fecha Fin</label><input id="s_fin" class="input" type="date"></div>
+      </div>
+      <div><label class="label">Estado</label>
+        <select id="s_estado" class="input"><option>Activo</option><option>Programado</option><option>Finalizado</option></select>
+      </div>
+      <div>
+        <label class="label">Premios por Posición</label>
+        <div id="premiosPosicion" class="space-y-2 mb-2"></div>
+        <button onclick="addPremioSorteo()" class="btn btn-secondary w-full" style="justify-content:center;font-size:12px">
+          <i data-lucide="plus" style="width:13px;height:13px;stroke-width:2.5"></i> Agregar Premio
+        </button>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalSorteo')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarSorteo()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Producto -->
+<div id="modalProducto" class="modal-overlay" onclick="closeOnOverlay(event,'modalProducto')">
+  <div class="card p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalProductoTitulo" class="font-bold text-slate-800 text-lg">Nuevo Producto</h2>
+      <button onclick="closeModal('modalProducto')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="productoEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre</label><input id="p_nombre" class="input" placeholder="Ej: Café Americano"></div>
+      <div><label class="label">Descripción</label><textarea id="p_desc" class="input" rows="2" placeholder="Describe el producto..."></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Precio (S/)</label><input id="p_precio" class="input" type="number" step="0.1" placeholder="0.00"></div>
+        <div><label class="label">Categoría</label>
+          <select id="p_cat" class="input"><option>Bebidas</option><option>Comida</option><option>Postres</option><option>Otros</option></select>
+        </div>
+      </div>
+      <div><label class="label">Imagen (URL)</label><input id="p_img" class="input" placeholder="https://..."></div>
+      <div><label class="label">Estado</label>
+        <select id="p_estado" class="input"><option>Disponible</option><option>No disponible</option></select>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalProducto')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarProducto()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Plantilla -->
+<div id="modalPlantilla" class="modal-overlay" onclick="closeOnOverlay(event,'modalPlantilla')">
+  <div class="card p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalPlantillaTitulo" class="font-bold text-slate-800 text-lg">Nueva Plantilla</h2>
+      <button onclick="closeModal('modalPlantilla')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="plantillaEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre de la Plantilla</label><input id="pl_nombre" class="input" placeholder="Ej: Bienvenida VIP"></div>
+      <div><label class="label">Canal</label>
+        <select id="pl_canal" class="input" onchange="toggleAsunto()">
+          <option>SMS</option><option>Email</option><option>WhatsApp</option>
+        </select>
+      </div>
+      <div id="asuntoField" class="hidden"><label class="label">Asunto (solo Email)</label><input id="pl_asunto" class="input" placeholder="Asunto del correo"></div>
+      <div><label class="label">Mensaje</label><textarea id="pl_mensaje" class="input" rows="4" placeholder="Escribe tu mensaje..." oninput="updatePlantillaPreview()"></textarea></div>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-xs text-slate-400 font-semibold mr-1">Variables:</span>
+        <button onclick="insertVar('{{nombre}}')" class="badge badge-purple cursor-pointer">{{nombre}}</button>
+        <button onclick="insertVar('{{puntos}}')" class="badge badge-blue cursor-pointer">{{puntos}}</button>
+        <button onclick="insertVar('{{premio}}')" class="badge badge-yellow cursor-pointer">{{premio}}</button>
+        <button onclick="insertVar('{{negocio}}')" class="badge badge-cyan cursor-pointer">{{negocio}}</button>
+      </div>
+      <div>
+        <label class="label">Vista Previa</label>
+        <div id="plantillaPreviewBox" class="rounded-xl p-3 text-sm text-slate-700" style="background:#F8FAFC;border:1.5px solid #E2E8F0;min-height:60px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.6"></div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalPlantilla')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarPlantilla()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Segmento -->
+<div id="modalSegmento" class="modal-overlay" onclick="closeOnOverlay(event,'modalSegmento')">
+  <div class="card p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalSegmentoTitulo" class="font-bold text-slate-800 text-lg">Nuevo Segmento</h2>
+      <button onclick="closeModal('modalSegmento')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="segmentoEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre del Segmento</label><input id="seg_nombre" class="input" placeholder="Ej: Clientes VIP"></div>
+      <div>
+        <label class="label">Condición</label>
+        <select id="seg_condicion" class="input" onchange="toggleSegPuntos()">
+          <option value="VIP">Clientes VIP</option>
+          <option value="Inactivo">Clientes Inactivos</option>
+          <option value="puntos">Clientes con más de X puntos</option>
+          <option value="cumpleanos">Cumpleaños este mes</option>
+          <option value="cartilla">Cartilla incompleta</option>
+        </select>
+      </div>
+      <div id="seg_puntosWrap" class="hidden">
+        <label class="label">Mínimo de Puntos</label>
+        <input id="seg_puntos" class="input" type="number" value="100" min="0">
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalSegmento')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarSegmento()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Usuario -->
+<div id="modalUsuario" class="modal-overlay" onclick="closeOnOverlay(event,'modalUsuario')">
+  <div class="card p-6 w-full max-w-md mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalUsuarioTitulo" class="font-bold text-slate-800 text-lg">Nuevo Usuario</h2>
+      <button onclick="closeModal('modalUsuario')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="usuarioEditId">
+    <div class="space-y-4">
+      <div><label class="label">Nombre Completo</label><input id="u_nombre" class="input" placeholder="Ej: Juan Pérez"></div>
+      <div><label class="label">Email</label><input id="u_email" class="input" placeholder="correo@empresa.com"></div>
+      <div><label class="label">Rol</label>
+        <select id="u_rol" class="input">
+          <option>Administrador</option>
+          <option>Gerente</option>
+          <option>Operador</option>
+          <option>Solo Lectura</option>
+        </select>
+      </div>
+      <div><label class="label">Estado</label>
+        <select id="u_estado" class="input"><option>Activo</option><option>Inactivo</option></select>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalUsuario')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarUsuario()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rol -->
+<div id="modalRol" class="modal-overlay" onclick="closeOnOverlay(event,'modalRol')">
+  <div class="card p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="modalRolTitulo" class="font-bold text-slate-800 text-lg">Nuevo Rol</h2>
+      <button onclick="closeModal('modalRol')" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" style="width:18px;height:18px;color:#94A3B8;stroke-width:2"></i></button>
+    </div>
+    <input type="hidden" id="rolEditId">
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Nombre del Rol</label><input id="r_nombre" class="input" placeholder="Ej: Supervisor"></div>
+        <div><label class="label">Color</label><input id="r_color" type="color" class="input h-10 p-1" value="#4F46E5"></div>
+      </div>
+      <div>
+        <label class="label">Permisos por Módulo</label>
+        <div class="overflow-x-auto mt-2">
+          <table class="text-xs">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px 12px;background:#F8FAFC;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Módulo</th>
+                <th style="text-align:center;padding:8px 12px;background:#F8FAFC;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Ver</th>
+                <th style="text-align:center;padding:8px 12px;background:#F8FAFC;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Crear</th>
+                <th style="text-align:center;padding:8px 12px;background:#F8FAFC;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Editar</th>
+                <th style="text-align:center;padding:8px 12px;background:#F8FAFC;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Eliminar</th>
+              </tr>
+            </thead>
+            <tbody id="permisosTabla"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modalRol')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+      <button onclick="guardarRol()" class="btn btn-primary flex-1" style="justify-content:center">
+        <i data-lucide="save" style="width:15px;height:15px;stroke-width:2.5"></i> Guardar Rol
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+  <div class="card px-5 py-3.5 flex items-center gap-3 shadow-lg" style="border-left:4px solid var(--primary)">
+    <i id="toastIcon" data-lucide="check-circle" style="width:18px;height:18px;color:#10B981;stroke-width:2;flex-shrink:0"></i>
+    <p id="toastMsg" class="text-sm font-semibold text-slate-700"></p>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="modalConfirm" class="modal-overlay">
+  <div class="card p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#FEE2E2">
+        <i data-lucide="trash-2" style="width:22px;height:22px;color:#EF4444;stroke-width:2"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 mb-2">¿Confirmar eliminación?</h3>
+      <p class="text-sm text-slate-400 mb-5">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-3">
+        <button onclick="closeModal('modalConfirm')" class="btn btn-secondary flex-1" style="justify-content:center">Cancelar</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger flex-1" style="justify-content:center">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+let clientes = [
+  {id:1,nombre:'María García',email:'maria@gmail.com',tel:'+51 994 111 222',nacimiento:'1990-03-15',estado:'VIP',puntos:450,sellos:7,registro:'2024-01-10'},
+  {id:2,nombre:'Juan Ríos',email:'juan@outlook.com',tel:'+51 994 222 333',nacimiento:'1985-07-22',estado:'Activo',puntos:200,sellos:3,registro:'2024-02-05'},
+  {id:3,nombre:'Lucía Pérez',email:'lucia@gmail.com',tel:'+51 994 333 444',nacimiento:'1995-11-08',estado:'Activo',puntos:120,sellos:5,registro:'2024-03-12'},
+  {id:4,nombre:'Carlos Cruz',email:'carlos@yahoo.com',tel:'+51 994 444 555',nacimiento:'1992-05-30',estado:'Inactivo',puntos:50,sellos:1,registro:'2024-04-20'},
+  {id:5,nombre:'Ana Torres',email:'ana@empresa.com',tel:'+51 994 555 666',nacimiento:'1988-12-01',estado:'VIP',puntos:800,sellos:9,registro:'2023-11-01'},
+  {id:6,nombre:'Pedro Vega',email:'pedro@gmail.com',tel:'+51 994 666 777',nacimiento:'1993-08-14',estado:'Activo',puntos:310,sellos:4,registro:'2024-05-18'},
+  {id:7,nombre:'Rosa Mendez',email:'rosa@gmail.com',tel:'+51 994 777 888',nacimiento:'1991-02-28',estado:'Activo',puntos:170,sellos:2,registro:'2024-06-03'},
+  {id:8,nombre:'Luis Flores',email:'luis@hotmail.com',tel:'+51 994 888 999',nacimiento:'1987-09-09',estado:'Inactivo',puntos:30,sellos:0,registro:'2024-07-15'},
+];
+
+let cartillas = [
+  {id:1,nombre:'Café Premium',emoji:'☕',sellos:9,sellados:5,premio:'1 Café Gratis',estado:'Activo',clientes:342},
+  {id:2,nombre:'Pizza Club',emoji:'🍕',sellos:8,sellados:2,premio:'1 Pizza Mediana',estado:'Activo',clientes:198},
+  {id:3,nombre:'Ensaladas Fit',emoji:'🥗',sellos:10,sellados:7,premio:'Ensalada XL gratis',estado:'Activo',clientes:87},
+  {id:4,nombre:'Jugos Frescos',emoji:'🥤',sellos:6,sellados:0,premio:'Jugo grande gratis',estado:'Inactivo',clientes:0},
+];
+
+let premiosRuleta = [
+  {id:1,nombre:'10% Descuento',color:'#4F46E5',prob:25,activo:true},
+  {id:2,nombre:'Producto Gratis',color:'#10B981',prob:10,activo:true},
+  {id:3,nombre:'2x1',color:'#F59E0B',prob:15,activo:true},
+  {id:4,nombre:'Sin Premio',color:'#94A3B8',prob:35,activo:true},
+  {id:5,nombre:'50 Puntos',color:'#06B6D4',prob:15,activo:true},
+];
+
+let historialRuletaData = [
+  {cliente:'María García',premio:'10% Descuento',fecha:'2025-07-20'},
+  {cliente:'Juan Ríos',premio:'Sin Premio',fecha:'2025-07-19'},
+  {cliente:'Ana Torres',premio:'Producto Gratis',fecha:'2025-07-18'},
+];
+
+let sorteos = [
+  {id:1,nombre:'Gran Sorteo de Verano',inicio:'2025-07-01',fin:'2025-07-31',estado:'Activo',participantes:234,
+   premios:[{pos:1,desc:'S/ 100 en efectivo'},{pos:2,desc:'S/ 50 en efectivo'},{pos:3,desc:'Cupón 30% dscto'}],
+   ganadores:[]
+  },
+  {id:2,nombre:'Sorteo Aniversario',inicio:'2025-06-01',fin:'2025-06-30',estado:'Finalizado',participantes:412,
+   premios:[{pos:1,desc:'TV 55" 4K'},{pos:2,desc:'Tablet iPad'},{pos:3,desc:'Auriculares BT'}],
+   ganadores:['Ana Torres','Pedro Vega','María García']
+  },
+];
+
+let productos = [
+  {id:1,nombre:'Café Americano',desc:'Café negro preparado al momento',precio:5.5,cat:'Bebidas',img:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=200&fit=crop',estado:'Disponible'},
+  {id:2,nombre:'Cappuccino',desc:'Espresso con espuma de leche cremosa',precio:7.0,cat:'Bebidas',img:'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=300&h=200&fit=crop',estado:'Disponible'},
+  {id:3,nombre:'Pizza Margherita',desc:'Pizza clásica italiana con tomate y mozzarella',precio:28.0,cat:'Comida',img:'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&h=200&fit=crop',estado:'Disponible'},
+  {id:4,nombre:'Tiramisú',desc:'Postre italiano clásico con café y mascarpone',precio:12.0,cat:'Postres',img:'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=300&h=200&fit=crop',estado:'Disponible'},
+  {id:5,nombre:'Sandwich Club',desc:'Sandwich triple con pollo, tocino y vegetales',precio:15.0,cat:'Comida',img:'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=300&h=200&fit=crop',estado:'No disponible'},
+  {id:6,nombre:'Jugo Natural',desc:'Jugo de frutas frescas del día',precio:8.0,cat:'Bebidas',img:'https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=300&h=200&fit=crop',estado:'Disponible'},
+];
+
+let plantillas = [
+  {id:1,nombre:'Bienvenida VIP',canal:'WhatsApp',asunto:'',mensaje:'¡Hola {{nombre}}! 🎉 Bienvenido al club VIP de {{negocio}}. Tienes {{puntos}} puntos acumulados. ¡Gracias por tu fidelidad!',creado:'2025-06-01'},
+  {id:2,nombre:'Recordatorio Cartilla',canal:'SMS',asunto:'',mensaje:'Hola {{nombre}}, te falta poco para completar tu cartilla en {{negocio}}. ¡Visítanos hoy y gana tu {{premio}}!',creado:'2025-06-15'},
+  {id:3,nombre:'Promo Cumpleaños',canal:'Email',asunto:'🎂 ¡Feliz Cumpleaños {{nombre}}!',mensaje:'Querido/a {{nombre}}, en tu día especial te regalamos un descuento exclusivo del 20%. ¡Visítanos y disfruta tu premio! Con cariño, {{negocio}}.',creado:'2025-07-01'},
+  {id:4,nombre:'Reactivación',canal:'SMS',asunto:'',mensaje:'{{nombre}}, te extrañamos en {{negocio}}. Tienes {{puntos}} puntos esperándote. ¡Vuelve pronto!',creado:'2025-07-10'},
+];
+
+let segmentos = [
+  {id:1,nombre:'Clientes VIP',condicion:'VIP',puntosMin:0,clientes:2},
+  {id:2,nombre:'Inactivos 30 días',condicion:'Inactivo',puntosMin:0,clientes:2},
+  {id:3,nombre:'Más de 200 puntos',condicion:'puntos',puntosMin:200,clientes:4},
+  {id:4,nombre:'Cumpleaños Julio',condicion:'cumpleanos',puntosMin:0,clientes:1},
+];
+
+let campanas = [
+  {id:1,nombre:'Promo Verano SMS',canal:'SMS',destinatarios:234,estado:'Enviada',fecha:'2025-07-15'},
+  {id:2,nombre:'Bienvenida VIP Email',canal:'Email',destinatarios:18,estado:'Enviada',fecha:'2025-07-10'},
+  {id:3,nombre:'Reactivación WhatsApp',canal:'WhatsApp',destinatarios:89,estado:'En progreso',fecha:'2025-07-20'},
+];
+
+let usuarios = [
+  {id:1,nombre:'Admin Principal',email:'admin@loyalty.pro',rol:'Administrador',estado:'Activo',ultimoAcceso:'hace 5m'},
+  {id:2,nombre:'Carlos Gerente',email:'carlos@cafedelcentro.pe',rol:'Gerente',estado:'Activo',ultimoAcceso:'hace 2h'},
+  {id:3,nombre:'María Operadora',email:'maria@cafedelcentro.pe',rol:'Operador',estado:'Activo',ultimoAcceso:'ayer'},
+  {id:4,nombre:'Pedro Lector',email:'pedro@cafedelcentro.pe',rol:'Solo Lectura',estado:'Inactivo',ultimoAcceso:'hace 1 semana'},
+];
+
+const modulos = ['Dashboard','Clientes','Cartillas','Ruleta','Sorteos','Catálogo','Página Web','Plantillas','Segmentación','Envíos','Usuarios','Configuración'];
+
+let roles = [
+  {id:1,nombre:'Administrador',color:'#4F46E5',permisos:{Dashboard:{ver:true,crear:true,editar:true,eliminar:true},Clientes:{ver:true,crear:true,editar:true,eliminar:true},Cartillas:{ver:true,crear:true,editar:true,eliminar:true},Ruleta:{ver:true,crear:true,editar:true,eliminar:true},Sorteos:{ver:true,crear:true,editar:true,eliminar:true},Catálogo:{ver:true,crear:true,editar:true,eliminar:true},'Página Web':{ver:true,crear:true,editar:true,eliminar:true},Plantillas:{ver:true,crear:true,editar:true,eliminar:true},Segmentación:{ver:true,crear:true,editar:true,eliminar:true},Envíos:{ver:true,crear:true,editar:true,eliminar:true},Usuarios:{ver:true,crear:true,editar:true,eliminar:true},Configuración:{ver:true,crear:true,editar:true,eliminar:true}}},
+  {id:2,nombre:'Gerente',color:'#10B981',permisos:{Dashboard:{ver:true,crear:false,editar:false,eliminar:false},Clientes:{ver:true,crear:true,editar:true,eliminar:false},Cartillas:{ver:true,crear:true,editar:true,eliminar:false},Ruleta:{ver:true,crear:true,editar:true,eliminar:false},Sorteos:{ver:true,crear:true,editar:true,eliminar:false},Catálogo:{ver:true,crear:true,editar:true,eliminar:false},'Página Web':{ver:true,crear:true,editar:true,eliminar:false},Plantillas:{ver:true,crear:true,editar:true,eliminar:false},Segmentación:{ver:true,crear:true,editar:true,eliminar:false},Envíos:{ver:true,crear:true,editar:false,eliminar:false},Usuarios:{ver:true,crear:false,editar:false,eliminar:false},Configuración:{ver:true,crear:false,editar:true,eliminar:false}}},
+  {id:3,nombre:'Operador',color:'#F59E0B',permisos:{Dashboard:{ver:true,crear:false,editar:false,eliminar:false},Clientes:{ver:true,crear:true,editar:true,eliminar:false},Cartillas:{ver:true,crear:false,editar:true,eliminar:false},Ruleta:{ver:true,crear:false,editar:false,eliminar:false},Sorteos:{ver:true,crear:false,editar:false,eliminar:false},Catálogo:{ver:true,crear:false,editar:false,eliminar:false},'Página Web':{ver:false,crear:false,editar:false,eliminar:false},Plantillas:{ver:true,crear:false,editar:false,eliminar:false},Segmentación:{ver:true,crear:false,editar:false,eliminar:false},Envíos:{ver:false,crear:false,editar:false,eliminar:false},Usuarios:{ver:false,crear:false,editar:false,eliminar:false},Configuración:{ver:false,crear:false,editar:false,eliminar:false}}},
+  {id:4,nombre:'Solo Lectura',color:'#94A3B8',permisos:{Dashboard:{ver:true,crear:false,editar:false,eliminar:false},Clientes:{ver:true,crear:false,editar:false,eliminar:false},Cartillas:{ver:true,crear:false,editar:false,eliminar:false},Ruleta:{ver:true,crear:false,editar:false,eliminar:false},Sorteos:{ver:true,crear:false,editar:false,eliminar:false},Catálogo:{ver:true,crear:false,editar:false,eliminar:false},'Página Web':{ver:true,crear:false,editar:false,eliminar:false},Plantillas:{ver:true,crear:false,editar:false,eliminar:false},Segmentación:{ver:true,crear:false,editar:false,eliminar:false},Envíos:{ver:true,crear:false,editar:false,eliminar:false},Usuarios:{ver:false,crear:false,editar:false,eliminar:false},Configuración:{ver:false,crear:false,editar:false,eliminar:false}}},
+];
+
+let nextId = 100;
+let sidebarCollapsed = false;
+let vistaGrid = true;
+let canalSeleccionado = '';
+let currentDeleteFn = null;
+let activeSegmento = null;
+let sorteosPremiosTemp = [];
+let spinningRuleta = false;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageTitles = {
+  dashboard:'Dashboard', clientes:'Clientes', cartillas:'Cartillas de Sellos',
+  ruleta:'Ruleta Promocional', sorteos:'Sorteos', catalogo:'Catálogo de Productos',
+  pagweb:'Página Web', plantillas:'Plantillas de Mensajes', segmentacion:'Segmentación',
+  envios:'Envíos Masivos', usuarios:'Usuarios & Roles', configuracion:'Configuración'
+};
+
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('screen-' + screen);
+  if (el) el.classList.add('active');
+  const nav = document.querySelector(`[data-screen="${screen}"]`);
+  if (nav) nav.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[screen] || screen;
+  // Update icon colors
+  document.querySelectorAll('.nav-item .nav-icon').forEach(ic => ic.style.color = '#94A3B8');
+  if (nav) { const ic = nav.querySelector('.nav-icon'); if (ic) ic.style.color = '#4F46E5'; }
+  // Render screen-specific content
+  if (screen === 'clientes') renderClientes();
+  if (screen === 'cartillas') renderCartillas();
+  if (screen === 'ruleta') renderRuleta();
+  if (screen === 'sorteos') renderSorteos();
+  if (screen === 'catalogo') renderProductos();
+  if (screen === 'pagweb') updatePreview();
+  if (screen === 'plantillas') renderPlantillas();
+  if (screen === 'segmentacion') renderSegmentos();
+  if (screen === 'envios') renderEnvios();
+  if (screen === 'usuarios') renderUsuarios();
+  lucide.createIcons();
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  const sb = document.getElementById('sidebar');
+  const mc = document.getElementById('mainContent');
+  const expandBtn = document.getElementById('expandBtn');
+  sb.classList.toggle('collapsed', sidebarCollapsed);
+  mc.classList.toggle('expanded', sidebarCollapsed);
+  expandBtn.classList.toggle('hidden', !sidebarCollapsed);
+  expandBtn.classList.toggle('flex', sidebarCollapsed);
+  lucide.createIcons();
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  lucide.createIcons();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type='success') {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  icon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info');
+  icon.style.color = type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#4F46E5';
+  toast.classList.remove('hidden');
+  lucide.createIcons();
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+// ============================================================
+// CONFIRM DELETE
+// ============================================================
+function confirmDelete(fn) {
+  currentDeleteFn = fn;
+  openModal('modalConfirm');
+  document.getElementById('confirmDeleteBtn').onclick = () => { fn(); closeModal('modalConfirm'); };
+}
+
+// ============================================================
+// CLIENTES
+// ============================================================
+function renderClientes(filtered) {
+  const list = filtered || clientes;
+  const tbody = document.getElementById('tablaClientes');
+  const empty = document.getElementById('emptyClientes');
+  document.getElementById('clienteCount').textContent = list.length + ' clientes';
+  if (!list.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">${c.nombre.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+          <span class="font-medium text-slate-700">${c.nombre}</span>
+        </div>
+      </td>
+      <td class="text-slate-500">${c.email}</td>
+      <td class="text-slate-500">${c.tel}</td>
+      <td><span class="font-semibold" style="color:#4F46E5">${c.puntos}</span></td>
+      <td><span class="font-semibold text-slate-700">${c.sellos}</span></td>
+      <td>${badgeEstado(c.estado)}</td>
+      <td class="text-slate-400 text-xs">${c.registro}</td>
+      <td>
+        <div class="flex items-center gap-1">
+          <button onclick="verCliente(${c.id})" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Ver">
+            <i data-lucide="eye" style="width:15px;height:15px;color:#64748B;stroke-width:2"></i>
+          </button>
+          <button onclick="editarCliente(${c.id})" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Editar">
+            <i data-lucide="pencil" style="width:15px;height:15px;color:#4F46E5;stroke-width:2"></i>
+          </button>
+          <button onclick="confirmDelete(()=>eliminarCliente(${c.id}))" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Eliminar">
+            <i data-lucide="trash-2" style="width:15px;height:15px;color:#EF4444;stroke-width:2"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+function badgeEstado(e) {
+  const map = {VIP:'badge-purple',Activo:'badge-green',Inactivo:'badge-red',Disponible:'badge-green','No disponible':'badge-red',Activo:'badge-green',Programado:'badge-yellow',Finalizado:'badge-gray'};
+  const cls = map[e] || 'badge-gray';
+  return `<span class="badge ${cls}">${e}</span>`;
+}
+
+function filterClientes() {
+  const q = document.getElementById('searchCliente').value.toLowerCase();
+  const est = document.getElementById('filterEstado').value;
+  const filtered = clientes.filter(c => {
+    const matchQ = c.nombre.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+    const matchE = !est || c.estado === est;
+    return matchQ && matchE;
+  });
+  renderClientes(filtered);
+}
+
+function guardarCliente() {
+  const id = document.getElementById('clienteEditId').value;
+  const data = {
+    nombre: document.getElementById('c_nombre').value.trim(),
+    email: document.getElementById('c_email').value.trim(),
+    tel: document.getElementById('c_tel').value.trim(),
+    nacimiento: document.getElementById('c_nacimiento').value,
+    estado: document.getElementById('c_estado').value,
+    puntos: parseInt(document.getElementById('c_puntos').value) || 0,
+    sellos: parseInt(document.getElementById('c_sellos').value) || 0,
+  };
+  if (!data.nombre || !data.email) { showToast('Completa nombre y email', 'error'); return; }
+  if (id) {
+    const idx = clientes.findIndex(c => c.id == id);
+    if (idx > -1) clientes[idx] = {...clientes[idx], ...data};
+    showToast('Cliente actualizado');
+  } else {
+    clientes.push({id: ++nextId, ...data, registro: new Date().toISOString().split('T')[0]});
+    showToast('Cliente creado');
+  }
+  closeModal('modalCliente');
+  renderClientes();
+}
+
+function editarCliente(id) {
+  const c = clientes.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('clienteEditId').value = id;
+  document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
+  document.getElementById('c_nombre').value = c.nombre;
+  document.getElementById('c_email').value = c.email;
+  document.getElementById('c_tel').value = c.tel;
+  document.getElementById('c_nacimiento').value = c.nacimiento;
+  document.getElementById('c_estado').value = c.estado;
+  document.getElementById('c_puntos').value = c.puntos;
+  document.getElementById('c_sellos').value = c.sellos;
+  openModal('modalCliente');
+}
+
+function verCliente(id) {
+  const c = clientes.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detalleClienteContent').innerHTML = `
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">${c.nombre.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+      <div>
+        <h3 class="font-bold text-slate-800 text-base">${c.nombre}</h3>
+        <p class="text-sm text-slate-400">${c.email}</p>
+        ${badgeEstado(c.estado)}
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="p-3 rounded-xl" style="background:#F8FAFC">
+        <p class="text-xs text-slate-400">Teléfono</p><p class="text-sm font-semibold text-slate-700">${c.tel}</p>
+      </div>
+      <div class="p-3 rounded-xl" style="background:#F8FAFC">
+        <p class="text-xs text-slate-400">Nacimiento</p><p class="text-sm font-semibold text-slate-700">${c.nacimiento || '—'}</p>
+      </div>
+      <div class="p-3 rounded-xl" style="background:#EEF2FF">
+        <p class="text-xs text-slate-400">Puntos</p><p class="text-lg font-bold" style="color:#4F46E5">${c.puntos}</p>
+      </div>
+      <div class="p-3 rounded-xl" style="background:#CFFAFE">
+        <p class="text-xs text-slate-400">Sellos</p><p class="text-lg font-bold" style="color:#0E7490">${c.sellos}</p>
+      </div>
+    </div>
+    <p class="text-xs text-slate-400">Registrado: ${c.registro}</p>
+  `;
+  openModal('modalVerCliente');
+}
+
+function eliminarCliente(id) {
+  clientes = clientes.filter(c => c.id !== id);
+  renderClientes();
+  showToast('Cliente eliminado', 'info');
+}
+
+// Open modal clean
+document.getElementById('modalCliente').addEventListener('click', function(){});
+function openNuevoCliente() {
+  document.getElementById('clienteEditId').value = '';
+  document.getElementById('modalClienteTitulo').textContent = 'Nuevo Cliente';
+  ['c_nombre','c_email','c_tel','c_nacimiento'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c_estado').value = 'Activo';
+  document.getElementById('c_puntos').value = 0;
+  document.getElementById('c_sellos').value = 0;
+  openModal('modalCliente');
+}
+// Override the button to clear form first
+document.querySelector('[onclick="openModal(\'modalCliente\')"]').onclick = openNuevoCliente;
+
+// ============================================================
+// CARTILLAS
+// ============================================================
+function renderCartillas() {
+  document.getElementById('listaCartillas').innerHTML = cartillas.map(car => {
+    const sellosArr = Array.from({length:car.sellos}, (_,i) => `
+      <div class="sello ${i < car.sellados ? 'filled' : ''}">
+        ${i < car.sellados ? '✓' : ''}
+      </div>
+    `).join('');
+    return `
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">${car.emoji}</span>
+          <div>
+            <h3 class="font-bold text-slate-800">${car.nombre}</h3>
+            <p class="text-xs text-slate-400">${car.clientes} clientes activos</p>
+          </div>
+        </div>
+        ${badgeEstado(car.estado)}
+      </div>
+      <div class="flex flex-wrap gap-2 mb-3">${sellosArr}</div>
+      <div class="text-xs text-slate-500 mb-3">
+        <span class="font-semibold">${car.sellados}/${car.sellos}</span> sellos • Premio: <span class="font-semibold text-indigo-600">${car.premio}</span>
+      </div>
+      <div class="progress-bar mb-4"><div class="progress-fill" style="width:${Math.round(car.sellados/car.sellos*100)}%"></div></div>
+      <div class="flex gap-2">
+        <button onclick="addSello(${car.id})" class="btn btn-primary flex-1" style="justify-content:center;font-size:12px;padding:7px 10px">
+          <i data-lucide="plus-circle" style="width:13px;height:13px;stroke-width:2.5"></i> Sello
+        </button>
+        <button onclick="resetCartilla(${car.id})" class="btn btn-secondary" style="font-size:12px;padding:7px 10px">
+          <i data-lucide="rotate-ccw" style="width:13px;height:13px;stroke-width:2"></i>
+        </button>
+        <button onclick="editarCartilla(${car.id})" class="btn btn-secondary" style="font-size:12px;padding:7px 10px">
+          <i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2"></i>
+        </button>
+        <button onclick="confirmDelete(()=>eliminarCartilla(${car.id}))" class="btn btn-danger" style="font-size:12px;padding:7px 10px">
+          <i data-lucide="trash-2" style="width:13px;height:13px;stroke-width:2"></i>
+        </button>
+      </div>
+    </div>`;
+  }).join('') + (cartillas.length === 0 ? `<div class="col-span-3 py-16 text-center text-slate-300"><i data-lucide="stamp" style="width:40px;height:40px;margin:0 auto 12px"></i><p>Sin cartillas creadas</p></div>` : '');
+  lucide.createIcons();
+}
+
+function addSello(id) {
+  const c = cartillas.find(x => x.id === id);
+  if (!c) return;
+  if (c.sellados >= c.sellos) { showToast('¡Cartilla completa! El cliente ganó su premio 🎉'); return; }
+  c.sellados++;
+  if (c.sellados === c.sellos) showToast(`¡${c.nombre} completada! Premio: ${c.premio} 🎉`);
+  else showToast(`Sello añadido (${c.sellados}/${c.sellos})`);
+  renderCartillas();
+}
+
+function resetCartilla(id) {
+  const c = cartillas.find(x => x.id === id);
+  if (!c) return;
+  c.sellados = 0;
+  renderCartillas();
+  showToast('Cartilla reiniciada', 'info');
+}
+
+function guardarCartilla() {
+  const id = document.getElementById('cartillaEditId').value;
+  const data = {
+    nombre: document.getElementById('car_nombre').value.trim(),
+    emoji: document.getElementById('car_emoji').value.trim() || '⭐',
+    sellos: parseInt(document.getElementById('car_sellos').value) || 9,
+    premio: document.getElementById('car_premio').value.trim(),
+    estado: document.getElementById('car_estado').value,
+  };
+  if (!data.nombre || !data.premio) { showToast('Completa nombre y premio', 'error'); return; }
+  if (id) {
+    const idx = cartillas.findIndex(c => c.id == id);
+    if (idx > -1) cartillas[idx] = {...cartillas[idx], ...data};
+    showToast('Cartilla actualizada');
+  } else {
+    cartillas.push({id: ++nextId, ...data, sellados: 0, clientes: 0});
+    showToast('Cartilla creada');
+  }
+  closeModal('modalCartilla');
+  renderCartillas();
+}
+
+function editarCartilla(id) {
+  const c = cartillas.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cartillaEditId').value = id;
+  document.getElementById('modalCartillaTitulo').textContent = 'Editar Cartilla';
+  document.getElementById('car_nombre').value = c.nombre;
+  document.getElementById('car_emoji').value = c.emoji;
+  document.getElementById('car_sellos').value = c.sellos;
+  document.getElementById('car_premio').value = c.premio;
+  document.getElementById('car_estado').value = c.estado;
+  openModal('modalCartilla');
+}
+
+function eliminarCartilla(id) {
+  cartillas = cartillas.filter(c => c.id !== id);
+  renderCartillas();
+  showToast('Cartilla eliminada', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalCartilla\')"]').onclick = function() {
+  document.getElementById('cartillaEditId').value = '';
+  document.getElementById('modalCartillaTitulo').textContent = 'Nueva Cartilla';
+  document.getElementById('car_nombre').value = '';
+  document.getElementById('car_emoji').value = '☕';
+  document.getElementById('car_sellos').value = 9;
+  document.getElementById('car_premio').value = '';
+  document.getElementById('car_estado').value = 'Activo';
+  openModal('modalCartilla');
+};
+
+// ============================================================
+// RULETA
+// ============================================================
+let rouletteAngle = 0;
+
+function renderRuleta() {
+  drawRuleta();
+  renderPremiosRuleta();
+  renderHistorialRuleta();
+}
+
+function drawRuleta() {
+  const canvas = document.getElementById('rouletteCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const activePremios = premiosRuleta.filter(p => p.activo);
+  if (!activePremios.length) return;
+  const total = activePremios.length;
+  const arcSize = (2 * Math.PI) / total;
+  const cx = canvas.width / 2, cy = canvas.height / 2, r = cx - 8;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  activePremios.forEach((p, i) => {
+    const start = rouletteAngle + i * arcSize;
+    const end = start + arcSize;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arcSize / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px DM Sans';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 2;
+    const maxLen = 14;
+    const txt = p.nombre.length > maxLen ? p.nombre.substring(0, maxLen) + '…' : p.nombre;
+    ctx.fillText(txt, r - 10, 4);
+    ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.15)';
+  ctx.shadowBlur = 8;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function spinRuleta() {
+  if (spinningRuleta) return;
+  const activePremios = premiosRuleta.filter(p => p.activo);
+  if (!activePremios.length) { showToast('Añade premios para girar', 'error'); return; }
+  spinningRuleta = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('resultadoRuleta').classList.add('hidden');
+  const totalProb = activePremios.reduce((s, p) => s + p.prob, 0);
+  let rand = Math.random() * totalProb;
+  let ganadorIdx = 0;
+  for (let i = 0; i < activePremios.length; i++) {
+    rand -= activePremios[i].prob;
+    if (rand <= 0) { ganadorIdx = i; break; }
+  }
+  const arcSize = (2 * Math.PI) / activePremios.length;
+  const targetAngle = -(ganadorIdx * arcSize + arcSize / 2);
+  const totalSpin = Math.PI * 2 * (8 + Math.floor(Math.random() * 4)) + targetAngle - (rouletteAngle % (Math.PI * 2));
+  const duration = 4000;
+  const startAngle = rouletteAngle;
+  const startTime = performance.now();
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 4);
+    rouletteAngle = startAngle + totalSpin * ease;
+    drawRuleta();
+    if (progress < 1) { requestAnimationFrame(animate); return; }
+    spinningRuleta = false;
+    document.getElementById('spinBtn').disabled = false;
+    const ganador = activePremios[ganadorIdx];
+    document.getElementById('premioGanado').textContent = ganador.nombre;
+    document.getElementById('resultadoRuleta').classList.remove('hidden');
+    historialRuletaData.unshift({cliente:'Usuario', premio:ganador.nombre, fecha:new Date().toISOString().split('T')[0]});
+    renderHistorialRuleta();
+    showToast('¡Resultado: ' + ganador.nombre + '!');
+  }
+  requestAnimationFrame(animate);
+}
+
+function renderPremiosRuleta() {
+  document.getElementById('listaPremios').innerHTML = premiosRuleta.map(p => `
+    <div class="flex items-center gap-3 p-3 rounded-xl" style="background:#F8FAFC;border:1.5px solid ${p.activo ? p.color+'33' : '#E2E8F0'}">
+      <div class="w-4 h-4 rounded-full flex-shrink-0" style="background:${p.color}"></div>
+      <span class="text-sm font-medium text-slate-700 flex-1">${p.nombre}</span>
+      <span class="text-xs text-slate-400">${p.prob}%</span>
+      <label class="switch" style="transform:scale(0.85)">
+        <input type="checkbox" ${p.activo ? 'checked' : ''} onchange="togglePremio(${p.id})">
+        <span class="slider"></span>
+      </label>
+      <button onclick="confirmDelete(()=>eliminarPremio(${p.id}))" class="p-1 rounded hover:bg-red-50">
+        <i data-lucide="trash-2" style="width:13px;height:13px;color:#EF4444;stroke-width:2"></i>
+      </button>
+    </div>
+  `).join('') || '<p class="text-sm text-slate-400 text-center py-4">Sin premios configurados</p>';
+  lucide.createIcons();
+}
+
+function togglePremio(id) {
+  const p = premiosRuleta.find(x => x.id === id);
+  if (p) p.activo = !p.activo;
+  drawRuleta();
+  renderPremiosRuleta();
+}
+
+function guardarPremio() {
+  const nombre = document.getElementById('pr_nombre').value.trim();
+  if (!nombre) { showToast('Ingresa un nombre', 'error'); return; }
+  premiosRuleta.push({
+    id: ++nextId,
+    nombre,
+    color: document.getElementById('pr_color').value,
+    prob: parseInt(document.getElementById('pr_prob').value) || 20,
+    activo: true
+  });
+  closeModal('modalPremio');
+  drawRuleta();
+  renderPremiosRuleta();
+  showToast('Premio añadido');
+}
+
+function eliminarPremio(id) {
+  premiosRuleta = premiosRuleta.filter(p => p.id !== id);
+  drawRuleta();
+  renderPremiosRuleta();
+  showToast('Premio eliminado', 'info');
+}
+
+function renderHistorialRuleta() {
+  document.getElementById('historialRuleta').innerHTML = historialRuletaData.slice(0, 5).map(h => `
+    <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+      <div>
+        <p class="text-xs font-semibold text-slate-700">${h.cliente}</p>
+        <p class="text-xs text-slate-400">${h.fecha}</p>
+      </div>
+      <span class="badge badge-purple">${h.premio}</span>
+    </div>
+  `).join('') || '<p class="text-sm text-slate-400 text-center py-4">Sin historial</p>';
+}
+
+// ============================================================
+// SORTEOS
+// ============================================================
+function renderSorteos() {
+  document.getElementById('listaSorteos').innerHTML = sorteos.map(s => `
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800">${s.nombre}</h3>
+          <p class="text-xs text-slate-400 mt-1">${s.inicio} → ${s.fin} • ${s.participantes} participantes</p>
+        </div>
+        <div class="flex items-center gap-2">
+          ${badgeEstadoSorteo(s.estado)}
+          <button onclick="editarSorteo(${s.id})" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="pencil" style="width:14px;height:14px;color:#4F46E5;stroke-width:2"></i></button>
+          <button onclick="confirmDelete(()=>eliminarSorteo(${s.id}))" class="p-1.5 rounded-lg hover:bg-red-50"><i data-lucide="trash-2" style="width:14px;height:14px;color:#EF4444;stroke-width:2"></i></button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Premios por Posición</h4>
+          <div class="space-y-2">
+            ${s.premios.map(p => `
+              <div class="flex items-center gap-3 p-2.5 rounded-lg" style="background:#F8FAFC">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:${p.pos===1?'#F59E0B':p.pos===2?'#94A3B8':'#B45309'}">${p.pos}°</div>
+                <span class="text-sm text-slate-700">${p.desc}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Ganadores</h4>
+          ${s.ganadores.length ? s.ganadores.map((g,i) => `
+            <div class="flex items-center gap-2 p-2 rounded-lg mb-1" style="background:#DCFCE7">
+              <span class="text-xs font-bold" style="color:#15803D">${i+1}°</span>
+              <span class="text-sm font-medium text-slate-700">${g}</span>
+            </div>
+          `).join('') : `<div class="text-center py-4"><p class="text-sm text-slate-400 mb-2">Sin ganadores aún</p>
+            ${s.estado === 'Activo' ? `<button onclick="seleccionarGanadores(${s.id})" class="btn btn-primary" style="font-size:12px;padding:7px 14px"><i data-lucide="shuffle" style="width:13px;height:13px;stroke-width:2.5"></i> Seleccionar</button>` : ''}</div>`}
+        </div>
+      </div>
+    </div>
+  `).join('') || '<div class="card py-16 text-center text-slate-300"><i data-lucide="trophy" style="width:40px;height:40px;margin:0 auto 12px"></i><p>Sin sorteos creados</p></div>';
+  lucide.createIcons();
+}
+
+function badgeEstadoSorteo(e) {
+  const map = {Activo:'badge-green',Programado:'badge-yellow',Finalizado:'badge-gray'};
+  return `<span class="badge ${map[e]||'badge-gray'}">${e}</span>`;
+}
+
+function seleccionarGanadores(id) {
+  const s = sorteos.find(x => x.id === id);
+  if (!s) return;
+  const pool = clientes.filter(c => c.estado !== 'Inactivo');
+  s.ganadores = s.premios.map(() => pool[Math.floor(Math.random() * pool.length)].nombre);
+  s.estado = 'Finalizado';
+  renderSorteos();
+  showToast('¡Ganadores seleccionados! 🎉');
+}
+
+let premiosSorteoEditTemp = [];
+function addPremioSorteo() {
+  const container = document.getElementById('premiosPosicion');
+  const pos = container.children.length + 1;
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2';
+  div.innerHTML = `
+    <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white" style="background:${pos===1?'#F59E0B':pos===2?'#94A3B8':'#B45309'}">${pos}°</div>
+    <input class="input flex-1" placeholder="Ej: Premio 1er lugar" value="">
+    <button onclick="this.parentElement.remove()" class="p-1.5 rounded-lg hover:bg-red-50 flex-shrink-0">
+      <i data-lucide="x" style="width:14px;height:14px;color:#EF4444;stroke-width:2"></i>
+    </button>
+  `;
+  container.appendChild(div);
+  lucide.createIcons();
+}
+
+function guardarSorteo() {
+  const id = document.getElementById('sorteoEditId').value;
+  const premiosInputs = document.querySelectorAll('#premiosPosicion .input');
+  const premios = Array.from(premiosInputs).map((inp, i) => ({pos: i+1, desc: inp.value.trim()})).filter(p => p.desc);
+  const data = {
+    nombre: document.getElementById('s_nombre').value.trim(),
+    inicio: document.getElementById('s_inicio').value,
+    fin: document.getElementById('s_fin').value,
+    estado: document.getElementById('s_estado').value,
+    premios,
+  };
+  if (!data.nombre) { showToast('Ingresa un nombre', 'error'); return; }
+  if (id) {
+    const idx = sorteos.findIndex(s => s.id == id);
+    if (idx > -1) sorteos[idx] = {...sorteos[idx], ...data};
+    showToast('Sorteo actualizado');
+  } else {
+    sorteos.push({id: ++nextId, ...data, participantes: Math.floor(Math.random()*300)+50, ganadores:[]});
+    showToast('Sorteo creado');
+  }
+  closeModal('modalSorteo');
+  renderSorteos();
+}
+
+function editarSorteo(id) {
+  const s = sorteos.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('sorteoEditId').value = id;
+  document.getElementById('modalSorteoTitulo').textContent = 'Editar Sorteo';
+  document.getElementById('s_nombre').value = s.nombre;
+  document.getElementById('s_inicio').value = s.inicio;
+  document.getElementById('s_fin').value = s.fin;
+  document.getElementById('s_estado').value = s.estado;
+  const container = document.getElementById('premiosPosicion');
+  container.innerHTML = '';
+  s.premios.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2';
+    div.innerHTML = `
+      <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white" style="background:${i===0?'#F59E0B':i===1?'#94A3B8':'#B45309'}">${p.pos}°</div>
+      <input class="input flex-1" placeholder="Premio" value="${p.desc}">
+      <button onclick="this.parentElement.remove()" class="p-1.5 rounded-lg hover:bg-red-50 flex-shrink-0"><i data-lucide="x" style="width:14px;height:14px;color:#EF4444;stroke-width:2"></i></button>
+    `;
+    container.appendChild(div);
+  });
+  lucide.createIcons();
+  openModal('modalSorteo');
+}
+
+function eliminarSorteo(id) {
+  sorteos = sorteos.filter(s => s.id !== id);
+  renderSorteos();
+  showToast('Sorteo eliminado', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalSorteo\')"]').onclick = function() {
+  document.getElementById('sorteoEditId').value = '';
+  document.getElementById('modalSorteoTitulo').textContent = 'Nuevo Sorteo';
+  document.getElementById('s_nombre').value = '';
+  document.getElementById('s_inicio').value = '';
+  document.getElementById('s_fin').value = '';
+  document.getElementById('s_estado').value = 'Activo';
+  document.getElementById('premiosPosicion').innerHTML = '';
+  addPremioSorteo(); addPremioSorteo(); addPremioSorteo();
+  openModal('modalSorteo');
+};
+
+// ============================================================
+// CATÁLOGO
+// ============================================================
+function renderProductos() {
+  const q = (document.getElementById('searchProducto').value || '').toLowerCase();
+  const cat = document.getElementById('filterCategoria').value;
+  const list = productos.filter(p => {
+    const matchQ = p.nombre.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
+    const matchC = !cat || p.cat === cat;
+    return matchQ && matchC;
+  });
+  if (vistaGrid) {
+    document.getElementById('catalogoGrid').classList.remove('hidden');
+    document.getElementById('catalogoTable').classList.add('hidden');
+    document.getElementById('catalogoGrid').innerHTML = list.map(p => `
+      <div class="card product-card overflow-hidden cursor-pointer">
+        <div class="relative">
+          <img src="${p.img}" alt="${p.nombre}" class="w-full h-36 object-cover" onerror="this.src='https://via.placeholder.com/300x150/EEF2FF/4F46E5?text=${encodeURIComponent(p.nombre)}'">
+          <div class="absolute top-2 right-2">${p.estado==='Disponible' ? '<span class="badge badge-green">Disponible</span>' : '<span class="badge badge-red">No disponible</span>'}</div>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-slate-800 text-sm mb-1">${p.nombre}</h3>
+          <p class="text-xs text-slate-400 mb-2">${p.desc}</p>
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-base" style="color:#4F46E5">S/ ${p.precio.toFixed(2)}</span>
+            <span class="badge badge-blue">${p.cat}</span>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="editarProducto(${p.id})" class="btn btn-secondary flex-1" style="font-size:11px;padding:5px 8px;justify-content:center">
+              <i data-lucide="pencil" style="width:12px;height:12px;stroke-width:2"></i> Editar
+            </button>
+            <button onclick="confirmDelete(()=>eliminarProducto(${p.id}))" class="btn btn-danger" style="font-size:11px;padding:5px 8px">
+              <i data-lucide="trash-2" style="width:12px;height:12px;stroke-width:2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<div class="col-span-4 py-12 text-center text-slate-300">Sin productos</div>';
+  } else {
+    document.getElementById('catalogoGrid').classList.add('hidden');
+    document.getElementById('catalogoTable').classList.remove('hidden');
+    document.getElementById('tablaProductos').innerHTML = list.map(p => `
+      <tr>
+        <td><div class="flex items-center gap-3"><img src="${p.img}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='https://via.placeholder.com/40/EEF2FF/4F46E5?text=P'"><span class="font-medium text-slate-700">${p.nombre}</span></div></td>
+        <td><span class="badge badge-blue">${p.cat}</span></td>
+        <td class="font-semibold" style="color:#4F46E5">S/ ${p.precio.toFixed(2)}</td>
+        <td>${badgeEstado(p.estado)}</td>
+        <td>
+          <div class="flex gap-1">
+            <button onclick="editarProducto(${p.id})" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="pencil" style="width:14px;height:14px;color:#4F46E5;stroke-width:2"></i></button>
+            <button onclick="confirmDelete(()=>eliminarProducto(${p.id}))" class="p-1.5 rounded-lg hover:bg-red-50"><i data-lucide="trash-2" style="width:14px;height:14px;color:#EF4444;stroke-width:2"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="5" class="py-12 text-center text-slate-300">Sin productos</td></tr>';
+  }
+  lucide.createIcons();
+}
+
+function toggleVistaProductos() {
+  vistaGrid = !vistaGrid;
+  const btn = document.getElementById('btnVistaCatalogo');
+  btn.innerHTML = vistaGrid
+    ? '<i data-lucide="grid-3x3" style="width:15px;height:15px;stroke-width:2"></i> Vista Grid'
+    : '<i data-lucide="list" style="width:15px;height:15px;stroke-width:2"></i> Vista Lista';
+  renderProductos();
+  lucide.createIcons();
+}
+
+function guardarProducto() {
+  const id = document.getElementById('productoEditId').value;
+  const data = {
+    nombre: document.getElementById('p_nombre').value.trim(),
+    desc: document.getElementById('p_desc').value.trim(),
+    precio: parseFloat(document.getElementById('p_precio').value) || 0,
+    cat: document.getElementById('p_cat').value,
+    img: document.getElementById('p_img').value.trim() || 'https://via.placeholder.com/300x150/EEF2FF/4F46E5?text=Producto',
+    estado: document.getElementById('p_estado').value,
+  };
+  if (!data.nombre) { showToast('Ingresa un nombre', 'error'); return; }
+  if (id) {
+    const idx = productos.findIndex(p => p.id == id);
+    if (idx > -1) productos[idx] = {...productos[idx], ...data};
+    showToast('Producto actualizado');
+  } else {
+    productos.push({id: ++nextId, ...data});
+    showToast('Producto creado');
+  }
+  closeModal('modalProducto');
+  renderProductos();
+}
+
+function editarProducto(id) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('productoEditId').value = id;
+  document.getElementById('modalProductoTitulo').textContent = 'Editar Producto';
+  document.getElementById('p_nombre').value = p.nombre;
+  document.getElementById('p_desc').value = p.desc;
+  document.getElementById('p_precio').value = p.precio;
+  document.getElementById('p_cat').value = p.cat;
+  document.getElementById('p_img').value = p.img;
+  document.getElementById('p_estado').value = p.estado;
+  openModal('modalProducto');
+}
+
+function eliminarProducto(id) {
+  productos = productos.filter(p => p.id !== id);
+  renderProductos();
+  showToast('Producto eliminado', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalProducto\')"]').onclick = function() {
+  document.getElementById('productoEditId').value = '';
+  document.getElementById('modalProductoTitulo').textContent = 'Nuevo Producto';
+  ['p_nombre','p_desc','p_precio','p_img'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p_cat').value = 'Bebidas';
+  document.getElementById('p_estado').value = 'Disponible';
+  openModal('modalProducto');
+};
+
+// ============================================================
+// PÁGINA WEB
+// ============================================================
+function switchPagWebTab(tab, btn) {
+  document.getElementById('pagweb-config').classList.toggle('hidden', tab !== 'config');
+  document.getElementById('pagweb-preview').classList.toggle('hidden', tab !== 'preview');
+  document.querySelectorAll('#screen-pagweb .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'preview') updatePreview();
+}
+
+function updatePreview() {
+  const nombre = document.getElementById('pw_nombre')?.value || 'Mi Negocio';
+  const desc = document.getElementById('pw_desc')?.value || '';
+  const tel = document.getElementById('pw_tel')?.value || '';
+  const email = document.getElementById('pw_email')?.value || '';
+  const dir = document.getElementById('pw_dir')?.value || '';
+  const horario = document.getElementById('pw_horario')?.value || '';
+  const color = document.getElementById('pw_color')?.value || '#4F46E5';
+  const cta = document.getElementById('pw_ctaText')?.value || 'Únete ahora';
+  const slug = document.getElementById('pw_slug')?.value || 'minegocio';
+  const ig = document.getElementById('pw_ig')?.value || '';
+  const fb = document.getElementById('pw_fb')?.value || '';
+  if (document.getElementById('urlPreview')) document.getElementById('urlPreview').textContent = `loyaltypro.app/${slug}`;
+  const featProds = productos.filter(p => p.estado === 'Disponible').slice(0, 3);
+  const prodsHTML = featProds.map(p => `
+    <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+      <img src="${p.img}" style="width:100%;height:120px;object-fit:cover" onerror="this.src='https://via.placeholder.com/300x120/${color.replace('#','')}/fff?text=${encodeURIComponent(p.nombre)}'">
+      <div style="padding:12px">
+        <p style="font-weight:700;font-size:13px;color:#1E293B;margin:0 0 4px">${p.nombre}</p>
+        <p style="font-weight:800;font-size:15px;color:${color};margin:0">S/ ${p.precio.toFixed(2)}</p>
+      </div>
+    </div>
+  `).join('');
+  const html = `
+    <div style="font-family:'DM Sans',sans-serif">
+      <nav style="background:${color};padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+        <span style="color:#fff;font-weight:800;font-size:16px">${nombre}</span>
+        <a href="#" style="color:#fff;font-size:13px;font-weight:600">Contáctanos</a>
+      </nav>
+      <div style="background:linear-gradient(135deg,${color},${color}cc);padding:48px 24px;text-align:center">
+        <h1 style="color:#fff;font-size:26px;font-weight:800;margin:0 0 10px">${nombre}</h1>
+        <p style="color:#ffffffcc;font-size:14px;margin:0 0 20px;max-width:400px;display:inline-block">${desc}</p>
+        <br>
+        <button style="background:#fff;color:${color};padding:12px 28px;border-radius:50px;border:none;font-weight:700;font-size:14px;cursor:pointer">${cta}</button>
+      </div>
+      <div style="padding:32px 24px;background:#F8FAFC">
+        <h2 style="font-size:18px;font-weight:800;color:#1E293B;margin:0 0 16px">Productos Destacados</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${prodsHTML}</div>
+      </div>
+      <div style="padding:24px;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <h3 style="font-size:14px;font-weight:700;color:#1E293B;margin:0 0 10px">📍 Información</h3>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">📞 ${tel}</p>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">✉️ ${email}</p>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">📌 ${dir}</p>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">🕐 ${horario}</p>
+        </div>
+        <div>
+          <h3 style="font-size:14px;font-weight:700;color:#1E293B;margin:0 0 10px">📱 Redes Sociales</h3>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">Instagram: ${ig}</p>
+          <p style="font-size:12px;color:#64748B;margin:4px 0">Facebook: ${fb}</p>
+          <div style="margin-top:12px">
+            <button style="background:${color};color:#fff;padding:10px 20px;border-radius:8px;border:none;font-weight:700;font-size:12px;cursor:pointer">Únete al programa de fidelización</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 24px;background:${color};text-align:center">
+        <p style="color:#ffffff80;font-size:11px;margin:0">© 2025 ${nombre} • Powered by LoyaltyPro</p>
+      </div>
+    </div>
+  `;
+  const preview = document.getElementById('previewContent');
+  if (preview) preview.innerHTML = html;
+}
+
+function syncColor() {
+  const v = document.getElementById('pw_colortext').value;
+  document.getElementById('pw_color').value = v;
+  updatePreview();
+}
+
+function savePagWeb() { showToast('Configuración guardada'); }
+
+// ============================================================
+// PLANTILLAS
+// ============================================================
+function renderPlantillas() {
+  const canalColors = {SMS:'badge-blue', Email:'badge-cyan', WhatsApp:'badge-green'};
+  document.getElementById('listaPlantillas').innerHTML = plantillas.map(pl => `
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="font-bold text-slate-800">${pl.nombre}</h3>
+          <p class="text-xs text-slate-400 mt-1">Creada: ${pl.creado}</p>
+        </div>
+        <span class="badge ${canalColors[pl.canal]||'badge-gray'}">${pl.canal}</span>
+      </div>
+      ${pl.asunto ? `<p class="text-xs font-semibold text-slate-500 mb-1">Asunto: ${pl.asunto}</p>` : ''}
+      <p class="text-sm text-slate-600 mb-4 leading-relaxed" style="font-family:'DM Mono',monospace;font-size:12px;background:#F8FAFC;padding:10px;border-radius:8px;border:1px solid #E2E8F0">${pl.mensaje}</p>
+      <div class="flex gap-2">
+        <button onclick="editarPlantilla(${pl.id})" class="btn btn-secondary flex-1" style="font-size:12px;padding:7px 10px;justify-content:center">
+          <i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2"></i> Editar
+        </button>
+        <button onclick="confirmDelete(()=>eliminarPlantilla(${pl.id}))" class="btn btn-danger" style="font-size:12px;padding:7px 10px">
+          <i data-lucide="trash-2" style="width:13px;height:13px;stroke-width:2"></i>
+        </button>
+      </div>
+    </div>
+  `).join('') || '<div class="col-span-3 py-12 text-center text-slate-300">Sin plantillas</div>';
+  lucide.createIcons();
+}
+
+function toggleAsunto() {
+  const canal = document.getElementById('pl_canal').value;
+  document.getElementById('asuntoField').classList.toggle('hidden', canal !== 'Email');
+}
+
+function insertVar(v) {
+  const ta = document.getElementById('pl_mensaje');
+  const start = ta.selectionStart;
+  ta.value = ta.value.substring(0, start) + v + ta.value.substring(ta.selectionEnd);
+  ta.selectionStart = ta.selectionEnd = start + v.length;
+  ta.focus();
+  updatePlantillaPreview();
+}
+
+function updatePlantillaPreview() {
+  const msg = document.getElementById('pl_mensaje').value
+    .replace(/{{nombre}}/g, '<strong>María García</strong>')
+    .replace(/{{puntos}}/g, '<strong>450</strong>')
+    .replace(/{{premio}}/g, '<strong>Café gratis</strong>')
+    .replace(/{{negocio}}/g, '<strong>Café del Centro</strong>');
+  document.getElementById('plantillaPreviewBox').innerHTML = msg || '<span style="color:#CBD5E1">Vista previa del mensaje...</span>';
+}
+
+function guardarPlantilla() {
+  const id = document.getElementById('plantillaEditId').value;
+  const data = {
+    nombre: document.getElementById('pl_nombre').value.trim(),
+    canal: document.getElementById('pl_canal').value,
+    asunto: document.getElementById('pl_asunto').value.trim(),
+    mensaje: document.getElementById('pl_mensaje').value.trim(),
+    creado: new Date().toISOString().split('T')[0],
+  };
+  if (!data.nombre || !data.mensaje) { showToast('Completa nombre y mensaje', 'error'); return; }
+  if (id) {
+    const idx = plantillas.findIndex(p => p.id == id);
+    if (idx > -1) plantillas[idx] = {...plantillas[idx], ...data};
+    showToast('Plantilla actualizada');
+  } else {
+    plantillas.push({id: ++nextId, ...data});
+    showToast('Plantilla creada');
+  }
+  closeModal('modalPlantilla');
+  renderPlantillas();
+  renderEnvios();
+}
+
+function editarPlantilla(id) {
+  const pl = plantillas.find(x => x.id === id);
+  if (!pl) return;
+  document.getElementById('plantillaEditId').value = id;
+  document.getElementById('modalPlantillaTitulo').textContent = 'Editar Plantilla';
+  document.getElementById('pl_nombre').value = pl.nombre;
+  document.getElementById('pl_canal').value = pl.canal;
+  document.getElementById('pl_asunto').value = pl.asunto;
+  document.getElementById('pl_mensaje').value = pl.mensaje;
+  toggleAsunto();
+  updatePlantillaPreview();
+  openModal('modalPlantilla');
+}
+
+function eliminarPlantilla(id) {
+  plantillas = plantillas.filter(p => p.id !== id);
+  renderPlantillas();
+  showToast('Plantilla eliminada', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalPlantilla\')"]').onclick = function() {
+  document.getElementById('plantillaEditId').value = '';
+  document.getElementById('modalPlantillaTitulo').textContent = 'Nueva Plantilla';
+  ['pl_nombre','pl_asunto','pl_mensaje'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pl_canal').value = 'SMS';
+  toggleAsunto();
+  updatePlantillaPreview();
+  openModal('modalPlantilla');
+};
+
+// ============================================================
+// SEGMENTACIÓN
+// ============================================================
+function getSegmentoClientes(seg) {
+  return clientes.filter(c => {
+    if (seg.condicion === 'VIP') return c.estado === 'VIP';
+    if (seg.condicion === 'Inactivo') return c.estado === 'Inactivo';
+    if (seg.condicion === 'puntos') return c.puntos >= seg.puntosMin;
+    if (seg.condicion === 'cumpleanos') {
+      const mes = new Date().getMonth() + 1;
+      if (!c.nacimiento) return false;
+      return parseInt(c.nacimiento.split('-')[1]) === mes;
+    }
+    if (seg.condicion === 'cartilla') return c.sellos < 9;
+    return false;
+  });
+}
+
+function renderSegmentos() {
+  const condLabels = {VIP:'Clientes VIP',Inactivo:'Clientes Inactivos',puntos:'Por puntos',cumpleanos:'Cumpleañeros',cartilla:'Cartilla incompleta'};
+  document.getElementById('listaSegmentos').innerHTML = segmentos.map(seg => {
+    const count = getSegmentoClientes(seg).length;
+    return `
+    <div onclick="selectSegmento(${seg.id})" class="card p-4 cursor-pointer hover:border-indigo-300 transition-colors border-2 ${activeSegmento===seg.id?'border-indigo-500':'border-transparent'}">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-bold text-slate-800 text-sm">${seg.nombre}</h3>
+        <div class="flex gap-1">
+          <button onclick="event.stopPropagation();editarSegmento(${seg.id})" class="p-1 rounded hover:bg-slate-100"><i data-lucide="pencil" style="width:13px;height:13px;color:#4F46E5;stroke-width:2"></i></button>
+          <button onclick="event.stopPropagation();confirmDelete(()=>eliminarSegmento(${seg.id}))" class="p-1 rounded hover:bg-red-50"><i data-lucide="trash-2" style="width:13px;height:13px;color:#EF4444;stroke-width:2"></i></button>
+        </div>
+      </div>
+      <p class="text-xs text-slate-400 mb-2">${condLabels[seg.condicion]||seg.condicion}${seg.condicion==='puntos'?' (≥'+seg.puntosMin+')':''}</p>
+      <div class="flex items-center justify-between">
+        <span class="text-xl font-bold" style="color:#4F46E5">${count}</span>
+        <span class="text-xs text-slate-400">clientes</span>
+      </div>
+    </div>`;
+  }).join('') || '<div class="card p-4 text-center text-slate-300 text-sm">Sin segmentos</div>';
+  lucide.createIcons();
+}
+
+function selectSegmento(id) {
+  activeSegmento = id;
+  const seg = segmentos.find(s => s.id === id);
+  if (!seg) return;
+  const list = getSegmentoClientes(seg);
+  document.getElementById('segmentoTitulo').textContent = `${seg.nombre} (${list.length} clientes)`;
+  document.getElementById('tablaSegmentoWrap').innerHTML = list.length ? `
+    <div class="overflow-x-auto">
+      <table>
+        <thead><tr><th>Cliente</th><th>Email</th><th>Puntos</th><th>Estado</th></tr></thead>
+        <tbody>${list.map(c => `
+          <tr>
+            <td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">${c.nombre.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><span class="font-medium text-slate-700 text-sm">${c.nombre}</span></div></td>
+            <td class="text-slate-500 text-sm">${c.email}</td>
+            <td class="font-semibold text-sm" style="color:#4F46E5">${c.puntos}</td>
+            <td>${badgeEstado(c.estado)}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>
+    </div>
+  ` : '<div class="py-12 text-center text-slate-300 text-sm">No hay clientes en este segmento</div>';
+  renderSegmentos();
+  lucide.createIcons();
+}
+
+function toggleSegPuntos() {
+  document.getElementById('seg_puntosWrap').classList.toggle('hidden', document.getElementById('seg_condicion').value !== 'puntos');
+}
+
+function guardarSegmento() {
+  const id = document.getElementById('segmentoEditId').value;
+  const data = {
+    nombre: document.getElementById('seg_nombre').value.trim(),
+    condicion: document.getElementById('seg_condicion').value,
+    puntosMin: parseInt(document.getElementById('seg_puntos').value) || 0,
+  };
+  if (!data.nombre) { showToast('Ingresa un nombre', 'error'); return; }
+  if (id) {
+    const idx = segmentos.findIndex(s => s.id == id);
+    if (idx > -1) segmentos[idx] = {...segmentos[idx], ...data};
+    showToast('Segmento actualizado');
+  } else {
+    segmentos.push({id: ++nextId, ...data, clientes: 0});
+    showToast('Segmento creado');
+  }
+  closeModal('modalSegmento');
+  renderSegmentos();
+  renderEnvios();
+}
+
+function editarSegmento(id) {
+  const seg = segmentos.find(x => x.id === id);
+  if (!seg) return;
+  document.getElementById('segmentoEditId').value = id;
+  document.getElementById('modalSegmentoTitulo').textContent = 'Editar Segmento';
+  document.getElementById('seg_nombre').value = seg.nombre;
+  document.getElementById('seg_condicion').value = seg.condicion;
+  document.getElementById('seg_puntos').value = seg.puntosMin;
+  toggleSegPuntos();
+  openModal('modalSegmento');
+}
+
+function eliminarSegmento(id) {
+  segmentos = segmentos.filter(s => s.id !== id);
+  renderSegmentos();
+  showToast('Segmento eliminado', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalSegmento\')"]').onclick = function() {
+  document.getElementById('segmentoEditId').value = '';
+  document.getElementById('modalSegmentoTitulo').textContent = 'Nuevo Segmento';
+  document.getElementById('seg_nombre').value = '';
+  document.getElementById('seg_condicion').value = 'VIP';
+  document.getElementById('seg_puntos').value = 100;
+  document.getElementById('seg_puntosWrap').classList.add('hidden');
+  openModal('modalSegmento');
+};
+
+// ============================================================
+// ENVÍOS
+// ============================================================
+function renderEnvios() {
+  const selPlantilla = document.getElementById('envio_plantilla');
+  const selSegmento = document.getElementById('envio_segmento');
+  const currentPl = selPlantilla.value;
+  const currentSeg = selSegmento.value;
+  selPlantilla.innerHTML = '<option value="">Seleccionar plantilla...</option>' + plantillas.map(p => `<option value="${p.id}">${p.nombre} (${p.canal})</option>`).join('');
+  selSegmento.innerHTML = '<option value="">Seleccionar segmento...</option>' + segmentos.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+  selPlantilla.value = currentPl;
+  selSegmento.value = currentSeg;
+  renderCampanas();
+  updateEnvioResumen();
+}
+
+function selectCanal(canal) {
+  canalSeleccionado = canal;
+  ['SMS','Email','WA'].forEach(c => {
+    const el = document.getElementById('canal' + c);
+    if (el) el.style.borderColor = '#E2E8F0';
+  });
+  const map = {SMS:'canalSMS', Email:'canalEmail', WhatsApp:'canalWA'};
+  const el = document.getElementById(map[canal]);
+  if (el) el.style.borderColor = '#4F46E5';
+  updateEnvioResumen();
+}
+
+function updateEnvioResumen() {
+  const plId = document.getElementById('envio_plantilla').value;
+  const segId = document.getElementById('envio_segmento').value;
+  const pl = plantillas.find(p => p.id == plId);
+  const seg = segmentos.find(s => s.id == segId);
+  const segClientes = seg ? getSegmentoClientes(seg).length : 0;
+  const costMap = {SMS: 0.05, Email: 0.02, WhatsApp: 0.08};
+  const cost = canalSeleccionado ? (segClientes * (costMap[canalSeleccionado] || 0)).toFixed(2) : '—';
+  document.getElementById('res_plantilla').textContent = pl ? pl.nombre : '—';
+  document.getElementById('res_segmento').textContent = seg ? seg.nombre : '—';
+  document.getElementById('res_dest').textContent = segClientes || '—';
+  document.getElementById('res_canal').textContent = canalSeleccionado || '—';
+  document.getElementById('res_costo').textContent = canalSeleccionado ? 'S/ ' + cost : '—';
+}
+
+function enviarCampana() {
+  const nombre = document.getElementById('envio_nombre').value.trim();
+  const plId = document.getElementById('envio_plantilla').value;
+  const segId = document.getElementById('envio_segmento').value;
+  if (!nombre || !plId || !segId || !canalSeleccionado) {
+    showToast('Completa todos los campos', 'error'); return;
+  }
+  const seg = segmentos.find(s => s.id == segId);
+  const dest = seg ? getSegmentoClientes(seg).length : 0;
+  const c = {
+    id: ++nextId,
+    nombre,
+    canal: canalSeleccionado,
+    destinatarios: dest,
+    estado: 'En progreso',
+    fecha: new Date().toISOString().split('T')[0],
+  };
+  campanas.unshift(c);
+  renderCampanas();
+  showToast('Campaña iniciada... 🚀');
+  setTimeout(() => {
+    c.estado = 'Enviada';
+    renderCampanas();
+    showToast('Campaña enviada exitosamente ✅');
+  }, 2500);
+}
+
+function renderCampanas() {
+  const estadoMap = {Enviada:'badge-green',Fallida:'badge-red','En progreso':'badge-blue',Programada:'badge-yellow'};
+  const canalIcon = {SMS:'message-square',Email:'mail',WhatsApp:'message-circle'};
+  document.getElementById('campanaCount').textContent = campanas.length + ' campañas';
+  document.getElementById('tablaCampanas').innerHTML = campanas.map(c => `
+    <tr>
+      <td class="font-medium text-slate-700">${c.nombre}</td>
+      <td>
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="${canalIcon[c.canal]||'send'}" style="width:13px;height:13px;stroke-width:2;color:#94A3B8"></i>
+          <span class="text-sm">${c.canal}</span>
+        </div>
+      </td>
+      <td class="font-semibold text-slate-700">${c.destinatarios.toLocaleString()}</td>
+      <td><span class="badge ${estadoMap[c.estado]||'badge-gray'}">${c.estado}</span></td>
+      <td class="text-xs text-slate-400">${c.fecha}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="py-8 text-center text-slate-300">Sin campañas enviadas</td></tr>';
+  lucide.createIcons();
+}
+
+// ============================================================
+// USUARIOS
+// ============================================================
+function switchUsuariosTab(tab, btn) {
+  document.getElementById('tab-usuarios').classList.toggle('hidden', tab !== 'usuarios');
+  document.getElementById('tab-roles').classList.toggle('hidden', tab !== 'roles');
+  document.querySelectorAll('#screen-usuarios .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'roles') renderRoles();
+}
+
+function renderUsuarios() {
+  const rolColors = {Administrador:'badge-purple', Gerente:'badge-blue', Operador:'badge-yellow','Solo Lectura':'badge-gray'};
+  document.getElementById('tablaUsuarios').innerHTML = usuarios.map(u => `
+    <tr>
+      <td>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#4F46E5,#06B6D4)">${u.nombre.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+          <span class="font-medium text-slate-700">${u.nombre}</span>
+        </div>
+      </td>
+      <td class="text-slate-500">${u.email}</td>
+      <td><span class="badge ${rolColors[u.rol]||'badge-gray'}">${u.rol}</span></td>
+      <td>${badgeEstado(u.estado)}</td>
+      <td class="text-xs text-slate-400">${u.ultimoAcceso}</td>
+      <td>
+        <div class="flex gap-1">
+          <button onclick="editarUsuario(${u.id})" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="pencil" style="width:14px;height:14px;color:#4F46E5;stroke-width:2"></i></button>
+          <button onclick="confirmDelete(()=>eliminarUsuario(${u.id}))" class="p-1.5 rounded-lg hover:bg-red-50"><i data-lucide="trash-2" style="width:14px;height:14px;color:#EF4444;stroke-width:2"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+function guardarUsuario() {
+  const id = document.getElementById('usuarioEditId').value;
+  const data = {
+    nombre: document.getElementById('u_nombre').value.trim(),
+    email: document.getElementById('u_email').value.trim(),
+    rol: document.getElementById('u_rol').value,
+    estado: document.getElementById('u_estado').value,
+    ultimoAcceso: 'Ahora',
+  };
+  if (!data.nombre || !data.email) { showToast('Completa nombre y email', 'error'); return; }
+  if (id) {
+    const idx = usuarios.findIndex(u => u.id == id);
+    if (idx > -1) usuarios[idx] = {...usuarios[idx], ...data};
+    showToast('Usuario actualizado');
+  } else {
+    usuarios.push({id: ++nextId, ...data});
+    showToast('Usuario creado');
+  }
+  closeModal('modalUsuario');
+  renderUsuarios();
+}
+
+function editarUsuario(id) {
+  const u = usuarios.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('usuarioEditId').value = id;
+  document.getElementById('modalUsuarioTitulo').textContent = 'Editar Usuario';
+  document.getElementById('u_nombre').value = u.nombre;
+  document.getElementById('u_email').value = u.email;
+  document.getElementById('u_rol').value = u.rol;
+  document.getElementById('u_estado').value = u.estado;
+  openModal('modalUsuario');
+}
+
+function eliminarUsuario(id) {
+  usuarios = usuarios.filter(u => u.id !== id);
+  renderUsuarios();
+  showToast('Usuario eliminado', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalUsuario\')"]').onclick = function() {
+  document.getElementById('usuarioEditId').value = '';
+  document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo Usuario';
+  ['u_nombre','u_email'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u_rol').value = 'Operador';
+  document.getElementById('u_estado').value = 'Activo';
+  openModal('modalUsuario');
+};
+
+// ============================================================
+// ROLES
+// ============================================================
+function renderRoles() {
+  document.getElementById('listaRoles').innerHTML = roles.map(r => {
+    const perms = r.permisos;
+    return `
+    <div class="card overflow-hidden">
+      <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100" style="background:${r.color}11">
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 rounded-full" style="background:${r.color}"></div>
+          <h3 class="font-bold text-slate-800">${r.nombre}</h3>
+          <span class="badge" style="background:${r.color}22;color:${r.color}">${modulos.filter(m => perms[m] && perms[m].ver).length} módulos</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="editarRol(${r.id})" class="btn btn-secondary" style="font-size:12px;padding:6px 12px">
+            <i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2"></i> Editar
+          </button>
+          ${r.id > 4 ? `<button onclick="confirmDelete(()=>eliminarRol(${r.id}))" class="btn btn-danger" style="font-size:12px;padding:6px 12px"><i data-lucide="trash-2" style="width:13px;height:13px;stroke-width:2"></i></button>` : ''}
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th style="text-align:center">Ver</th>
+              <th style="text-align:center">Crear</th>
+              <th style="text-align:center">Editar</th>
+              <th style="text-align:center">Eliminar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${modulos.map(m => `
+              <tr>
+                <td class="font-medium text-slate-700 text-sm">${m}</td>
+                <td style="text-align:center">${checkIcon(perms[m]?.ver, r.color)}</td>
+                <td style="text-align:center">${checkIcon(perms[m]?.crear, r.color)}</td>
+                <td style="text-align:center">${checkIcon(perms[m]?.editar, r.color)}</td>
+                <td style="text-align:center">${checkIcon(perms[m]?.eliminar, r.color)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+function checkIcon(val, color) {
+  return val
+    ? `<div style="width:20px;height:20px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;margin:0 auto"><i data-lucide="check" style="width:12px;height:12px;color:${color};stroke-width:3"></i></div>`
+    : `<div style="width:20px;height:20px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;margin:0 auto"><i data-lucide="minus" style="width:12px;height:12px;color:#CBD5E1;stroke-width:2.5"></i></div>`;
+}
+
+function buildPermisosTabla(rol) {
+  return modulos.map(m => {
+    const p = rol?.permisos?.[m] || {ver:false,crear:false,editar:false,eliminar:false};
+    return `
+      <tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;font-size:13px;color:#334155">${m}</td>
+        ${['ver','crear','editar','eliminar'].map(action => `
+          <td style="text-align:center;padding:8px 12px;border-bottom:1px solid #F1F5F9">
+            <input type="checkbox" class="permission-check" data-modulo="${m}" data-action="${action}" ${p[action]?'checked':''}>
+          </td>
+        `).join('')}
+      </tr>
+    `;
+  }).join('');
+}
+
+function editarRol(id) {
+  const r = roles.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('rolEditId').value = id;
+  document.getElementById('modalRolTitulo').textContent = 'Editar Rol';
+  document.getElementById('r_nombre').value = r.nombre;
+  document.getElementById('r_color').value = r.color;
+  document.getElementById('permisosTabla').innerHTML = buildPermisosTabla(r);
+  openModal('modalRol');
+  lucide.createIcons();
+}
+
+function guardarRol() {
+  const id = document.getElementById('rolEditId').value;
+  const nombre = document.getElementById('r_nombre').value.trim();
+  const color = document.getElementById('r_color').value;
+  if (!nombre) { showToast('Ingresa un nombre', 'error'); return; }
+  const permisos = {};
+  document.querySelectorAll('#permisosTabla .permission-check').forEach(cb => {
+    const mod = cb.dataset.modulo;
+    const action = cb.dataset.action;
+    if (!permisos[mod]) permisos[mod] = {ver:false,crear:false,editar:false,eliminar:false};
+    permisos[mod][action] = cb.checked;
+  });
+  if (id) {
+    const idx = roles.findIndex(r => r.id == id);
+    if (idx > -1) roles[idx] = {...roles[idx], nombre, color, permisos};
+    showToast('Rol actualizado');
+  } else {
+    roles.push({id: ++nextId, nombre, color, permisos});
+    showToast('Rol creado');
+  }
+  closeModal('modalRol');
+  renderRoles();
+}
+
+function eliminarRol(id) {
+  roles = roles.filter(r => r.id !== id);
+  renderRoles();
+  showToast('Rol eliminado', 'info');
+}
+
+document.querySelector('[onclick="openModal(\'modalRol\')"]').onclick = function() {
+  document.getElementById('rolEditId').value = '';
+  document.getElementById('modalRolTitulo').textContent = 'Nuevo Rol';
+  document.getElementById('r_nombre').value = '';
+  document.getElementById('r_color').value = '#4F46E5';
+  document.getElementById('permisosTabla').innerHTML = buildPermisosTabla(null);
+  openModal('modalRol');
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  renderClientes();
+  renderCartillas();
+  renderRuleta();
+  renderSorteos();
+  renderProductos();
+  renderPlantillas();
+  renderSegmentos();
+  renderEnvios();
+  renderUsuarios();
+  updatePreview();
+  // Set initial sorteo premios
+  document.getElementById('premiosPosicion').innerHTML = '';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitalis · Gestión de Citas Médicas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-900:#0B3D3D;
+    --teal-700:#0F5C5C;
+    --teal-500:#1F7A6E;
+    --sage-100:#E7F2EC;
+    --sage-50:#F4F8F6;
+    --ink-900:#1B2421;
+    --slate-500:#5B6B6A;
+    --coral-500:#E8694A;
+    --coral-100:#FBE7E0;
+    --gold-400:#D9A441;
+  }
+  body{font-family:'Inter',sans-serif; background:var(--sage-50); color:var(--ink-900);}
+  .font-display{font-family:'Fraunces',serif;}
+  .font-mono{font-family:'Roboto Mono',monospace;}
+
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#C9DCD4; border-radius:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  [x-cloak]{display:none !important;}
+
+  .pulse-divider{
+    position:relative; height:14px; overflow:hidden;
+  }
+  .pulse-divider svg{position:absolute; top:0; left:0; width:200%; height:100%;
+    animation:pulseMove 5s linear infinite;}
+  @keyframes pulseMove{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  @media (prefers-reduced-motion: reduce){ .pulse-divider svg{animation:none;} }
+
+  .pill-badge{
+    border-radius: 999px 999px 999px 999px / 60% 60% 60% 60%;
+    position:relative;
+  }
+  .pill-badge::after{
+    content:'';
+    position:absolute; left:50%; top:8%; bottom:8%; width:1px;
+    background: currentColor; opacity:.35;
+  }
+
+  .sidebar-link{ position:relative; transition: all .18s ease; }
+  .sidebar-link i{ width:1.25rem; text-align:center; }
+  .sidebar-link.active{ background: rgba(255,255,255,.12); }
+  .sidebar-link.active::before{
+    content:''; position:absolute; left:0; top:10%; bottom:10%; width:3px; background:var(--gold-400); border-radius:3px;
+  }
+
+  .view-fade{ animation: fadeIn .35s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  .card-surface{ background:#fff; border:1px solid #E4EDE8; border-radius:1rem; }
+
+  .input-field{
+    background:#fff; border:1px solid #DCE6E1; border-radius:.6rem; padding:.55rem .8rem;
+    font-size:.875rem; transition: all .15s;
+  }
+  .input-field:focus{ outline:none; border-color:var(--teal-500); box-shadow:0 0 0 3px rgba(31,122,110,.15); }
+  .input-field.invalid{ border-color:var(--coral-500); box-shadow:0 0 0 3px rgba(232,105,74,.15); }
+
+  .btn-primary{ background:var(--teal-700); color:#fff; transition:.15s; }
+  .btn-primary:hover{ background:var(--teal-900); transform:translateY(-1px); }
+  .btn-ghost:hover{ background:var(--sage-100); }
+
+  .skeleton-row td{ position:relative; }
+
+  .table-row-hover:hover{ background: var(--sage-50); }
+
+  .modal-backdrop{ background: rgba(11,61,61,.45); backdrop-filter: blur(2px); }
+  .modal-panel{ animation: modalIn .25s cubic-bezier(.16,1,.3,1); }
+  @keyframes modalIn{ from{opacity:0; transform:scale(.96) translateY(8px);} to{opacity:1; transform:none;} }
+
+  .status-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+</style>
+</head>
+<body x-data="appState()" x-init="init()" class="h-full">
+
+<!-- ===================== ROOT LAYOUT ===================== -->
+<div class="min-h-screen flex">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 w-72 text-white flex flex-col transition-transform duration-300 lg:translate-x-0"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    style="background: linear-gradient(180deg, var(--teal-900), var(--teal-700));">
+
+    <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+      <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+        <i class="fa-solid fa-heart-pulse text-[var(--gold-400)] text-lg"></i>
+      </div>
+      <div>
+        <p class="font-display text-xl leading-none">Vitalis</p>
+        <p class="text-[11px] text-white/60 tracking-wide">Gestión de citas médicas</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <p class="px-3 text-[11px] uppercase tracking-wider text-white/40 mb-2">General</p>
+      <button @click="goTo('dashboard')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='dashboard' && 'active'">
+        <i class="fa-solid fa-gauge-high"></i> Panel principal
+      </button>
+      <button @click="goTo('agenda')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='agenda' && 'active'">
+        <i class="fa-solid fa-calendar-days"></i> Agenda de citas
+      </button>
+
+      <p class="px-3 text-[11px] uppercase tracking-wider text-white/40 mb-2 mt-5">Administración</p>
+      <button @click="goTo('pacientes')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='pacientes' && 'active'">
+        <i class="fa-solid fa-users"></i> Pacientes
+      </button>
+      <button @click="goTo('servicios')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='servicios' && 'active'">
+        <i class="fa-solid fa-briefcase-medical"></i> Servicios
+      </button>
+      <button @click="goTo('historial')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='historial' && 'active'">
+        <i class="fa-solid fa-file-waveform"></i> Historial clínico
+      </button>
+
+      <p class="px-3 text-[11px] uppercase tracking-wider text-white/40 mb-2 mt-5">Cuenta</p>
+      <button @click="goTo('config')" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium" :class="view==='config' && 'active'">
+        <i class="fa-solid fa-sliders"></i> Configuración
+      </button>
+    </nav>
+
+    <div class="px-4 py-4 border-t border-white/10">
+      <div class="flex items-center gap-3 px-2 py-2 rounded-lg bg-white/5">
+        <img src="https://i.pravatar.cc/64?img=47" class="w-9 h-9 rounded-full ring-2 ring-white/20" alt="">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate">Dra. Camila Rojas</p>
+          <p class="text-[11px] text-white/50 truncate">Medicina general</p>
+        </div>
+        <i class="fa-solid fa-arrow-right-from-bracket text-white/40 text-xs"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- overlay mobile -->
+  <div x-show="sidebarOpen" x-cloak @click="sidebarOpen=false" class="fixed inset-0 bg-black/40 z-30 lg:hidden"></div>
+
+  <!-- ===================== MAIN COLUMN ===================== -->
+  <div class="flex-1 flex flex-col lg:ml-72 min-h-screen">
+
+    <!-- NAVBAR -->
+    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[#E4EDE8]">
+      <div class="flex items-center gap-4 px-4 sm:px-6 py-3">
+        <button @click="sidebarOpen=!sidebarOpen" class="lg:hidden text-[var(--teal-700)] text-lg">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="relative flex-1 max-w-md hidden sm:block">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--slate-500)] text-sm"></i>
+          <input type="text" placeholder="Buscar paciente, cita o servicio…" class="input-field w-full pl-9">
+        </div>
+
+        <p class="font-display text-lg flex-1 sm:hidden" x-text="pageTitle()"></p>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <button class="relative w-9 h-9 rounded-full btn-ghost flex items-center justify-center text-[var(--teal-700)]">
+            <i class="fa-regular fa-bell"></i>
+            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--coral-500)] text-white text-[10px] flex items-center justify-center">3</span>
+          </button>
+          <button @click="openModal('crearCita')" class="btn-primary hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+            <i class="fa-solid fa-plus"></i> Nueva cita
+          </button>
+          <img src="https://i.pravatar.cc/64?img=47" class="w-9 h-9 rounded-full ring-2 ring-[var(--sage-100)]" alt="">
+        </div>
+      </div>
+      <div class="pulse-divider px-6 hidden sm:block">
+        <svg viewBox="0 0 600 14" preserveAspectRatio="none"><polyline points="0,7 60,7 75,2 90,12 105,7 160,7 175,1 190,13 205,7 600,7" fill="none" stroke="#D9A441" stroke-width="1.4" opacity="0.5"/></svg>
+      </div>
+    </header>
+
+    <!-- ===================== CONTENT ===================== -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section x-show="view==='dashboard'" x-cloak class="view-fade space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-[var(--slate-500)] font-medium">Hoy, <span x-text="todayLabel"></span></p>
+            <h1 class="font-display text-3xl text-[var(--teal-900)]">Buen día, doctora Rojas</h1>
+          </div>
+          <button @click="openModal('crearCita')" class="sm:hidden btn-primary flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fa-solid fa-plus"></i> Nueva cita
+          </button>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <template x-for="kpi in kpis" :key="kpi.label">
+            <div class="card-surface p-5 flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="w-10 h-10 rounded-lg flex items-center justify-center" :style="`background:${kpi.bg}`">
+                  <i :class="kpi.icon" :style="`color:${kpi.color}`"></i>
+                </span>
+                <span class="text-xs font-medium px-2 py-1 rounded-full" :class="kpi.trendUp ? 'text-[var(--teal-700)] bg-[var(--sage-100)]' : 'text-[var(--coral-500)] bg-[var(--coral-100)]'">
+                  <i :class="kpi.trendUp ? 'fa-solid fa-arrow-trend-up' : 'fa-solid fa-arrow-trend-down'"></i> <span x-text="kpi.delta"></span>
+                </span>
+              </div>
+              <div>
+                <p class="font-display text-2xl text-[var(--ink-900)]" x-text="kpi.value"></p>
+                <p class="text-xs text-[var(--slate-500)]" x-text="kpi.label"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- chart -->
+          <div class="card-surface p-5 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-display text-lg text-[var(--teal-900)]">Citas atendidas — últimos 7 días</h3>
+              <span class="text-xs text-[var(--slate-500)] font-mono">+18% vs sem. anterior</span>
+            </div>
+            <canvas id="citasChart" height="160"></canvas>
+          </div>
+
+          <!-- services breakdown bars -->
+          <div class="card-surface p-5">
+            <h3 class="font-display text-lg text-[var(--teal-900)] mb-4">Servicios más solicitados</h3>
+            <div class="space-y-4">
+              <template x-for="s in serviciosPop" :key="s.nombre">
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span x-text="s.nombre"></span>
+                    <span class="font-mono text-[var(--slate-500)]" x-text="s.pct + '%'"></span>
+                  </div>
+                  <div class="h-2 rounded-full bg-[var(--sage-100)] overflow-hidden">
+                    <div class="h-full rounded-full" :style="`width:${s.pct}%; background:${s.color}`"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- upcoming appointments -->
+        <div class="card-surface p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display text-lg text-[var(--teal-900)]">Próximas citas de hoy</h3>
+            <button @click="goTo('agenda')" class="text-sm font-medium text-[var(--teal-700)] hover:underline">Ver agenda completa</button>
+          </div>
+          <div class="divide-y divide-[#EEF4F1]">
+            <template x-for="c in citasHoy" :key="c.id">
+              <div class="flex items-center gap-4 py-3">
+                <div class="w-14 text-center">
+                  <p class="font-mono text-sm font-semibold text-[var(--teal-700)]" x-text="c.hora"></p>
+                </div>
+                <img :src="c.avatar" class="w-9 h-9 rounded-full" alt="">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate" x-text="c.paciente"></p>
+                  <p class="text-xs text-[var(--slate-500)] truncate" x-text="c.servicio"></p>
+                </div>
+                <span class="pill-badge text-xs font-medium px-3 py-1" :style="`background:${estadoColor(c.estado).bg}; color:${estadoColor(c.estado).fg}`" x-text="c.estado"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ AGENDA ============ -->
+      <section x-show="view==='agenda'" x-cloak class="view-fade space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 class="font-display text-2xl text-[var(--teal-900)]">Agenda de citas</h1>
+            <p class="text-sm text-[var(--slate-500)]">Gestiona, reprograma y confirma las citas médicas.</p>
+          </div>
+          <button @click="openModal('crearCita')" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium w-fit">
+            <i class="fa-solid fa-plus"></i> Agendar cita
+          </button>
+        </div>
+
+        <div class="card-surface p-4 flex flex-wrap gap-3 items-center">
+          <div class="relative flex-1 min-w-[200px]">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--slate-500)] text-sm"></i>
+            <input x-model="filtroCitas" type="text" placeholder="Buscar por paciente o médico…" class="input-field w-full pl-9">
+          </div>
+          <select x-model="filtroEstado" class="input-field">
+            <option value="">Todos los estados</option>
+            <option>Confirmada</option>
+            <option>Pendiente</option>
+            <option>Cancelada</option>
+            <option>Atendida</option>
+          </select>
+          <select class="input-field">
+            <option>Esta semana</option>
+            <option>Este mes</option>
+            <option>Próximos 3 meses</option>
+          </select>
+        </div>
+
+        <div class="card-surface overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-[var(--sage-50)] text-left text-xs uppercase tracking-wide text-[var(--slate-500)]">
+                  <th class="px-5 py-3 font-medium">Paciente</th>
+                  <th class="px-5 py-3 font-medium">Servicio</th>
+                  <th class="px-5 py-3 font-medium">Médico</th>
+                  <th class="px-5 py-3 font-medium">Fecha y hora</th>
+                  <th class="px-5 py-3 font-medium">Estado</th>
+                  <th class="px-5 py-3 font-medium text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#EEF4F1]">
+                <template x-for="cita in citasFiltradas" :key="cita.id">
+                  <tr class="table-row-hover transition-colors">
+                    <td class="px-5 py-3">
+                      <div class="flex items-center gap-3">
+                        <img :src="cita.avatar" class="w-8 h-8 rounded-full" alt="">
+                        <span class="font-medium" x-text="cita.paciente"></span>
+                      </div>
+                    </td>
+                    <td class="px-5 py-3 text-[var(--slate-500)]" x-text="cita.servicio"></td>
+                    <td class="px-5 py-3 text-[var(--slate-500)]" x-text="cita.medico"></td>
+                    <td class="px-5 py-3 font-mono text-xs" x-text="cita.fecha + ' · ' + cita.hora"></td>
+                    <td class="px-5 py-3">
+                      <span class="pill-badge text-xs font-medium px-3 py-1" :style="`background:${estadoColor(cita.estado).bg}; color:${estadoColor(cita.estado).fg}`" x-text="cita.estado"></span>
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                      <div class="flex items-center justify-end gap-1">
+                        <button x-show="cita.estado==='Atendida'" @click="openHistorialModal(cita)" title="Crear historial" class="w-8 h-8 rounded-lg btn-ghost text-[var(--gold-400)]"><i class="fa-solid fa-file-medical"></i></button>
+                        <button @click="verCita(cita)" class="w-8 h-8 rounded-lg btn-ghost text-[var(--teal-700)]"><i class="fa-regular fa-eye"></i></button>
+                        <button @click="editarCita(cita)" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-regular fa-pen-to-square"></i></button>
+                        <button @click="confirmarEliminar('cita', cita)" class="w-8 h-8 rounded-lg btn-ghost text-[var(--coral-500)]"><i class="fa-regular fa-trash-can"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="citasFiltradas.length===0">
+                  <td colspan="6" class="px-5 py-10 text-center text-[var(--slate-500)] text-sm">No se encontraron citas con esos filtros.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- pagination -->
+          <div class="flex items-center justify-between px-5 py-3 border-t border-[#EEF4F1] text-sm text-[var(--slate-500)]">
+            <span>Mostrando <strong x-text="citasFiltradas.length"></strong> de <strong x-text="citas.length"></strong> citas</span>
+            <div class="flex items-center gap-1">
+              <button class="w-8 h-8 rounded-lg btn-ghost"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+              <button class="w-8 h-8 rounded-lg bg-[var(--teal-700)] text-white text-xs font-medium">1</button>
+              <button class="w-8 h-8 rounded-lg btn-ghost text-xs">2</button>
+              <button class="w-8 h-8 rounded-lg btn-ghost"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PACIENTES ============ -->
+      <section x-show="view==='pacientes'" x-cloak class="view-fade space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 class="font-display text-2xl text-[var(--teal-900)]">Pacientes</h1>
+            <p class="text-sm text-[var(--slate-500)]">Base de datos de pacientes registrados en la clínica.</p>
+          </div>
+          <button @click="openModal('crearPaciente')" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium w-fit">
+            <i class="fa-solid fa-user-plus"></i> Nuevo paciente
+          </button>
+        </div>
+
+        <div class="card-surface p-4 flex flex-wrap gap-3 items-center">
+          <div class="relative flex-1 min-w-[200px]">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--slate-500)] text-sm"></i>
+            <input x-model="filtroPacientes" type="text" placeholder="Buscar por nombre o DNI…" class="input-field w-full pl-9">
+          </div>
+        </div>
+
+        <div class="card-surface overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-[var(--sage-50)] text-left text-xs uppercase tracking-wide text-[var(--slate-500)]">
+                  <th class="px-5 py-3 font-medium">Paciente</th>
+                  <th class="px-5 py-3 font-medium">DNI</th>
+                  <th class="px-5 py-3 font-medium">Edad</th>
+                  <th class="px-5 py-3 font-medium">Teléfono</th>
+                  <th class="px-5 py-3 font-medium">Última visita</th>
+                  <th class="px-5 py-3 font-medium text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#EEF4F1]">
+                <template x-for="p in pacientesFiltrados" :key="p.id">
+                  <tr class="table-row-hover transition-colors">
+                    <td class="px-5 py-3">
+                      <div class="flex items-center gap-3">
+                        <img :src="p.avatar" class="w-8 h-8 rounded-full" alt="">
+                        <span class="font-medium" x-text="p.nombre"></span>
+                      </div>
+                    </td>
+                    <td class="px-5 py-3 font-mono text-xs text-[var(--slate-500)]" x-text="p.dni"></td>
+                    <td class="px-5 py-3 text-[var(--slate-500)]" x-text="p.edad + ' años'"></td>
+                    <td class="px-5 py-3 text-[var(--slate-500)]" x-text="p.telefono"></td>
+                    <td class="px-5 py-3 text-[var(--slate-500)]" x-text="p.ultimaVisita"></td>
+                    <td class="px-5 py-3 text-right">
+                      <div class="flex items-center justify-end gap-1">
+                        <button @click="goTo('historial'); pacienteHistorial=p" class="w-8 h-8 rounded-lg btn-ghost text-[var(--teal-700)]"><i class="fa-regular fa-file-waveform"></i></button>
+                        <button @click="editarPaciente(p)" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-regular fa-pen-to-square"></i></button>
+                        <button @click="confirmarEliminar('paciente', p)" class="w-8 h-8 rounded-lg btn-ghost text-[var(--coral-500)]"><i class="fa-regular fa-trash-can"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SERVICIOS ============ -->
+      <section x-show="view==='servicios'" x-cloak class="view-fade space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 class="font-display text-2xl text-[var(--teal-900)]">Servicios médicos</h1>
+            <p class="text-sm text-[var(--slate-500)]">Catálogo de servicios y especialidades disponibles.</p>
+          </div>
+          <button @click="openModal('crearServicio')" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium w-fit">
+            <i class="fa-solid fa-plus"></i> Nuevo servicio
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <template x-for="s in servicios" :key="s.id">
+            <div class="card-surface p-5 flex flex-col gap-3">
+              <div class="flex items-start justify-between">
+                <span class="w-11 h-11 rounded-xl flex items-center justify-center" :style="`background:${s.bg}`">
+                  <i :class="s.icon" :style="`color:${s.color}`" class="text-lg"></i>
+                </span>
+                <div class="flex gap-1">
+                  <button @click="editarServicio(s)" class="w-7 h-7 rounded-lg btn-ghost text-[var(--slate-500)] text-xs"><i class="fa-regular fa-pen-to-square"></i></button>
+                  <button @click="confirmarEliminar('servicio', s)" class="w-7 h-7 rounded-lg btn-ghost text-[var(--coral-500)] text-xs"><i class="fa-regular fa-trash-can"></i></button>
+                </div>
+              </div>
+              <div>
+                <p class="font-display text-lg" x-text="s.nombre"></p>
+                <p class="text-xs text-[var(--slate-500)]" x-text="s.descripcion"></p>
+              </div>
+              <div class="flex items-center justify-between text-sm pt-2 border-t border-[#EEF4F1]">
+                <span class="font-mono text-[var(--teal-700)] font-semibold" x-text="'S/ ' + s.precio"></span>
+                <span class="text-[var(--slate-500)] text-xs" x-text="s.duracion + ' min'"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- ============ HISTORIAL CLÍNICO ============ -->
+      <section x-show="view==='historial'" x-cloak class="view-fade space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div>
+            <h1 class="font-display text-2xl text-[var(--teal-900)]">Historial clínico</h1>
+            <p class="text-sm text-[var(--slate-500)]">Ficha completa del paciente: antecedentes y consultas registradas.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
+          <!-- patient list (mini sidebar) -->
+          <div class="card-surface p-3">
+            <div class="relative mb-3 px-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--slate-500)] text-xs"></i>
+              <input x-model="filtroHistorialPacientes" type="text" placeholder="Buscar paciente…" class="input-field w-full pl-9 text-sm">
+            </div>
+            <div class="max-h-[600px] overflow-y-auto space-y-1">
+              <template x-for="p in pacientes.filter(p => p.nombre.toLowerCase().includes(filtroHistorialPacientes.toLowerCase()))" :key="p.id">
+                <button @click="pacienteHistorial=p" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors" :class="pacienteHistorial.id===p.id ? 'bg-[var(--sage-100)]' : 'hover:bg-[var(--sage-50)]'">
+                  <img :src="p.avatar" class="w-9 h-9 rounded-full" alt="">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate" x-text="p.nombre"></p>
+                    <p class="text-xs text-[var(--slate-500)] truncate" x-text="(p.historial?.length || 0) + ' consulta(s) registrada(s)'"></p>
+                  </div>
+                  <i x-show="p.antecedentes?.alergias?.length" class="fa-solid fa-triangle-exclamation text-[var(--coral-500)] text-xs" title="Tiene alergias"></i>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- right column: ficha + antecedentes + consultas -->
+          <div class="space-y-5">
+            <!-- patient header -->
+            <div class="card-surface p-5">
+              <div class="flex flex-wrap items-center gap-4 justify-between">
+                <div class="flex items-center gap-4">
+                  <img :src="pacienteHistorial.avatar" class="w-14 h-14 rounded-full" alt="">
+                  <div>
+                    <p class="font-display text-xl" x-text="pacienteHistorial.nombre"></p>
+                    <p class="text-xs text-[var(--slate-500)] font-mono" x-text="'DNI ' + pacienteHistorial.dni + ' · ' + pacienteHistorial.edad + ' años · Sangre ' + pacienteHistorial.sangre"></p>
+                  </div>
+                </div>
+                <button @click="openHistorialModal()" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
+                  <i class="fa-solid fa-plus"></i> Nueva entrada
+                </button>
+              </div>
+
+              <!-- antecedentes -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-5 border-t border-[#EEF4F1]">
+                <div class="rounded-lg p-3" :class="pacienteHistorial.antecedentes?.alergias?.length ? 'bg-[var(--coral-100)]' : 'bg-[var(--sage-50)]'">
+                  <p class="text-[11px] uppercase tracking-wide font-medium mb-1" :class="pacienteHistorial.antecedentes?.alergias?.length ? 'text-[var(--coral-500)]' : 'text-[var(--slate-500)]'">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>Alergias
+                  </p>
+                  <p class="text-sm" :class="pacienteHistorial.antecedentes?.alergias?.length ? 'text-[var(--coral-500)] font-semibold' : 'text-[var(--slate-500)]'" x-text="pacienteHistorial.antecedentes?.alergias?.length ? pacienteHistorial.antecedentes.alergias.join(', ') : 'Ninguna registrada'"></p>
+                </div>
+                <div class="rounded-lg p-3 bg-[var(--sage-50)]">
+                  <p class="text-[11px] uppercase tracking-wide font-medium mb-1 text-[var(--slate-500)]"><i class="fa-solid fa-heart-pulse mr-1"></i>Enf. crónicas</p>
+                  <p class="text-sm text-[var(--ink-900)]" x-text="pacienteHistorial.antecedentes?.cronicas?.length ? pacienteHistorial.antecedentes.cronicas.join(', ') : 'Ninguna registrada'"></p>
+                </div>
+                <div class="rounded-lg p-3 bg-[var(--sage-50)]">
+                  <p class="text-[11px] uppercase tracking-wide font-medium mb-1 text-[var(--slate-500)]"><i class="fa-solid fa-scissors mr-1"></i>Cirugías previas</p>
+                  <p class="text-sm text-[var(--ink-900)]" x-text="pacienteHistorial.antecedentes?.cirugias?.length ? pacienteHistorial.antecedentes.cirugias.join(', ') : 'Ninguna registrada'"></p>
+                </div>
+                <div class="rounded-lg p-3 bg-[var(--sage-50)]">
+                  <p class="text-[11px] uppercase tracking-wide font-medium mb-1 text-[var(--slate-500)]"><i class="fa-solid fa-people-roof mr-1"></i>Antec. familiares</p>
+                  <p class="text-sm text-[var(--ink-900)]" x-text="pacienteHistorial.antecedentes?.familiares?.length ? pacienteHistorial.antecedentes.familiares.join(', ') : 'Ninguno registrado'"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- consultas (accordion) -->
+            <div class="space-y-3">
+              <p class="text-xs uppercase tracking-wider text-[var(--slate-500)] font-medium px-1">Consultas registradas (<span x-text="pacienteHistorial.historial?.length || 0"></span>)</p>
+
+              <template x-for="h in (pacienteHistorial.historial || [])" :key="h.id">
+                <div class="card-surface overflow-hidden">
+                  <button @click="entradaAbierta = entradaAbierta === h.id ? null : h.id" class="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-[var(--sage-50)] transition-colors">
+                    <div class="w-2.5 h-2.5 rounded-full shrink-0" :style="`background:${estadoColor('Atendida').fg}`"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-sm font-semibold" x-text="h.diagnostico"></p>
+                        <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--sage-100)] text-[var(--teal-700)]" x-text="h.cie10"></span>
+                      </div>
+                      <p class="text-xs text-[var(--slate-500)] mt-0.5" x-text="h.fecha + ' · ' + h.especialidad + ' · ' + h.medico"></p>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-[var(--slate-500)] transition-transform" :class="entradaAbierta === h.id && 'rotate-180'"></i>
+                  </button>
+
+                  <div x-show="entradaAbierta === h.id" x-collapse class="border-t border-[#EEF4F1] px-5 py-5 space-y-5">
+                    <div>
+                      <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-1">Motivo de consulta</p>
+                      <p class="text-sm" x-text="h.motivo"></p>
+                    </div>
+
+                    <div>
+                      <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-2">Signos vitales</p>
+                      <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Presión</p><p class="text-sm font-mono font-semibold" x-text="h.signos.presion"></p></div>
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Temp °C</p><p class="text-sm font-mono font-semibold" x-text="h.signos.temperatura"></p></div>
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Peso kg</p><p class="text-sm font-mono font-semibold" x-text="h.signos.peso"></p></div>
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Talla cm</p><p class="text-sm font-mono font-semibold" x-text="h.signos.talla"></p></div>
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Frec. card.</p><p class="text-sm font-mono font-semibold" x-text="h.signos.frecuencia"></p></div>
+                        <div class="text-center bg-[var(--sage-50)] rounded-lg py-2"><p class="text-[10px] text-[var(--slate-500)]">Sat. O₂ %</p><p class="text-sm font-mono font-semibold" x-text="h.signos.saturacion"></p></div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-1">Examen físico</p>
+                      <p class="text-sm text-[var(--ink-900)]" x-text="h.examen"></p>
+                    </div>
+
+                    <div x-show="h.tratamiento && h.tratamiento.length">
+                      <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-2">Tratamiento indicado</p>
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                          <thead><tr class="text-left text-[11px] uppercase text-[var(--slate-500)]"><th class="py-1 pr-3">Medicamento</th><th class="py-1 pr-3">Dosis</th><th class="py-1 pr-3">Frecuencia</th><th class="py-1">Duración</th></tr></thead>
+                          <tbody class="divide-y divide-[#EEF4F1]">
+                            <template x-for="t in h.tratamiento" :key="t.medicamento">
+                              <tr><td class="py-1.5 pr-3 font-medium" x-text="t.medicamento"></td><td class="py-1.5 pr-3 text-[var(--slate-500)]" x-text="t.dosis"></td><td class="py-1.5 pr-3 text-[var(--slate-500)]" x-text="t.frecuencia"></td><td class="py-1.5 text-[var(--slate-500)]" x-text="t.duracion"></td></tr>
+                            </template>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-6">
+                      <div class="flex-1 min-w-[200px]">
+                        <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-1">Indicaciones</p>
+                        <p class="text-sm text-[var(--ink-900)]" x-text="h.indicaciones"></p>
+                      </div>
+                      <div>
+                        <p class="text-xs uppercase tracking-wide text-[var(--slate-500)] font-medium mb-1">Próxima cita sugerida</p>
+                        <p class="text-sm font-mono font-semibold text-[var(--teal-700)]" x-text="h.proximaCita"></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <div x-show="!pacienteHistorial.historial || pacienteHistorial.historial.length===0" class="card-surface p-8 text-center text-[var(--slate-500)] text-sm">
+                <i class="fa-solid fa-file-circle-plus text-2xl mb-2 text-[var(--teal-500)]"></i>
+                <p>Este paciente aún no tiene consultas registradas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CONFIG (placeholder) ============ -->
+      <section x-show="view==='config'" x-cloak class="view-fade space-y-5">
+        <h1 class="font-display text-2xl text-[var(--teal-900)]">Configuración</h1>
+        <div class="card-surface p-8 text-center text-[var(--slate-500)] text-sm">
+          <i class="fa-solid fa-sliders text-3xl mb-3 text-[var(--teal-500)]"></i>
+          <p>Sección de configuración disponible en una próxima iteración del MVP.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CREAR / EDITAR CITA ===================== -->
+<div x-show="modal==='crearCita'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#EEF4F1]">
+      <h3 class="font-display text-lg" x-text="editMode ? 'Editar cita' : 'Agendar nueva cita'"></h3>
+      <button @click="closeModal()" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Paciente *</label>
+        <select x-model="form.paciente" class="input-field w-full" :class="errors.paciente && 'invalid'">
+          <option value="">Selecciona un paciente</option>
+          <template x-for="p in pacientes" :key="p.id"><option :value="p.nombre" x-text="p.nombre"></option></template>
+        </select>
+        <p x-show="errors.paciente" class="text-xs text-[var(--coral-500)] mt-1"><i class="fa-solid fa-circle-exclamation"></i> Selecciona un paciente.</p>
+      </div>
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Servicio *</label>
+        <select x-model="form.servicio" class="input-field w-full" :class="errors.servicio && 'invalid'">
+          <option value="">Selecciona un servicio</option>
+          <template x-for="s in servicios" :key="s.id"><option :value="s.nombre" x-text="s.nombre"></option></template>
+        </select>
+        <p x-show="errors.servicio" class="text-xs text-[var(--coral-500)] mt-1"><i class="fa-solid fa-circle-exclamation"></i> Selecciona un servicio.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Fecha *</label>
+          <input type="date" x-model="form.fecha" class="input-field w-full" :class="errors.fecha && 'invalid'">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Hora *</label>
+          <input type="time" x-model="form.hora" class="input-field w-full" :class="errors.hora && 'invalid'">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Médico</label>
+        <input type="text" x-model="form.medico" placeholder="Ej. Dra. Camila Rojas" class="input-field w-full">
+      </div>
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Notas</label>
+        <textarea x-model="form.notas" rows="2" placeholder="Motivo de la cita, observaciones…" class="input-field w-full"></textarea>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#EEF4F1]">
+      <button @click="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium btn-ghost text-[var(--slate-500)]">Cancelar</button>
+      <button @click="guardarCita()" class="btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+        <span x-text="editMode ? 'Guardar cambios' : 'Agendar cita'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: VER CITA ===================== -->
+<div x-show="modal==='verCita'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#EEF4F1]">
+      <h3 class="font-display text-lg">Detalle de la cita</h3>
+      <button @click="closeModal()" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-6 space-y-3 text-sm" x-show="citaSeleccionada">
+      <div class="flex items-center gap-3 pb-3 border-b border-[#EEF4F1]">
+        <img :src="citaSeleccionada.avatar" class="w-10 h-10 rounded-full" alt="">
+        <div>
+          <p class="font-medium" x-text="citaSeleccionada.paciente"></p>
+          <span class="pill-badge text-xs font-medium px-3 py-0.5" :style="`background:${estadoColor(citaSeleccionada.estado).bg}; color:${estadoColor(citaSeleccionada.estado).fg}`" x-text="citaSeleccionada.estado"></span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><p class="text-xs text-[var(--slate-500)]">Servicio</p><p class="font-medium" x-text="citaSeleccionada.servicio"></p></div>
+        <div><p class="text-xs text-[var(--slate-500)]">Médico</p><p class="font-medium" x-text="citaSeleccionada.medico"></p></div>
+        <div><p class="text-xs text-[var(--slate-500)]">Fecha</p><p class="font-medium" x-text="citaSeleccionada.fecha"></p></div>
+        <div><p class="text-xs text-[var(--slate-500)]">Hora</p><p class="font-medium" x-text="citaSeleccionada.hora"></p></div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#EEF4F1]">
+      <button @click="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium btn-ghost text-[var(--slate-500)]">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CREAR / EDITAR PACIENTE ===================== -->
+<div x-show="modal==='crearPaciente'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#EEF4F1]">
+      <h3 class="font-display text-lg" x-text="editMode ? 'Editar paciente' : 'Nuevo paciente'"></h3>
+      <button @click="closeModal()" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Nombre completo *</label>
+        <input type="text" x-model="formPaciente.nombre" placeholder="Ej. Mariana Castro" class="input-field w-full" :class="errors.nombre && 'invalid'">
+        <p x-show="errors.nombre" class="text-xs text-[var(--coral-500)] mt-1"><i class="fa-solid fa-circle-exclamation"></i> El nombre es obligatorio.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">DNI *</label>
+          <input type="text" x-model="formPaciente.dni" placeholder="00000000" class="input-field w-full" :class="errors.dni && 'invalid'">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Edad</label>
+          <input type="number" x-model="formPaciente.edad" placeholder="35" class="input-field w-full">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Teléfono</label>
+        <input type="text" x-model="formPaciente.telefono" placeholder="+51 999 999 999" class="input-field w-full">
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#EEF4F1]">
+      <button @click="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium btn-ghost text-[var(--slate-500)]">Cancelar</button>
+      <button @click="guardarPaciente()" class="btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+        <span x-text="editMode ? 'Guardar cambios' : 'Registrar paciente'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CREAR / EDITAR SERVICIO ===================== -->
+<div x-show="modal==='crearServicio'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#EEF4F1]">
+      <h3 class="font-display text-lg" x-text="editMode ? 'Editar servicio' : 'Nuevo servicio'"></h3>
+      <button @click="closeModal()" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Nombre del servicio *</label>
+        <input type="text" x-model="formServicio.nombre" placeholder="Ej. Consulta general" class="input-field w-full" :class="errors.nombreServicio && 'invalid'">
+        <p x-show="errors.nombreServicio" class="text-xs text-[var(--coral-500)] mt-1"><i class="fa-solid fa-circle-exclamation"></i> El nombre es obligatorio.</p>
+      </div>
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Descripción</label>
+        <textarea x-model="formServicio.descripcion" rows="2" class="input-field w-full"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Precio (S/) *</label>
+          <input type="number" x-model="formServicio.precio" class="input-field w-full" :class="errors.precio && 'invalid'">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Duración (min)</label>
+          <input type="number" x-model="formServicio.duracion" class="input-field w-full">
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#EEF4F1]">
+      <button @click="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium btn-ghost text-[var(--slate-500)]">Cancelar</button>
+      <button @click="guardarServicio()" class="btn-primary px-5 py-2 rounded-lg text-sm font-medium">
+        <span x-text="editMode ? 'Guardar cambios' : 'Crear servicio'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: NUEVA ENTRADA DE HISTORIAL ===================== -->
+<div x-show="modal==='crearHistorial'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-2xl max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#EEF4F1] sticky top-0 bg-white z-10">
+      <div>
+        <h3 class="font-display text-lg">Nueva entrada de historial</h3>
+        <p class="text-xs text-[var(--slate-500)] mt-0.5" x-text="formHistorial.paciente ? 'Paciente: ' + formHistorial.paciente : 'Selecciona un paciente'"></p>
+      </div>
+      <button @click="closeModal()" class="w-8 h-8 rounded-lg btn-ghost text-[var(--slate-500)]"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <!-- datos base -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Paciente *</label>
+          <select x-model="formHistorial.paciente" class="input-field w-full" :class="errors.hPaciente && 'invalid'" :disabled="formHistorial.bloqueadoDesdeCita">
+            <option value="">Selecciona un paciente</option>
+            <template x-for="p in pacientes" :key="p.id"><option :value="p.nombre" x-text="p.nombre"></option></template>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Especialidad / servicio</label>
+          <input type="text" x-model="formHistorial.especialidad" class="input-field w-full">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Médico</label>
+          <input type="text" x-model="formHistorial.medico" class="input-field w-full">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Fecha de la consulta</label>
+          <input type="text" x-model="formHistorial.fecha" class="input-field w-full">
+        </div>
+      </div>
+
+      <!-- motivo -->
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Motivo de consulta *</label>
+        <textarea x-model="formHistorial.motivo" rows="2" placeholder="¿Por qué viene el paciente hoy?" class="input-field w-full" :class="errors.hMotivo && 'invalid'"></textarea>
+      </div>
+
+      <!-- signos vitales -->
+      <div>
+        <p class="text-xs font-medium text-[var(--slate-500)] mb-2">Signos vitales</p>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <input x-model="formHistorial.signos.presion" placeholder="Presión" class="input-field text-sm text-center">
+          <input x-model="formHistorial.signos.temperatura" placeholder="Temp °C" class="input-field text-sm text-center">
+          <input x-model="formHistorial.signos.peso" placeholder="Peso kg" class="input-field text-sm text-center">
+          <input x-model="formHistorial.signos.talla" placeholder="Talla cm" class="input-field text-sm text-center">
+          <input x-model="formHistorial.signos.frecuencia" placeholder="Fr. card." class="input-field text-sm text-center">
+          <input x-model="formHistorial.signos.saturacion" placeholder="Sat. O₂" class="input-field text-sm text-center">
+        </div>
+      </div>
+
+      <!-- examen y diagnostico -->
+      <div>
+        <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Examen físico / observaciones</label>
+        <textarea x-model="formHistorial.examen" rows="2" class="input-field w-full"></textarea>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Diagnóstico *</label>
+          <input type="text" x-model="formHistorial.diagnostico" class="input-field w-full" :class="errors.hDiagnostico && 'invalid'">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Código CIE-10</label>
+          <input type="text" x-model="formHistorial.cie10" placeholder="Ej. I10" class="input-field w-full font-mono">
+        </div>
+      </div>
+
+      <!-- tratamiento dinamico -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-medium text-[var(--slate-500)]">Tratamiento / receta</p>
+          <button @click="formHistorial.tratamiento.push({medicamento:'',dosis:'',frecuencia:'',duracion:''})" type="button" class="text-xs font-medium text-[var(--teal-700)] hover:underline"><i class="fa-solid fa-plus"></i> Agregar medicamento</button>
+        </div>
+        <div class="space-y-2">
+          <template x-for="(t, idx) in formHistorial.tratamiento" :key="idx">
+            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center">
+              <input x-model="t.medicamento" placeholder="Medicamento" class="input-field text-sm">
+              <input x-model="t.dosis" placeholder="Dosis" class="input-field text-sm">
+              <input x-model="t.frecuencia" placeholder="Frecuencia" class="input-field text-sm">
+              <input x-model="t.duracion" placeholder="Duración" class="input-field text-sm">
+              <button @click="formHistorial.tratamiento.splice(idx,1)" type="button" class="w-8 h-8 rounded-lg btn-ghost text-[var(--coral-500)]"><i class="fa-regular fa-trash-can text-xs"></i></button>
+            </div>
+          </template>
+          <p x-show="formHistorial.tratamiento.length===0" class="text-xs text-[var(--slate-500)] italic">Sin medicamentos indicados.</p>
+        </div>
+      </div>
+
+      <!-- indicaciones -->
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-4">
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Indicaciones</label>
+          <textarea x-model="formHistorial.indicaciones" rows="2" class="input-field w-full"></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-[var(--slate-500)] mb-1 block">Próxima cita</label>
+          <input type="text" x-model="formHistorial.proximaCita" placeholder="Ej. 10 jul 2026" class="input-field w-full">
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#EEF4F1] sticky bottom-0 bg-white">
+      <button @click="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium btn-ghost text-[var(--slate-500)]">Cancelar</button>
+      <button @click="guardarHistorial()" class="btn-primary px-5 py-2 rounded-lg text-sm font-medium">Guardar entrada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CONFIRMAR ELIMINACIÓN ===================== -->
+<div x-show="modal==='eliminar'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" x-transition.opacity>
+  <div @click.outside="closeModal()" class="modal-panel card-surface w-full max-w-sm p-6 text-center">
+    <div class="w-14 h-14 mx-auto rounded-full bg-[var(--coral-100)] flex items-center justify-center mb-4">
+      <i class="fa-solid fa-triangle-exclamation text-[var(--coral-500)] text-xl"></i>
+    </div>
+    <h3 class="font-display text-lg mb-1">¿Eliminar este registro?</h3>
+    <p class="text-sm text-[var(--slate-500)] mb-6">Esta acción no se puede deshacer. Se eliminará permanentemente <span class="font-medium" x-text="itemAEliminar?.label"></span>.</p>
+    <div class="flex gap-3">
+      <button @click="closeModal()" class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium btn-ghost border border-[#E4EDE8]">Cancelar</button>
+      <button @click="ejecutarEliminar()" class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white" style="background:var(--coral-500)">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div x-show="toast.show" x-cloak x-transition class="fixed bottom-6 right-6 z-[60] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg bg-[var(--teal-900)] text-white">
+  <i class="fa-solid fa-circle-check text-[var(--gold-400)]"></i>
+  <span class="text-sm" x-text="toast.message"></span>
+</div>
+
+<script>
+function appState(){
+  return {
+    sidebarOpen: false,
+    view: 'dashboard',
+    modal: null,
+    editMode: false,
+    toast: { show:false, message:'' },
+    todayLabel: new Date().toLocaleDateString('es-PE', { weekday:'long', day:'numeric', month:'long' }),
+
+    filtroCitas: '', filtroEstado: '', filtroPacientes: '', filtroHistorialPacientes: '',
+    citaSeleccionada: null, pacienteHistorial: {}, entradaAbierta: null,
+    itemAEliminar: null,
+
+    form: { paciente:'', servicio:'', fecha:'', hora:'', medico:'', notas:'' },
+    formPaciente: { nombre:'', dni:'', edad:'', telefono:'' },
+    formServicio: { nombre:'', descripcion:'', precio:'', duracion:'' },
+    formHistorial: { paciente:'', especialidad:'', medico:'', fecha:'', motivo:'', signos:{presion:'',temperatura:'',peso:'',talla:'',frecuencia:'',saturacion:''}, examen:'', diagnostico:'', cie10:'', tratamiento:[], indicaciones:'', proximaCita:'', citaId:null, bloqueadoDesdeCita:false },
+    errors: {},
+
+    kpis: [
+      { label:'Citas de hoy', value:'18', delta:'+4', trendUp:true, icon:'fa-solid fa-calendar-check', color:'#0F5C5C', bg:'#E7F2EC' },
+      { label:'Pacientes activos', value:'342', delta:'+12', trendUp:true, icon:'fa-solid fa-users', color:'#1F7A6E', bg:'#E7F2EC' },
+      { label:'Cancelaciones', value:'5', delta:'-2', trendUp:false, icon:'fa-solid fa-calendar-xmark', color:'#E8694A', bg:'#FBE7E0' },
+      { label:'Ingresos del mes', value:'S/ 24,180', delta:'+9%', trendUp:true, icon:'fa-solid fa-sack-dollar', color:'#D9A441', bg:'#FBF1E0' },
+    ],
+
+    serviciosPop: [
+      { nombre:'Consulta general', pct:38, color:'#0F5C5C' },
+      { nombre:'Pediatría', pct:24, color:'#1F7A6E' },
+      { nombre:'Odontología', pct:18, color:'#D9A441' },
+      { nombre:'Laboratorio clínico', pct:12, color:'#E8694A' },
+      { nombre:'Cardiología', pct:8, color:'#5B6B6A' },
+    ],
+
+    pacientes: [
+      { id:1, nombre:'Mariana Castro', dni:'45612378', edad:34, telefono:'+51 987 654 321', ultimaVisita:'12 jun 2026', avatar:'https://i.pravatar.cc/64?img=5', sangre:'O+',
+        antecedentes:{ alergias:['Penicilina'], cronicas:['Hipertensión arterial'], cirugias:['Apendicectomía (2014)'], familiares:['Madre con diabetes tipo 2'] },
+        historial:[
+          { id:101, citaId:1, fecha:'12 jun 2026', medico:'Dra. Camila Rojas', especialidad:'Consulta general',
+            motivo:'Control de presión arterial y mareos ocasionales.',
+            signos:{ presion:'138/88', temperatura:'36.6', peso:'68', talla:'162', frecuencia:'78', saturacion:'97' },
+            examen:'Paciente alerta, orientada. Sin signos de focalización neurológica. Auscultación cardiopulmonar normal.',
+            diagnostico:'Hipertensión arterial no controlada', cie10:'I10',
+            tratamiento:[ {medicamento:'Losartán', dosis:'50mg', frecuencia:'1 vez al día', duracion:'30 días'} ],
+            indicaciones:'Dieta baja en sodio, control de presión en casa 2 veces por semana. Reevaluar en 4 semanas.',
+            proximaCita:'10 jul 2026' },
+          { id:102, citaId:null, fecha:'02 mar 2026', medico:'Dra. Ana Belmonte', especialidad:'Laboratorio clínico',
+            motivo:'Chequeo de perfil lipídico de rutina.',
+            signos:{ presion:'126/82', temperatura:'36.5', peso:'67', talla:'162', frecuencia:'74', saturacion:'98' },
+            examen:'Sin hallazgos relevantes al examen físico.',
+            diagnostico:'Perfil lipídico dentro de rangos normales', cie10:'Z00.0',
+            tratamiento:[],
+            indicaciones:'Mantener actividad física regular. Control anual.',
+            proximaCita:'—' } ] },
+      { id:2, nombre:'Jorge Huamán', dni:'71234567', edad:51, telefono:'+51 945 112 233', ultimaVisita:'05 jun 2026', avatar:'https://i.pravatar.cc/64?img=12', sangre:'A-',
+        antecedentes:{ alergias:[], cronicas:['Diabetes tipo 2', 'Dislipidemia'], cirugias:[], familiares:['Padre con infarto a los 58 años'] },
+        historial:[
+          { id:201, citaId:2, fecha:'05 jun 2026', medico:'Dr. Tomás Vargas', especialidad:'Cardiología',
+            motivo:'Dolor torácico leve intermitente desde hace una semana.',
+            signos:{ presion:'132/85', temperatura:'36.7', peso:'82', talla:'171', frecuencia:'80', saturacion:'97' },
+            examen:'Ruidos cardiacos rítmicos, sin soplos. ECG sin alteraciones agudas.',
+            diagnostico:'Dolor torácico atípico, descartado origen cardiaco agudo', cie10:'R07.4',
+            tratamiento:[ {medicamento:'Atorvastatina', dosis:'20mg', frecuencia:'1 vez al día (noche)', duracion:'90 días'} ],
+            indicaciones:'Evitar esfuerzos intensos por 1 semana. Acudir a emergencia si el dolor se intensifica o irradia al brazo.',
+            proximaCita:'05 sep 2026' } ] },
+      { id:3, nombre:'Lucía Fernández', dni:'48823310', edad:28, telefono:'+51 998 776 554', ultimaVisita:'15 jun 2026', avatar:'https://i.pravatar.cc/64?img=32', sangre:'B+',
+        antecedentes:{ alergias:['Látex'], cronicas:[], cirugias:[], familiares:[] },
+        historial:[
+          { id:301, citaId:3, fecha:'15 jun 2026', medico:'Dra. Ana Belmonte', especialidad:'Odontología',
+            motivo:'Limpieza dental de rutina y sensibilidad en molar inferior.',
+            signos:{ presion:'—', temperatura:'36.4', peso:'—', talla:'—', frecuencia:'—', saturacion:'—' },
+            examen:'Placa bacteriana leve. Caries incipiente en pieza 36.',
+            diagnostico:'Caries dental pieza 36', cie10:'K02.9',
+            tratamiento:[ {medicamento:'Ibuprofeno', dosis:'400mg', frecuencia:'Si hay dolor, cada 8h', duracion:'3 días'} ],
+            indicaciones:'Programar resina compuesta en próxima cita. Reforzar técnica de cepillado.',
+            proximaCita:'29 jun 2026' } ] },
+      { id:4, nombre:'Renzo Salazar', dni:'70098123', edad:42, telefono:'+51 911 223 344', ultimaVisita:'01 jun 2026', avatar:'https://i.pravatar.cc/64?img=15', sangre:'AB+',
+        antecedentes:{ alergias:[], cronicas:[], cirugias:['Fractura de tibia (2019)'], familiares:[] },
+        historial:[] },
+      { id:5, nombre:'Daniela Quispe', dni:'46612980', edad:23, telefono:'+51 922 334 455', ultimaVisita:'18 jun 2026', avatar:'https://i.pravatar.cc/64?img=20', sangre:'O-',
+        antecedentes:{ alergias:['Sulfas'], cronicas:['Asma leve'], cirugias:[], familiares:['Madre con asma'] },
+        historial:[
+          { id:501, citaId:5, fecha:'18 jun 2026', medico:'Dra. Camila Rojas', especialidad:'Consulta general',
+            motivo:'Tos, congestión nasal y febrícula desde hace 3 días.',
+            signos:{ presion:'112/74', temperatura:'37.8', peso:'58', talla:'160', frecuencia:'88', saturacion:'97' },
+            examen:'Faringe eritematosa. Auscultación pulmonar con leves sibilancias espiratorias.',
+            diagnostico:'Infección respiratoria alta con broncoespasmo leve', cie10:'J06.9',
+            tratamiento:[ {medicamento:'Paracetamol', dosis:'500mg', frecuencia:'Cada 8h', duracion:'5 días'}, {medicamento:'Salbutamol inhalador', dosis:'2 puff', frecuencia:'Cada 6h si hay tos', duracion:'7 días'} ],
+            indicaciones:'Hidratación abundante, reposo relativo. Evitar exposición al humo. Acudir si la fiebre persiste más de 48h.',
+            proximaCita:'25 jun 2026' } ] },
+      { id:6, nombre:'Fernando Ríos', dni:'40012398', edad:60, telefono:'+51 933 445 566', ultimaVisita:'10 may 2026', avatar:'https://i.pravatar.cc/64?img=8', sangre:'A+',
+        antecedentes:{ alergias:[], cronicas:['Hipertensión arterial', 'Hipotiroidismo'], cirugias:['Colecistectomía (2011)'], familiares:['Madre con hipotiroidismo'] },
+        historial:[
+          { id:601, citaId:null, fecha:'10 may 2026', medico:'Dr. Tomás Vargas', especialidad:'Cardiología',
+            motivo:'Control trimestral de hipertensión.',
+            signos:{ presion:'145/92', temperatura:'36.5', peso:'79', talla:'168', frecuencia:'76', saturacion:'97' },
+            examen:'Sin edemas. Ruidos cardiacos normales.',
+            diagnostico:'Hipertensión arterial no controlada', cie10:'I10',
+            tratamiento:[ {medicamento:'Enalapril', dosis:'10mg', frecuencia:'2 veces al día', duracion:'90 días'} ],
+            indicaciones:'Ajuste de dosis por presión elevada. Control en 4 semanas, traer registro de presión diaria.',
+            proximaCita:'07 jun 2026' } ] },
+      { id:7, nombre:'Valeria Ponce', dni:'45098712', edad:31, telefono:'+51 944 556 677', ultimaVisita:'08 jun 2026', avatar:'https://i.pravatar.cc/64?img=9', sangre:'B-',
+        antecedentes:{ alergias:[], cronicas:[], cirugias:[], familiares:['Padre con diabetes tipo 2'] },
+        historial:[
+          { id:701, citaId:7, fecha:'08 jun 2026', medico:'Dra. Ana Belmonte', especialidad:'Laboratorio clínico',
+            motivo:'Examen de glucosa en ayunas por antecedente familiar.',
+            signos:{ presion:'118/76', temperatura:'36.4', peso:'61', talla:'165', frecuencia:'72', saturacion:'98' },
+            examen:'Sin hallazgos relevantes.',
+            diagnostico:'Glicemia en ayunas normal', cie10:'Z13.1',
+            tratamiento:[],
+            indicaciones:'Mantener dieta balanceada. Repetir examen en control anual.',
+            proximaCita:'—' } ] },
+    ],
+
+    servicios: [
+      { id:1, nombre:'Consulta general', descripcion:'Evaluación médica integral de rutina.', precio:80, duracion:30, icon:'fa-solid fa-stethoscope', color:'#0F5C5C', bg:'#E7F2EC' },
+      { id:2, nombre:'Pediatría', descripcion:'Atención especializada para niños y adolescentes.', precio:90, duracion:30, icon:'fa-solid fa-baby', color:'#1F7A6E', bg:'#E7F2EC' },
+      { id:3, nombre:'Odontología', descripcion:'Limpieza, revisión y tratamientos dentales.', precio:70, duracion:45, icon:'fa-solid fa-tooth', color:'#D9A441', bg:'#FBF1E0' },
+      { id:4, nombre:'Cardiología', descripcion:'Evaluación cardiovascular y electrocardiograma.', precio:150, duracion:40, icon:'fa-solid fa-heart-pulse', color:'#E8694A', bg:'#FBE7E0' },
+      { id:5, nombre:'Laboratorio clínico', descripcion:'Análisis de sangre, orina y perfil bioquímico.', precio:60, duracion:20, icon:'fa-solid fa-vial', color:'#5B6B6A', bg:'#EEF2F0' },
+      { id:6, nombre:'Ginecología', descripcion:'Control y consulta ginecológica preventiva.', precio:110, duracion:30, icon:'fa-solid fa-venus', color:'#0F5C5C', bg:'#E7F2EC' },
+    ],
+
+    citas: [
+      { id:1, paciente:'Mariana Castro', servicio:'Consulta general', medico:'Dra. Camila Rojas', fecha:'19 jun 2026', hora:'09:00', estado:'Confirmada', avatar:'https://i.pravatar.cc/64?img=5' },
+      { id:2, paciente:'Jorge Huamán', servicio:'Cardiología', medico:'Dr. Tomás Vargas', fecha:'19 jun 2026', hora:'10:30', estado:'Pendiente', avatar:'https://i.pravatar.cc/64?img=12' },
+      { id:3, paciente:'Lucía Fernández', servicio:'Odontología', medico:'Dra. Ana Belmonte', fecha:'19 jun 2026', hora:'11:15', estado:'Confirmada', avatar:'https://i.pravatar.cc/64?img=32' },
+      { id:4, paciente:'Renzo Salazar', servicio:'Pediatría', medico:'Dr. Iván Mejía', fecha:'19 jun 2026', hora:'13:00', estado:'Atendida', avatar:'https://i.pravatar.cc/64?img=15' },
+      { id:5, paciente:'Daniela Quispe', servicio:'Consulta general', medico:'Dra. Camila Rojas', fecha:'19 jun 2026', hora:'15:30', estado:'Cancelada', avatar:'https://i.pravatar.cc/64?img=20' },
+      { id:6, paciente:'Fernando Ríos', servicio:'Cardiología', medico:'Dr. Tomás Vargas', fecha:'20 jun 2026', hora:'09:45', estado:'Pendiente', avatar:'https://i.pravatar.cc/64?img=8' },
+      { id:7, paciente:'Valeria Ponce', servicio:'Laboratorio clínico', medico:'Dra. Ana Belmonte', fecha:'20 jun 2026', hora:'10:00', estado:'Confirmada', avatar:'https://i.pravatar.cc/64?img=9' },
+      { id:8, paciente:'Jorge Huamán', servicio:'Consulta general', medico:'Dra. Camila Rojas', fecha:'21 jun 2026', hora:'16:00', estado:'Atendida', avatar:'https://i.pravatar.cc/64?img=12' },
+    ],
+
+    init(){
+      this.pacienteHistorial = this.pacientes[0];
+      this.$nextTick(() => this.renderChart());
+    },
+
+    pageTitle(){
+      const titles = { dashboard:'Panel principal', agenda:'Agenda', pacientes:'Pacientes', servicios:'Servicios', historial:'Historial', config:'Configuración' };
+      return titles[this.view] || 'Vitalis';
+    },
+
+    goTo(v){ this.view = v; this.sidebarOpen = false; },
+
+    estadoColor(estado){
+      const map = {
+        'Confirmada': { bg:'#E7F2EC', fg:'#0F5C5C' },
+        'Pendiente':  { bg:'#FBF1E0', fg:'#B07A1E' },
+        'Cancelada':  { bg:'#FBE7E0', fg:'#E8694A' },
+        'Atendida':   { bg:'#EEF2F0', fg:'#5B6B6A' },
+      };
+      return map[estado] || map['Pendiente'];
+    },
+
+    get citasHoy(){ return this.citas.filter(c => c.fecha === '19 jun 2026'); },
+
+    get citasFiltradas(){
+      return this.citas.filter(c => {
+        const matchText = (c.paciente + c.medico).toLowerCase().includes(this.filtroCitas.toLowerCase());
+        const matchEstado = this.filtroEstado ? c.estado === this.filtroEstado : true;
+        return matchText && matchEstado;
+      });
+    },
+
+    get pacientesFiltrados(){
+      return this.pacientes.filter(p => (p.nombre + p.dni).toLowerCase().includes(this.filtroPacientes.toLowerCase()));
+    },
+
+    openModal(name){
+      this.modal = name; this.editMode = false; this.errors = {};
+      if(name === 'crearCita') this.form = { paciente:'', servicio:'', fecha:'', hora:'', medico:'', notas:'' };
+      if(name === 'crearPaciente') this.formPaciente = { nombre:'', dni:'', edad:'', telefono:'' };
+      if(name === 'crearServicio') this.formServicio = { nombre:'', descripcion:'', precio:'', duracion:'' };
+    },
+    closeModal(){ this.modal = null; this.errors = {}; },
+
+    // Abre el formulario de historial. Si viene desde una cita atendida, precarga los datos.
+    openHistorialModal(cita){
+      this.errors = {};
+      if(cita){
+        const p = this.pacientes.find(p => p.nombre === cita.paciente);
+        this.formHistorial = {
+          paciente: cita.paciente, especialidad: cita.servicio, medico: cita.medico, fecha: cita.fecha,
+          motivo:'', signos:{presion:'',temperatura:'',peso:'',talla:'',frecuencia:'',saturacion:''},
+          examen:'', diagnostico:'', cie10:'', tratamiento:[], indicaciones:'', proximaCita:'',
+          citaId: cita.id, bloqueadoDesdeCita:true, pacienteId: p ? p.id : null
+        };
+      } else {
+        const p = this.pacienteHistorial;
+        this.formHistorial = {
+          paciente: p.nombre || '', especialidad:'', medico:'', fecha: this.todayLabel,
+          motivo:'', signos:{presion:'',temperatura:'',peso:'',talla:'',frecuencia:'',saturacion:''},
+          examen:'', diagnostico:'', cie10:'', tratamiento:[], indicaciones:'', proximaCita:'',
+          citaId: null, bloqueadoDesdeCita:false, pacienteId: p.id || null
+        };
+      }
+      this.modal = 'crearHistorial';
+    },
+
+    guardarHistorial(){
+      this.errors = {};
+      if(!this.formHistorial.paciente) this.errors.hPaciente = true;
+      if(!this.formHistorial.motivo) this.errors.hMotivo = true;
+      if(!this.formHistorial.diagnostico) this.errors.hDiagnostico = true;
+      if(Object.keys(this.errors).length) return;
+
+      const p = this.pacientes.find(p => p.nombre === this.formHistorial.paciente);
+      if(!p){ this.errors.hPaciente = true; return; }
+      if(!p.historial) p.historial = [];
+      if(!p.antecedentes) p.antecedentes = { alergias:[], cronicas:[], cirugias:[], familiares:[] };
+
+      const { bloqueadoDesdeCita, pacienteId, ...entrada } = this.formHistorial;
+      p.historial.unshift({ id: Date.now(), ...entrada });
+
+      this.showToast('Entrada de historial guardada correctamente');
+      this.closeModal();
+      this.pacienteHistorial = p;
+      this.entradaAbierta = null;
+      this.view = 'historial';
+    },
+
+    verCita(c){ this.citaSeleccionada = c; this.modal = 'verCita'; },
+    editarCita(c){ this.form = {...c}; this.editMode = true; this.modal = 'crearCita'; this._editId = c.id; },
+    editarPaciente(p){ this.formPaciente = {...p}; this.editMode = true; this.modal = 'crearPaciente'; this._editId = p.id; },
+    editarServicio(s){ this.formServicio = {...s}; this.editMode = true; this.modal = 'crearServicio'; this._editId = s.id; },
+
+    guardarCita(){
+      this.errors = {};
+      if(!this.form.paciente) this.errors.paciente = true;
+      if(!this.form.servicio) this.errors.servicio = true;
+      if(!this.form.fecha) this.errors.fecha = true;
+      if(!this.form.hora) this.errors.hora = true;
+      if(Object.keys(this.errors).length) return;
+
+      if(this.editMode){
+        const i = this.citas.findIndex(c => c.id === this._editId);
+        this.citas[i] = { ...this.citas[i], ...this.form };
+        this.showToast('Cita actualizada correctamente');
+      } else {
+        const p = this.pacientes.find(p => p.nombre === this.form.paciente);
+        this.citas.unshift({ id: Date.now(), ...this.form, medico: this.form.medico || 'Dra. Camila Rojas', estado:'Pendiente', avatar: p ? p.avatar : 'https://i.pravatar.cc/64?img=1' });
+        this.showToast('Cita agendada correctamente');
+      }
+      this.closeModal();
+    },
+
+    guardarPaciente(){
+      this.errors = {};
+      if(!this.formPaciente.nombre) this.errors.nombre = true;
+      if(!this.formPaciente.dni) this.errors.dni = true;
+      if(Object.keys(this.errors).length) return;
+
+      if(this.editMode){
+        const i = this.pacientes.findIndex(p => p.id === this._editId);
+        this.pacientes[i] = { ...this.pacientes[i], ...this.formPaciente };
+        this.showToast('Paciente actualizado correctamente');
+      } else {
+        this.pacientes.unshift({ id: Date.now(), ...this.formPaciente, ultimaVisita:'—', avatar:'https://i.pravatar.cc/64?img=' + Math.floor(Math.random()*60), sangre:'—', historial:[] });
+        this.showToast('Paciente registrado correctamente');
+      }
+      this.closeModal();
+    },
+
+    guardarServicio(){
+      this.errors = {};
+      if(!this.formServicio.nombre) this.errors.nombreServicio = true;
+      if(!this.formServicio.precio) this.errors.precio = true;
+      if(Object.keys(this.errors).length) return;
+
+      if(this.editMode){
+        const i = this.servicios.findIndex(s => s.id === this._editId);
+        this.servicios[i] = { ...this.servicios[i], ...this.formServicio };
+        this.showToast('Servicio actualizado correctamente');
+      } else {
+        this.servicios.unshift({ id: Date.now(), ...this.formServicio, icon:'fa-solid fa-briefcase-medical', color:'#0F5C5C', bg:'#E7F2EC' });
+        this.showToast('Servicio creado correctamente');
+      }
+      this.closeModal();
+    },
+
+    confirmarEliminar(tipo, item){
+      this.itemAEliminar = { tipo, item, label: item.nombre || item.paciente };
+      this.modal = 'eliminar';
+    },
+    ejecutarEliminar(){
+      const { tipo, item } = this.itemAEliminar;
+      if(tipo === 'cita') this.citas = this.citas.filter(c => c.id !== item.id);
+      if(tipo === 'paciente') this.pacientes = this.pacientes.filter(p => p.id !== item.id);
+      if(tipo === 'servicio') this.servicios = this.servicios.filter(s => s.id !== item.id);
+      this.showToast('Registro eliminado correctamente');
+      this.closeModal();
+    },
+
+    showToast(message){
+      this.toast = { show:true, message };
+      setTimeout(() => this.toast.show = false, 2800);
+    },
+
+    renderChart(){
+      const ctx = document.getElementById('citasChart');
+      if(!ctx) return;
+      new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+          datasets:[{
+            label:'Citas atendidas',
+            data:[14,18,12,20,22,9,5],
+            backgroundColor:'#1F7A6E',
+            borderRadius:6,
+            maxBarThickness:34,
+          }]
+        },
+        options:{
+          plugins:{ legend:{ display:false } },
+          scales:{
+            y:{ beginAtZero:true, grid:{ color:'#EEF4F1' }, ticks:{ color:'#5B6B6A', font:{ size:11 } } },
+            x:{ grid:{ display:false }, ticks:{ color:'#5B6B6A', font:{ size:11 } } }
+          }
+        }
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>

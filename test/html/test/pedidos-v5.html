@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ember & Salt — Portal de Pedidos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ember: { 50:'#fff8f0', 100:'#ffecd6', 200:'#ffd5a8', 300:'#ffb870', 400:'#ff9040', 500:'#f56e10', 600:'#d94f06', 700:'#b33b06', 800:'#8f2f0c', 900:'#72280d' },
+            salt:  { 50:'#f9f6f2', 100:'#f0e9df', 200:'#e2d0bc', 300:'#d0b08e', 400:'#bc8e63', 500:'#a6724a', 600:'#8a5b3a', 700:'#6e4730', 800:'#573829', 900:'#402a1e' },
+            coal:  { 900:'#0f0d0b', 800:'#1a1714', 700:'#242018', 600:'#3a342a', 500:'#524a3e' }
+          },
+          fontFamily: {
+            poppins:   ['Poppins', 'sans-serif'],
+            playfair:  ['Playfair Display', 'serif'],
+            dm:        ['DM Sans', 'sans-serif'],
+            cormorant: ['Cormorant Garamond', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --ember: #f56e10;
+      --salt:  #a6724a;
+      --coal:  #0f0d0b;
+    }
+    * { scroll-behavior: smooth; }
+    body { background: #0f0d0b; font-family: 'Poppins', sans-serif; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1714; }
+    ::-webkit-scrollbar-thumb { background: #f56e10; border-radius: 10px; }
+
+    /* Grain overlay */
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    /* Hero gradient */
+    .hero-bg {
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,110,16,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 40% at 90% 30%, rgba(166,114,74,0.12) 0%, transparent 60%),
+                  #0f0d0b;
+    }
+
+    /* Card hover lift */
+    .food-card { transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease; }
+    .food-card:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(245,110,16,.18); }
+
+    /* Glow btn */
+    .btn-ember {
+      background: linear-gradient(135deg, #f56e10 0%, #d94f06 100%);
+      box-shadow: 0 4px 24px rgba(245,110,16,.4);
+      transition: box-shadow .25s, transform .2s;
+    }
+    .btn-ember:hover { box-shadow: 0 8px 36px rgba(245,110,16,.6); transform: translateY(-1px); }
+    .btn-ember:active { transform: translateY(0); }
+
+    /* Category pill active */
+    .cat-pill.active {
+      background: linear-gradient(135deg, #f56e10, #d94f06);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(245,110,16,.4);
+    }
+
+    /* Cart slide */
+    .cart-panel {
+      transform: translateX(100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .cart-panel.open { transform: translateX(0); }
+    .cart-overlay { opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* Badge pulse */
+    @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
+    .badge-pop { animation: badgePop .4s ease; }
+
+    /* Star fill */
+    .star-filled { color: #f56e10; }
+
+    /* Toast */
+    .toast { transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Skeleton shimmer */
+    @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+    .shimmer {
+      background: linear-gradient(90deg, #1a1714 25%, #2a241e 50%, #1a1714 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    /* Divider flame */
+    .flame-divider::before {
+      content: '🔥';
+      position: absolute; left: 50%; transform: translateX(-50%);
+      top: -14px; font-size: 22px;
+    }
+
+    /* Image overlay gradient */
+    .img-fade { background: linear-gradient(0deg, rgba(10,8,6,.85) 0%, rgba(10,8,6,.1) 60%, transparent 100%); }
+
+    /* Input focus glow */
+    .input-ember:focus { outline: none; border-color: #f56e10; box-shadow: 0 0 0 3px rgba(245,110,16,.2); }
+
+    /* Smooth number transition */
+    .qty-num { transition: all .2s; }
+
+    /* Modal */
+    .modal-backdrop { opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .modal-box { transform: scale(.92) translateY(20px); transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s; opacity: 0; }
+    .modal-backdrop.open .modal-box { transform: scale(1) translateY(0); opacity: 1; }
+  </style>
+</head>
+
+<body class="text-white relative z-0 min-h-screen">
+
+<!-- ═══════════════════  NAVBAR  ═══════════════════ -->
+<nav class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl border-b border-white/5" style="background:rgba(15,13,11,.85)">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl btn-ember flex items-center justify-center text-lg select-none">🔥</div>
+      <div>
+        <span class="font-playfair text-xl font-bold text-white">Ember</span>
+        <span class="font-cormorant italic text-xl text-ember-400"> &amp; Salt</span>
+      </div>
+    </div>
+
+    <!-- Search — desktop -->
+    <div class="hidden md:flex items-center gap-2 flex-1 max-w-md mx-8">
+      <div class="relative w-full">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-salt-400"></i>
+        <input id="searchInput" type="text" placeholder="Busca platos, ingredientes..."
+          class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-salt-500 font-dm" />
+      </div>
+    </div>
+
+    <!-- Right actions -->
+    <div class="flex items-center gap-3">
+      <!-- User -->
+      <button class="hidden sm:flex items-center gap-2 text-sm text-salt-300 hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5 font-dm">
+        <i data-lucide="user" class="w-4 h-4"></i>
+        <span>Mi cuenta</span>
+      </button>
+      <!-- Cart -->
+      <button id="cartBtn" class="relative btn-ember rounded-xl px-4 py-2 flex items-center gap-2 text-sm font-poppins font-semibold">
+        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">Carrito</span>
+        <span id="cartBadge" class="bg-white text-ember-600 rounded-full text-xs font-bold px-1.5 py-0.5 min-w-[20px] text-center hidden">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════  HERO  ═══════════════════ -->
+<section class="hero-bg pt-16 pb-10 relative overflow-hidden">
+  <!-- Decorative circles -->
+  <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-ember-500/5 blur-3xl pointer-events-none"></div>
+  <div class="absolute top-40 -left-10 w-48 h-48 rounded-full bg-salt-500/8 blur-2xl pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col md:flex-row items-center gap-10">
+    <!-- Text -->
+    <div class="flex-1 text-center md:text-left">
+      <p class="font-cormorant italic text-ember-400 text-lg mb-2 tracking-wide">Bienvenido a</p>
+      <h1 class="font-playfair text-5xl sm:text-6xl lg:text-7xl font-bold leading-none mb-4">
+        Ember <span class="text-ember-400">&amp;</span><br/>
+        <em class="font-cormorant font-normal text-salt-300 text-5xl sm:text-6xl">Salt</em>
+      </h1>
+      <p class="font-dm text-salt-300 text-base max-w-sm mx-auto md:mx-0 mb-6 leading-relaxed">
+        Cocina de autor con fuego vivo. Ingredientes locales, sabores intensos,<br/>experiencias que perduran.
+      </p>
+      <div class="flex flex-wrap gap-3 justify-center md:justify-start text-xs font-poppins font-medium">
+        <span class="bg-coal-800 border border-white/8 rounded-full px-4 py-1.5 flex items-center gap-1.5 text-salt-300">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-ember-400"></i> Entrega 25–40 min
+        </span>
+        <span class="bg-coal-800 border border-white/8 rounded-full px-4 py-1.5 flex items-center gap-1.5 text-salt-300">
+          <i data-lucide="star" class="w-3.5 h-3.5 text-ember-400 fill-ember-400"></i> 4.9 · 2.3k reseñas
+        </span>
+        <span class="bg-coal-800 border border-white/8 rounded-full px-4 py-1.5 flex items-center gap-1.5 text-salt-300">
+          <i data-lucide="truck" class="w-3.5 h-3.5 text-ember-400"></i> Envío gratis +S/80
+        </span>
+      </div>
+    </div>
+
+    <!-- Feature image mosaic -->
+    <div class="flex-1 max-w-sm relative">
+      <div class="grid grid-cols-2 gap-3">
+        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&h=300&fit=crop" class="rounded-2xl col-span-2 h-44 w-full object-cover shadow-2xl border border-white/10" alt="hero food" />
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=150&fit=crop" class="rounded-xl h-28 w-full object-cover shadow-xl border border-white/8" alt="food" />
+        <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=200&h=150&fit=crop" class="rounded-xl h-28 w-full object-cover shadow-xl border border-white/8" alt="food" />
+      </div>
+      <div class="absolute -bottom-3 -right-3 bg-coal-800 border border-ember-500/30 rounded-2xl px-4 py-3 shadow-2xl">
+        <p class="font-poppins text-xs text-salt-400">Pedidos hoy</p>
+        <p class="font-playfair text-2xl font-bold text-ember-400">142 🔥</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile search -->
+  <div class="md:hidden px-4 mt-2">
+    <div class="relative">
+      <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-salt-400"></i>
+      <input id="searchInputMobile" type="text" placeholder="Busca platos..."
+        class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-salt-500 font-dm" />
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════  PROMO BANNER  ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+  <div class="bg-gradient-to-r from-ember-600/20 via-ember-500/10 to-transparent border border-ember-500/20 rounded-2xl p-4 flex items-center gap-4">
+    <div class="text-3xl shrink-0">🎉</div>
+    <div class="flex-1">
+      <p class="font-poppins font-semibold text-white text-sm">Promo de lanzamiento — <span class="text-ember-400">15% OFF</span> en tu primer pedido</p>
+      <p class="font-dm text-salt-400 text-xs mt-0.5">Usa el código <span class="text-ember-300 font-mono font-bold">EMBER15</span> al pagar. Válido hasta el 30 de junio.</p>
+    </div>
+    <button class="shrink-0 text-xs btn-ember rounded-lg px-4 py-2 font-poppins font-semibold whitespace-nowrap">Copiar código</button>
+  </div>
+</div>
+
+<!-- ═══════════════════  CATEGORIES  ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
+  <div class="flex gap-2.5 overflow-x-auto pb-2 hide-scrollbar" style="-ms-overflow-style:none;scrollbar-width:none;">
+    <button class="cat-pill active shrink-0 font-poppins font-semibold text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 transition-all" data-cat="all">
+      🍽️ Todo
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="entradas">
+      🥗 Entradas
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="carnes">
+      🥩 Carnes
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="pastas">
+      🍝 Pastas
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="mariscos">
+      🦐 Mariscos
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="postres">
+      🍮 Postres
+    </button>
+    <button class="cat-pill shrink-0 font-poppins font-medium text-sm px-5 py-2.5 rounded-2xl border border-white/10 bg-coal-800 text-salt-300 transition-all hover:border-ember-500/40" data-cat="bebidas">
+      🍹 Bebidas
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════  SORT & FILTER BAR  ═══════════════════ -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pb-8 flex flex-wrap items-center gap-3">
+  <span class="font-dm text-salt-400 text-sm" id="resultCount">Mostrando 18 platos</span>
+  <div class="ml-auto flex gap-2 flex-wrap">
+    <select id="sortSelect" class="input-ember bg-coal-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-salt-300 font-dm cursor-pointer">
+      <option value="popular">Más populares</option>
+      <option value="price-asc">Precio: menor a mayor</option>
+      <option value="price-desc">Precio: mayor a menor</option>
+      <option value="rating">Mejor calificados</option>
+    </select>
+    <button class="flex items-center gap-2 bg-coal-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-salt-300 font-dm hover:border-ember-500/40 transition">
+      <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Filtros
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════  PRODUCT GRID  ═══════════════════ -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 pb-32">
+  <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <!-- Cards injected by JS -->
+  </div>
+  <p id="emptyState" class="hidden text-center text-salt-400 font-dm py-20 text-lg">No encontramos platos con ese criterio 😢</p>
+</main>
+
+<!-- ═══════════════════  CART OVERLAY  ═══════════════════ -->
+<div id="cartOverlay" class="cart-overlay fixed inset-0 bg-black/60 backdrop-blur-sm z-50"></div>
+
+<!-- ═══════════════════  CART PANEL  ═══════════════════ -->
+<aside id="cartPanel" class="cart-panel fixed top-0 right-0 h-full w-full max-w-md bg-coal-900 border-l border-white/8 z-50 flex flex-col shadow-2xl">
+  <!-- Cart header -->
+  <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+    <div>
+      <h2 class="font-playfair text-xl font-bold">Tu Carrito</h2>
+      <p class="font-dm text-salt-400 text-xs mt-0.5" id="cartSubtitle">Agrega platos para comenzar</p>
+    </div>
+    <button id="closeCart" class="w-9 h-9 rounded-xl bg-coal-700 hover:bg-coal-600 flex items-center justify-center transition">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <!-- Cart items -->
+  <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4" id="cartItems">
+    <!-- Empty state -->
+    <div id="cartEmpty" class="flex flex-col items-center justify-center h-full text-center py-16">
+      <div class="text-6xl mb-4">🛒</div>
+      <p class="font-playfair text-xl font-bold text-salt-300 mb-2">Carrito vacío</p>
+      <p class="font-dm text-salt-500 text-sm">Explora nuestro menú y agrega tus platos favoritos.</p>
+    </div>
+  </div>
+
+  <!-- Promo code -->
+  <div class="px-6 py-3 border-t border-white/8" id="cartPromoSection" style="display:none">
+    <div class="flex gap-2">
+      <input id="promoInput" type="text" placeholder="Código de descuento" class="input-ember flex-1 bg-coal-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-salt-500 font-dm" />
+      <button id="promoBtn" onclick="applyPromo()" class="btn-ember rounded-xl px-4 py-2 text-sm font-poppins font-semibold">Aplicar</button>
+    </div>
+    <p id="promoMsg" class="text-xs mt-1.5 font-dm hidden"></p>
+  </div>
+
+  <!-- Cart summary -->
+  <div class="px-6 py-5 border-t border-white/8 space-y-3" id="cartSummary" style="display:none">
+    <div class="flex justify-between text-sm font-dm text-salt-300">
+      <span>Subtotal</span><span id="summarySubtotal">S/ 0.00</span>
+    </div>
+    <div class="flex justify-between text-sm font-dm text-salt-300">
+      <span>Envío</span><span id="summaryShipping" class="text-green-400">Gratis</span>
+    </div>
+    <div id="discountRow" class="hidden flex justify-between text-sm font-dm text-ember-400">
+      <span>Descuento (15%)</span><span id="summaryDiscount">-S/ 0.00</span>
+    </div>
+    <div class="flex justify-between font-poppins font-bold text-lg border-t border-white/10 pt-3">
+      <span>Total</span><span id="summaryTotal" class="text-ember-400">S/ 0.00</span>
+    </div>
+    <button onclick="openCheckout()" class="btn-ember w-full py-3.5 rounded-2xl font-poppins font-bold text-base flex items-center justify-center gap-2">
+      <i data-lucide="credit-card" class="w-5 h-5"></i> Ir a pagar
+    </button>
+    <p class="text-center text-xs text-salt-500 font-dm flex items-center justify-center gap-1">
+      <i data-lucide="shield-check" class="w-3 h-3 text-green-500"></i> Pago 100% seguro y encriptado
+    </p>
+  </div>
+</aside>
+
+<!-- ═══════════════════  CHECKOUT MODAL  ═══════════════════ -->
+<div id="checkoutModal" class="modal-backdrop fixed inset-0 bg-black/70 backdrop-blur-md z-[60] flex items-center justify-center px-4">
+  <div class="modal-box bg-coal-900 border border-white/10 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="p-6 border-b border-white/8 flex items-center justify-between">
+      <div>
+        <h2 class="font-playfair text-2xl font-bold">Finalizar Pedido</h2>
+        <p class="font-dm text-salt-400 text-sm mt-0.5">Ingresa tus datos de entrega</p>
+      </div>
+      <button onclick="closeCheckout()" class="w-9 h-9 rounded-xl bg-coal-700 hover:bg-coal-600 flex items-center justify-center">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5">
+      <!-- Delivery type -->
+      <div>
+        <p class="font-poppins font-semibold text-sm mb-3">¿Cómo quieres recibir tu pedido?</p>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="setDelivery('delivery')" id="btnDelivery" class="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-ember-500 bg-ember-500/10 transition">
+            <i data-lucide="bike" class="w-6 h-6 text-ember-400"></i>
+            <span class="font-poppins font-semibold text-sm">Delivery</span>
+          </button>
+          <button onclick="setDelivery('pickup')" id="btnPickup" class="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-white/10 bg-coal-800 transition">
+            <i data-lucide="store" class="w-6 h-6 text-salt-400"></i>
+            <span class="font-poppins font-semibold text-sm text-salt-300">Recoger</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Personal data -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="font-dm text-xs text-salt-400 mb-1 block">Nombre</label>
+          <input type="text" placeholder="Ana" class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-salt-600 font-dm" />
+        </div>
+        <div>
+          <label class="font-dm text-xs text-salt-400 mb-1 block">Apellido</label>
+          <input type="text" placeholder="García" class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-salt-600 font-dm" />
+        </div>
+      </div>
+      <div>
+        <label class="font-dm text-xs text-salt-400 mb-1 block">Teléfono</label>
+        <input type="tel" placeholder="+51 999 999 999" class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-salt-600 font-dm" />
+      </div>
+      <div id="addressSection">
+        <label class="font-dm text-xs text-salt-400 mb-1 block">Dirección de entrega</label>
+        <input type="text" placeholder="Av. Principal 123, Lima" class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-salt-600 font-dm" />
+      </div>
+      <div>
+        <label class="font-dm text-xs text-salt-400 mb-1 block">Notas adicionales (opcional)</label>
+        <textarea rows="2" placeholder="Sin cebolla, sin picante..." class="input-ember w-full bg-coal-800 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-salt-600 font-dm resize-none"></textarea>
+      </div>
+
+      <!-- Payment -->
+      <div>
+        <p class="font-poppins font-semibold text-sm mb-3">Método de pago</p>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-ember-500/50 bg-ember-500/5 cursor-pointer">
+            <input type="radio" name="pay" value="card" checked class="accent-ember-500" />
+            <i data-lucide="credit-card" class="w-4 h-4 text-ember-400"></i>
+            <span class="font-dm text-sm">Tarjeta de crédito / débito</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-coal-800 cursor-pointer hover:border-ember-500/30 transition">
+            <input type="radio" name="pay" value="yape" class="accent-ember-500" />
+            <span class="text-lg">💜</span>
+            <span class="font-dm text-sm">Yape / Plin</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-coal-800 cursor-pointer hover:border-ember-500/30 transition">
+            <input type="radio" name="pay" value="efectivo" class="accent-ember-500" />
+            <i data-lucide="banknote" class="w-4 h-4 text-green-400"></i>
+            <span class="font-dm text-sm">Efectivo al recibir</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="bg-coal-800 rounded-2xl p-4 space-y-2">
+        <p class="font-poppins font-semibold text-sm mb-3">Resumen del pedido</p>
+        <div class="flex justify-between text-sm font-dm text-salt-300">
+          <span>Subtotal</span><span id="chkSubtotal">S/ 0.00</span>
+        </div>
+        <div class="flex justify-between text-sm font-dm text-salt-300">
+          <span>Envío</span><span class="text-green-400">Gratis</span>
+        </div>
+        <div class="flex justify-between font-poppins font-bold border-t border-white/10 pt-2 mt-2">
+          <span>Total</span><span id="chkTotal" class="text-ember-400">S/ 0.00</span>
+        </div>
+      </div>
+
+      <button onclick="placeOrder()" class="btn-ember w-full py-4 rounded-2xl font-poppins font-bold text-lg flex items-center justify-center gap-2">
+        <i data-lucide="check-circle" class="w-5 h-5"></i> Confirmar Pedido
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════  SUCCESS MODAL  ═══════════════════ -->
+<div id="successModal" class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-md z-[70] flex items-center justify-center px-4">
+  <div class="modal-box bg-coal-900 border border-white/10 rounded-3xl w-full max-w-sm p-8 text-center shadow-2xl">
+    <div class="text-7xl mb-6">🎉</div>
+    <h2 class="font-playfair text-3xl font-bold mb-2">¡Pedido Confirmado!</h2>
+    <p class="font-cormorant italic text-salt-300 text-lg mb-4">Tu comida está siendo preparada</p>
+    <div class="bg-coal-800 rounded-2xl p-4 mb-6">
+      <p class="font-dm text-xs text-salt-400 mb-1">Número de pedido</p>
+      <p class="font-mono font-bold text-ember-400 text-xl" id="orderNumber">#EMB-00142</p>
+      <p class="font-dm text-xs text-salt-400 mt-3">Tiempo estimado de entrega</p>
+      <p class="font-poppins font-bold text-white text-lg">30–45 minutos 🔥</p>
+    </div>
+    <button onclick="closeSuccess()" class="btn-ember w-full py-3.5 rounded-2xl font-poppins font-bold">
+      Seguir explorando
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════  TOAST  ═══════════════════ -->
+<div id="toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-coal-700 border border-ember-500/30 rounded-2xl px-5 py-3 flex items-center gap-3 z-[80] shadow-2xl whitespace-nowrap">
+  <i data-lucide="check-circle" class="w-4 h-4 text-ember-400"></i>
+  <span id="toastMsg" class="font-poppins font-medium text-sm"></span>
+</div>
+
+<!-- ═══════════════════  PRODUCT MODAL  ═══════════════════ -->
+<div id="productModal" class="modal-backdrop fixed inset-0 bg-black/70 backdrop-blur-md z-[60] flex items-center justify-center px-4">
+  <div class="modal-box bg-coal-900 border border-white/10 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div id="productModalContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════  FOOTER  ═══════════════════ -->
+<footer class="bg-coal-900 border-t border-white/5 py-12 mt-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-xl btn-ember flex items-center justify-center text-base">🔥</div>
+          <span class="font-playfair text-lg font-bold">Ember <span class="text-ember-400">&</span> Salt</span>
+        </div>
+        <p class="font-dm text-salt-500 text-sm leading-relaxed">Cocina de autor con fuego vivo. Abrimos todos los días de 12:00 a 23:00 hrs.</p>
+      </div>
+      <div>
+        <p class="font-poppins font-semibold text-sm mb-3">Contáctanos</p>
+        <div class="space-y-2 text-sm font-dm text-salt-400">
+          <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-ember-400"></i> +51 999 123 456</p>
+          <p class="flex items-center gap-2"><i data-lucide="mail" class="w-3.5 h-3.5 text-ember-400"></i> hola@embersalt.pe</p>
+          <p class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-ember-400"></i> Av. La Mar 456, Miraflores</p>
+        </div>
+      </div>
+      <div>
+        <p class="font-poppins font-semibold text-sm mb-3">Horarios</p>
+        <div class="space-y-1 text-sm font-dm text-salt-400">
+          <p>Lunes – Viernes: 12:00 – 23:00</p>
+          <p>Sábado: 12:00 – 00:00</p>
+          <p>Domingo: 12:00 – 22:00</p>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-white/5 pt-6 flex flex-wrap items-center justify-between gap-4">
+      <p class="font-dm text-salt-600 text-xs">© 2025 Ember &amp; Salt. Todos los derechos reservados.</p>
+      <div class="flex gap-4 text-xs font-dm text-salt-600">
+        <a href="#" class="hover:text-salt-400 transition">Términos</a>
+        <a href="#" class="hover:text-salt-400 transition">Privacidad</a>
+        <a href="#" class="hover:text-salt-400 transition">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════  JS  ═══════════════════ -->
+<script>
+// ─── DATA ──────────────────────────────────────────────
+const products = [
+  // ENTRADAS
+  {id:1, name:'Tabla de Quesos Artesanales', cat:'entradas', price:42, rating:4.8, reviews:128, popular:true, tag:'Chef recomienda',
+   img:'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=500&h=400&fit=crop',
+   desc:'Selección de quesos maduros con mermeladas de fruta, nueces garrapiñadas y pan artesanal tostado.', time:10},
+  {id:2, name:'Ceviche de Langostinos', cat:'entradas', price:55, rating:5.0, reviews:247, popular:true, tag:'Favorito',
+   img:'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=500&h=400&fit=crop',
+   desc:'Langostinos frescos marinados en leche de tigre de ají limo, choclo morado y camote glaseado.', time:15},
+  {id:3, name:'Hummus de Betarraga', cat:'entradas', price:28, rating:4.6, reviews:89, popular:false, tag:'Vegano',
+   img:'https://images.unsplash.com/photo-1577805947697-89e18249d767?w=500&h=400&fit=crop',
+   desc:'Hummus cremoso de betarraga asada con tahini, aceite de oliva extra virgen y pita casera.', time:8},
+  {id:4, name:'Bruschetta Tricolor', cat:'entradas', price:32, rating:4.7, reviews:104, popular:false, tag:'',
+   img:'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=500&h=400&fit=crop',
+   desc:'Pan de masa madre tostado con tomate heirloom, pesto de albahaca y burrata fresca.', time:12},
+
+  // CARNES
+  {id:5, name:'Rib Eye al Carbón 350g', cat:'carnes', price:98, rating:4.9, reviews:315, popular:true, tag:'⭐ Top ventas',
+   img:'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&h=400&fit=crop',
+   desc:'Rib eye madurado 30 días, asado al carbón con mantequilla de hierbas, puré rústico y chimichurri.', time:25},
+  {id:6, name:'Lomo Saltado Premium', cat:'carnes', price:72, rating:4.8, reviews:198, popular:true, tag:'Fusión',
+   img:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&h=400&fit=crop',
+   desc:'Lomo fino saltado con tomates cherry, cebolla morada, sillao de primera y papas fritas crujientes.', time:20},
+  {id:7, name:'Costillas BBQ Bourbon', cat:'carnes', price:85, rating:4.7, reviews:167, popular:false, tag:'',
+   img:'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=500&h=400&fit=crop',
+   desc:'Costillas de cerdo braseadas 8 horas con salsa BBQ casera de bourbon y coleslaw cremoso.', time:30},
+  {id:8, name:'Pollo al Cilindro', cat:'carnes', price:62, rating:4.6, reviews:143, popular:false, tag:'',
+   img:'https://images.unsplash.com/photo-1598103442097-8b74394b95c8?w=500&h=400&fit=crop',
+   desc:'Pollo entero marinado en especias ancestrales, asado lentamente al cilindro con papas doradas.', time:35},
+
+  // PASTAS
+  {id:9, name:'Tagliatelle al Tartufo', cat:'pastas', price:68, rating:4.9, reviews:201, popular:true, tag:'Signature',
+   img:'https://images.unsplash.com/photo-1481931098730-318b6f776db0?w=500&h=400&fit=crop',
+   desc:'Pasta fresca de huevo con crema de trufa negra, parmesano 24 meses y láminas de trufa italiana.', time:20},
+  {id:10, name:'Risotto de Mariscos', cat:'pastas', price:74, rating:4.8, reviews:178, popular:false, tag:'Mar',
+   img:'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=500&h=400&fit=crop',
+   desc:'Arroz arborio cremoso con mejillones, calamares, langostinos y azafrán de La Mancha.', time:22},
+  {id:11, name:'Gnocchi al Pesto Genovese', cat:'pastas', price:52, rating:4.7, reviews:132, popular:false, tag:'Vegetariano',
+   img:'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&h=400&fit=crop',
+   desc:'Gnocchi de papa artesanal con pesto genovese de albahaca, piñones tostados y pecorino.', time:18},
+
+  // MARISCOS
+  {id:12, name:'Pulpo a la Brasa', cat:'mariscos', price:88, rating:5.0, reviews:267, popular:true, tag:'🔥 Hot',
+   img:'https://images.unsplash.com/photo-1559847844-5315695dadae?w=500&h=400&fit=crop',
+   desc:'Pulpo gallego braseado con aceite de pimentón ahumado, papas baby y alioli de cítricos.', time:28},
+  {id:13, name:'Tiradito Nikkei', cat:'mariscos', price:62, rating:4.8, reviews:189, popular:false, tag:'Nikkei',
+   img:'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=500&h=400&fit=crop',
+   desc:'Finas láminas de pescado blanco con leche de tigre de maracuyá, ají amarillo y aceite de sésamo.', time:12},
+  {id:14, name:'Paella Valenciana', cat:'mariscos', price:95, rating:4.9, reviews:223, popular:true, tag:'Para 2',
+   img:'https://images.unsplash.com/photo-1515443961218-a51367888e4b?w=500&h=400&fit=crop',
+   desc:'Paella tradicional con pollo, conejo, judías verdes, garrofón y azafrán, para dos personas.', time:40},
+
+  // POSTRES
+  {id:15, name:'Volcán de Chocolate 70%', cat:'postres', price:32, rating:4.9, reviews:342, popular:true, tag:'❤️ Favorito',
+   img:'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&h=400&fit=crop',
+   desc:'Coulant de chocolate oscuro 70% con corazón fundido, helado de vainilla de Madagascar y sal de Maras.', time:15},
+  {id:16, name:'Crema Brûlée de Maracuyá', cat:'postres', price:28, rating:4.7, reviews:156, popular:false, tag:'',
+   img:'https://images.unsplash.com/photo-1470324161839-ce2bb6fa6bc3?w=500&h=400&fit=crop',
+   desc:'Crema brûlée con esencia de maracuyá fresco, caramelizada al momento con azúcar de caña.', time:10},
+
+  // BEBIDAS
+  {id:17, name:'Pisco Sour Clásico', cat:'bebidas', price:28, rating:4.9, reviews:389, popular:true, tag:'🍸 Imprescindible',
+   img:'https://images.unsplash.com/photo-1541546006121-5c3bc5e8c7b9?w=500&h=400&fit=crop',
+   desc:'Pisco quebranta peruano, limón de Chulucanas, clara de huevo, jarabe de goma y amargo de Angostura.', time:5},
+  {id:18, name:'Agua de Piña con Jengibre', cat:'bebidas', price:14, rating:4.6, reviews:112, popular:false, tag:'Sin alcohol',
+   img:'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&h=400&fit=crop',
+   desc:'Infusión refrescante de piña natural, jengibre fresco, menta y un toque de limón. Sin gas.', time:5},
+];
+
+// ─── STATE ─────────────────────────────────────────────
+let cart = [];
+let activeCategory = 'all';
+let searchQuery = '';
+let sortMode = 'popular';
+let promoApplied = false;
+let deliveryMode = 'delivery';
+
+// ─── RENDER PRODUCTS ────────────────────────────────────
+function getFiltered() {
+  let items = [...products];
+  if (activeCategory !== 'all') items = items.filter(p => p.cat === activeCategory);
+  if (searchQuery) items = items.filter(p => p.name.toLowerCase().includes(searchQuery) || p.desc.toLowerCase().includes(searchQuery));
+  if (sortMode === 'price-asc') items.sort((a,b) => a.price - b.price);
+  else if (sortMode === 'price-desc') items.sort((a,b) => b.price - a.price);
+  else if (sortMode === 'rating') items.sort((a,b) => b.rating - a.rating);
+  else items.sort((a,b) => (b.popular?1:0)-(a.popular?1:0));
+  return items;
+}
+
+function stars(rating) {
+  return [1,2,3,4,5].map(i => `<i data-lucide="star" class="w-3 h-3 ${i <= Math.round(rating) ? 'fill-ember-400 text-ember-400' : 'text-coal-600'}"></i>`).join('');
+}
+
+function renderProducts() {
+  const items = getFiltered();
+  const grid = document.getElementById('productGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('resultCount').textContent = `Mostrando ${items.length} plato${items.length !== 1 ? 's':''}`;
+  if (!items.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = items.map(p => {
+    const inCart = cart.find(c => c.id === p.id);
+    return `
+    <div class="food-card bg-coal-800 rounded-3xl overflow-hidden border border-white/6 cursor-pointer group" onclick="openProduct(${p.id})">
+      <div class="relative h-48 overflow-hidden">
+        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+        <div class="img-fade absolute inset-0"></div>
+        ${p.tag ? `<span class="absolute top-3 left-3 bg-ember-500/90 backdrop-blur-sm text-white text-[10px] font-poppins font-bold px-2.5 py-1 rounded-full">${p.tag}</span>` : ''}
+        <span class="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-dm px-2.5 py-1 rounded-full flex items-center gap-1">
+          <i data-lucide="clock" class="w-3 h-3"></i> ${p.time} min
+        </span>
+      </div>
+      <div class="p-4">
+        <h3 class="font-poppins font-semibold text-sm text-white mb-1 leading-snug">${p.name}</h3>
+        <p class="font-dm text-salt-500 text-xs leading-relaxed mb-3 line-clamp-2">${p.desc}</p>
+        <div class="flex items-center gap-1 mb-3">
+          ${stars(p.rating)}
+          <span class="font-dm text-salt-500 text-[10px] ml-1">${p.rating} (${p.reviews})</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-cormorant italic text-salt-500 text-xs">desde</span>
+            <span class="font-playfair font-bold text-lg text-white ml-1">S/ ${p.price}</span>
+          </div>
+          ${inCart
+            ? `<div class="flex items-center gap-2 bg-coal-700 rounded-2xl px-3 py-1.5" onclick="event.stopPropagation()">
+                <button onclick="changeQty(${p.id},-1)" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+                <span class="font-poppins font-bold text-sm min-w-[16px] text-center">${inCart.qty}</span>
+                <button onclick="changeQty(${p.id},1)" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+               </div>`
+            : `<button onclick="addToCart(${p.id}); event.stopPropagation()" class="btn-ember rounded-2xl w-9 h-9 flex items-center justify-center">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+               </button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+// ─── PRODUCT DETAIL MODAL ───────────────────────────────
+function openProduct(id) {
+  const p = products.find(x => x.id === id);
+  const inCart = cart.find(c => c.id === id);
+  document.getElementById('productModalContent').innerHTML = `
+    <div>
+      <div class="relative h-64 overflow-hidden rounded-t-3xl">
+        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover" />
+        <div class="img-fade absolute inset-0"></div>
+        <button onclick="closeProduct()" class="absolute top-4 right-4 w-9 h-9 bg-black/60 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-black/80 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+        ${p.tag ? `<span class="absolute top-4 left-4 bg-ember-500/90 text-white text-xs font-poppins font-bold px-3 py-1 rounded-full">${p.tag}</span>` : ''}
+      </div>
+      <div class="p-6">
+        <div class="flex items-start justify-between mb-3">
+          <h2 class="font-playfair text-2xl font-bold flex-1 pr-4">${p.name}</h2>
+          <span class="font-playfair font-bold text-2xl text-ember-400 shrink-0">S/ ${p.price}</span>
+        </div>
+        <div class="flex items-center gap-2 mb-4">
+          ${stars(p.rating)}
+          <span class="font-dm text-salt-400 text-sm">${p.rating} · ${p.reviews} reseñas</span>
+          <span class="ml-auto flex items-center gap-1 text-salt-500 text-xs font-dm"><i data-lucide="clock" class="w-3 h-3"></i> ${p.time} min</span>
+        </div>
+        <p class="font-dm text-salt-300 text-sm leading-relaxed mb-6">${p.desc}</p>
+        <div class="flex items-center gap-3">
+          ${inCart
+            ? `<div class="flex items-center gap-4 bg-coal-800 rounded-2xl px-5 py-3 flex-1 justify-center">
+                <button onclick="changeQty(${p.id},-1); refreshProductModal(${p.id})" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="minus" class="w-5 h-5"></i></button>
+                <span class="font-poppins font-bold text-xl min-w-[24px] text-center">${inCart.qty}</span>
+                <button onclick="changeQty(${p.id},1); refreshProductModal(${p.id})" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="plus" class="w-5 h-5"></i></button>
+               </div>`
+            : `<button onclick="addToCart(${p.id}); refreshProductModal(${p.id})" class="btn-ember flex-1 py-3.5 rounded-2xl font-poppins font-bold flex items-center justify-center gap-2">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i> Agregar al carrito
+               </button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('productModal').classList.add('open');
+  lucide.createIcons();
+}
+function refreshProductModal(id) { openProduct(id); renderProducts(); }
+function closeProduct() { document.getElementById('productModal').classList.remove('open'); }
+
+// ─── CART ───────────────────────────────────────────────
+function addToCart(id) {
+  const p = products.find(x => x.id === id);
+  const existing = cart.find(c => c.id === id);
+  if (existing) existing.qty++;
+  else cart.push({...p, qty:1});
+  updateCartUI();
+  showToast(`🔥 ${p.name} agregado`);
+  renderProducts();
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+  renderProducts();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+  renderProducts();
+}
+
+function updateCartUI() {
+  const totalQty = cart.reduce((s,c) => s+c.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  if (totalQty > 0) {
+    badge.textContent = totalQty; badge.classList.remove('hidden');
+    badge.classList.add('badge-pop');
+    setTimeout(() => badge.classList.remove('badge-pop'), 400);
+  } else badge.classList.add('hidden');
+
+  // subtitle
+  document.getElementById('cartSubtitle').textContent = totalQty > 0
+    ? `${totalQty} ítem${totalQty>1?'s':''} seleccionado${totalQty>1?'s':''}`
+    : 'Agrega platos para comenzar';
+
+  const itemsEl = document.getElementById('cartItems');
+  const emptyEl = document.getElementById('cartEmpty');
+  const summaryEl = document.getElementById('cartSummary');
+  const promoEl = document.getElementById('cartPromoSection');
+
+  if (!cart.length) {
+    emptyEl.style.display = 'flex'; summaryEl.style.display = 'none'; promoEl.style.display = 'none';
+    itemsEl.innerHTML = '';
+    itemsEl.appendChild(emptyEl);
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  summaryEl.style.display = 'block';
+  promoEl.style.display = 'block';
+
+  itemsEl.innerHTML = cart.map(item => `
+    <div class="flex items-center gap-3 bg-coal-800 rounded-2xl p-3">
+      <img src="${item.img}" class="w-14 h-14 rounded-xl object-cover shrink-0" />
+      <div class="flex-1 min-w-0">
+        <p class="font-poppins font-semibold text-sm leading-snug truncate">${item.name}</p>
+        <p class="font-cormorant text-ember-400 font-semibold mt-0.5">S/ ${item.price}</p>
+      </div>
+      <div class="flex items-center gap-2 bg-coal-700 rounded-xl px-2 py-1.5">
+        <button onclick="changeQty(${item.id},-1)" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="minus" class="w-3 h-3"></i></button>
+        <span class="font-poppins font-bold text-sm min-w-[16px] text-center">${item.qty}</span>
+        <button onclick="changeQty(${item.id},1)" class="text-salt-400 hover:text-ember-400 transition"><i data-lucide="plus" class="w-3 h-3"></i></button>
+      </div>
+      <button onclick="removeFromCart(${item.id})" class="text-salt-600 hover:text-red-400 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+    </div>`).join('');
+
+  const subtotal = cart.reduce((s,c) => s + c.price*c.qty, 0);
+  const discount = promoApplied ? subtotal * 0.15 : 0;
+  const total = subtotal - discount;
+
+  document.getElementById('summarySubtotal').textContent = `S/ ${subtotal.toFixed(2)}`;
+  document.getElementById('summaryTotal').textContent = `S/ ${total.toFixed(2)}`;
+  document.getElementById('chkSubtotal').textContent = `S/ ${subtotal.toFixed(2)}`;
+  document.getElementById('chkTotal').textContent = `S/ ${total.toFixed(2)}`;
+
+  if (promoApplied) {
+    document.getElementById('discountRow').classList.remove('hidden');
+    document.getElementById('summaryDiscount').textContent = `-S/ ${discount.toFixed(2)}`;
+  }
+  lucide.createIcons();
+}
+
+// ─── PROMO ──────────────────────────────────────────────
+function applyPromo() {
+  const code = document.getElementById('promoInput').value.trim().toUpperCase();
+  const msg = document.getElementById('promoMsg');
+  if (code === 'EMBER15') {
+    promoApplied = true;
+    msg.textContent = '✅ ¡Código aplicado! 15% de descuento.';
+    msg.className = 'text-xs mt-1.5 font-dm text-green-400';
+    msg.classList.remove('hidden');
+    updateCartUI();
+  } else {
+    msg.textContent = '❌ Código inválido o ya usado.';
+    msg.className = 'text-xs mt-1.5 font-dm text-red-400';
+    msg.classList.remove('hidden');
+  }
+}
+
+// ─── CART PANEL TOGGLE ──────────────────────────────────
+document.getElementById('cartBtn').addEventListener('click', () => {
+  document.getElementById('cartPanel').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+});
+document.getElementById('closeCart').addEventListener('click', closeCartPanel);
+document.getElementById('cartOverlay').addEventListener('click', closeCartPanel);
+function closeCartPanel() {
+  document.getElementById('cartPanel').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+}
+
+// ─── CHECKOUT ───────────────────────────────────────────
+function openCheckout() {
+  closeCartPanel();
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function closeCheckout() { document.getElementById('checkoutModal').classList.remove('open'); }
+
+function setDelivery(mode) {
+  deliveryMode = mode;
+  const btnD = document.getElementById('btnDelivery');
+  const btnP = document.getElementById('btnPickup');
+  const addr = document.getElementById('addressSection');
+  if (mode === 'delivery') {
+    btnD.classList.replace('border-white/10','border-ember-500');
+    btnD.classList.add('bg-ember-500/10');
+    btnP.classList.replace('border-ember-500','border-white/10');
+    btnP.classList.remove('bg-ember-500/10');
+    addr.style.display = 'block';
+  } else {
+    btnP.classList.replace('border-white/10','border-ember-500');
+    btnP.classList.add('bg-ember-500/10');
+    btnD.classList.replace('border-ember-500','border-white/10');
+    btnD.classList.remove('bg-ember-500/10');
+    addr.style.display = 'none';
+  }
+}
+
+function placeOrder() {
+  closeCheckout();
+  const num = '#EMB-' + (Math.floor(Math.random()*90000)+10000);
+  document.getElementById('orderNumber').textContent = num;
+  document.getElementById('successModal').classList.add('open');
+  cart = []; promoApplied = false;
+  updateCartUI(); renderProducts();
+}
+function closeSuccess() { document.getElementById('successModal').classList.remove('open'); }
+
+// ─── TOAST ──────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg) {
+  clearTimeout(toastTimeout);
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── SEARCH & FILTER ────────────────────────────────────
+function setupSearch() {
+  ['searchInput','searchInputMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => { searchQuery = e.target.value.toLowerCase(); renderProducts(); });
+  });
+}
+
+document.querySelectorAll('.cat-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCategory = btn.dataset.cat;
+    renderProducts();
+  });
+});
+
+document.getElementById('sortSelect').addEventListener('change', e => { sortMode = e.target.value; renderProducts(); });
+
+// ─── CLOSE MODALS ON BACKDROP ───────────────────────────
+document.getElementById('checkoutModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeCheckout(); });
+document.getElementById('productModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeProduct(); });
+document.getElementById('successModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeSuccess(); });
+
+// ─── INIT ───────────────────────────────────────────────
+renderProducts();
+setupSearch();
+lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferretería Salazar — Inventario</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --sidebar-w:240px;
+    --accent:#1a1a2e;
+    --accent2:#e63946;
+    --bg:#f8f8f6;
+    --card:#ffffff;
+    --border:#e8e8e4;
+    --text:#1a1a1a;
+    --muted:#6b6b6b;
+    --green:#16a34a;
+    --amber:#d97706;
+    --red:#dc2626;
+    --blue:#2563eb;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  .sidebar{position:fixed;top:0;left:0;height:100vh;width:var(--sidebar-w);background:var(--accent);color:#fff;display:flex;flex-direction:column;z-index:100;transition:transform .3s ease}
+  .sidebar-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+  .sidebar-logo .brand{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:.2rem}
+  .sidebar-logo h1{font-size:1rem;font-weight:600;color:#fff;line-height:1.3}
+  .sidebar-logo span{color:var(--accent2);font-size:.85rem}
+  .nav-section{padding:.75rem 0}
+  .nav-label{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:.5rem 1.25rem .25rem;font-weight:500}
+  .nav-item{display:flex;align-items:center;gap:.75rem;padding:.55rem 1.25rem;cursor:pointer;font-size:.8rem;color:rgba(255,255,255,.65);transition:all .15s;border-left:2px solid transparent;font-weight:400}
+  .nav-item:hover{color:#fff;background:rgba(255,255,255,.06);border-left-color:rgba(255,255,255,.2)}
+  .nav-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--accent2)}
+  .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+  .nav-item.active svg{opacity:1}
+  .main{margin-left:var(--sidebar-w);min-height:100vh;transition:margin .3s}
+  .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+  .topbar-left{display:flex;align-items:center;gap:1rem}
+  .page-title{font-size:.95rem;font-weight:600;color:var(--text)}
+  .page-sub{font-size:.75rem;color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:6px;font-size:.78rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:#0f0f1e}
+  .btn-danger{background:var(--accent2);color:#fff}
+  .btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}
+  .btn-outline:hover{background:var(--bg)}
+  .btn-sm{padding:.35rem .75rem;font-size:.72rem}
+  .btn-icon{padding:.4rem;border-radius:5px;background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--muted);transition:all .15s}
+  .btn-icon:hover{background:var(--bg);color:var(--text)}
+  .content{padding:1.5rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px}
+  .card-pad{padding:1.25rem}
+  .metric-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+  .metric-val{font-size:1.6rem;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-.03em}
+  .metric-label{font-size:.72rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+  .metric-delta{font-size:.72rem;font-weight:500;margin-top:.25rem}
+  .delta-up{color:var(--green)}
+  .delta-down{color:var(--red)}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.78rem}
+  th{text-align:left;padding:.75rem 1rem;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:.75rem 1rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .badge{display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:100px;font-size:.65rem;font-weight:600;letter-spacing:.03em;white-space:nowrap}
+  .badge-green{background:#dcfce7;color:#15803d}
+  .badge-red{background:#fee2e2;color:#b91c1c}
+  .badge-amber{background:#fef3c7;color:#92400e}
+  .badge-blue{background:#dbeafe;color:#1d4ed8}
+  .badge-gray{background:#f1f5f9;color:#475569}
+  .badge-dark{background:#1a1a2e;color:#fff}
+  .input{width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);outline:none;transition:border .15s}
+  .input:focus{border-color:#999}
+  .input-sm{padding:.35rem .65rem;font-size:.75rem}
+  select.input{cursor:pointer}
+  label.form-label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem}
+  .form-group{margin-bottom:1rem}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .2s}
+  .modal-overlay.open{opacity:1;pointer-events:all}
+  .modal{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);transform:translateY(8px);transition:transform .2s}
+  .modal-overlay.open .modal{transform:translateY(0)}
+  .modal-lg{max-width:720px}
+  .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-body{padding:1.5rem}
+  .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem}
+  .modal-title{font-size:.9rem;font-weight:600}
+  .close-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.2rem;line-height:1;padding:.2rem}
+  .search-bar{position:relative}
+  .search-bar input{padding-left:2rem}
+  .search-bar svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--muted);width:14px;height:14px}
+  .tab-bar{display:flex;gap:.25rem;border-bottom:1px solid var(--border);padding:0}
+  .tab{padding:.6rem 1rem;font-size:.78rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all .15s;margin-bottom:-1px}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .tab:hover:not(.active){color:var(--text)}
+  .stock-bar{height:6px;background:#e8e8e4;border-radius:3px;overflow:hidden}
+  .stock-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+  .sidebar-toggle{display:none;background:none;border:none;cursor:pointer;padding:.3rem;color:var(--muted)}
+  .page{display:none}
+  .page.active{display:block}
+  .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+  .alert{padding:.75rem 1rem;border-radius:8px;font-size:.78rem;font-weight:500;margin-bottom:1rem}
+  .alert-warning{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+  .alert-success{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+  .permission-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)}
+  .permission-row:last-child{border-bottom:none}
+  .checkbox-group{display:flex;gap:.75rem}
+  .checkbox-item{display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--muted);cursor:pointer}
+  .checkbox-item input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px}
+  .sku-mono{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
+  .empty-state{text-align:center;padding:3rem 1rem;color:var(--muted)}
+  .empty-state svg{width:40px;height:40px;margin:0 auto 1rem;opacity:.3}
+  .timeline-item{position:relative;padding-left:1.5rem;padding-bottom:1rem}
+  .timeline-item::before{content:'';position:absolute;left:5px;top:8px;bottom:0;width:1px;background:var(--border)}
+  .timeline-item:last-child::before{display:none}
+  .timeline-dot{position:absolute;left:0;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:#fff}
+  .timeline-dot.green{border-color:var(--green);background:#dcfce7}
+  .timeline-dot.red{border-color:var(--red);background:#fee2e2}
+  .timeline-dot.amber{border-color:var(--amber);background:#fef3c7}
+  .overlay-menu{position:fixed;inset:0;z-index:90;display:none}
+  .overlay-menu.open{display:block}
+  @media(max-width:768px){
+    :root{--sidebar-w:240px}
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .main{margin-left:0}
+    .sidebar-toggle{display:flex}
+    .grid-4{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(2,1fr)}
+    .grid-2{grid-template-columns:1fr}
+    .content{padding:1rem}
+    .topbar{padding:.75rem 1rem}
+    .hide-mobile{display:none!important}
+  }
+  @media(max-width:480px){
+    .grid-4{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:1fr}
+  }
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .dot-green{background:var(--green)}
+  .dot-red{background:var(--red)}
+  .dot-amber{background:var(--amber)}
+  .progress-ring{width:60px;height:60px}
+  .lote-card{border:1px solid var(--border);border-radius:8px;padding:1rem;background:#fff}
+  .lote-card.damaged{border-color:#fca5a5;background:#fff5f5}
+  .chart-bar-wrap{display:flex;flex-direction:column;gap:.5rem}
+  .chart-bar-row{display:flex;align-items:center;gap:.75rem;font-size:.72rem}
+  .chart-bar-label{width:90px;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chart-bar-track{flex:1;height:8px;background:#f1f1ef;border-radius:4px;overflow:hidden}
+  .chart-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .6s}
+  .chart-bar-val{width:50px;font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);text-align:right}
+  select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- Sidebar overlay for mobile -->
+<div class="overlay-menu" id="overlayMenu" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">Sistema de Inventario</div>
+    <h1>Ferretería<br><span>Salazar</span></h1>
+  </div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:1rem">
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active" onclick="goTo('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Inventario</div>
+      <div class="nav-item" onclick="goTo('products',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Productos
+      </div>
+      <div class="nav-item" onclick="goTo('categories',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        Categorías
+      </div>
+      <div class="nav-item" onclick="goTo('brands',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+        Marcas
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Operaciones</div>
+      <div class="nav-item" onclick="goTo('movements',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
+        Movimientos
+      </div>
+      <div class="nav-item" onclick="goTo('lotes',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8zM5 19h14M7 19v2M15 19v2"/></svg>
+        Lotes
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Administración</div>
+      <div class="nav-item" onclick="goTo('users',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Usuarios
+      </div>
+      <div class="nav-item" onclick="goTo('roles',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Roles y Permisos
+      </div>
+    </div>
+  </nav>
+  <div style="padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.1)">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;flex-shrink:0">AS</div>
+      <div>
+        <div style="font-size:.72rem;font-weight:500;color:#fff">Admin Salazar</div>
+        <div style="font-size:.62rem;color:rgba(255,255,255,.4)">Administrador</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="mainContent">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-sub" id="pageDate"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <button class="btn btn-primary btn-sm" id="topbarAction" onclick="topbarActionFn()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="topbarActionLabel">Nuevo</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ====== DASHBOARD ====== -->
+    <div class="page active" id="page-dashboard">
+
+      <!-- Date filter -->
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm active-range" onclick="setRange('today',this)">Hoy</button>
+          <button class="btn btn-outline btn-sm" onclick="setRange('week',this)">Esta semana</button>
+          <button class="btn btn-outline btn-sm" onclick="setRange('month',this)">Este mes</button>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="date" id="dateFrom" class="input input-sm" style="width:140px">
+          <span style="font-size:.75rem;color:var(--muted)">—</span>
+          <input type="date" id="dateTo" class="input input-sm" style="width:140px">
+          <button class="btn btn-outline btn-sm" onclick="applyDateRange()">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="grid-4" style="margin-bottom:1.25rem">
+        <div class="metric-card">
+          <div class="metric-label">Total Productos</div>
+          <div class="metric-val" id="m-totalProducts">0</div>
+          <div class="metric-delta delta-up" id="m-totalProductsDelta">— SKUs activos</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Stock Bajo</div>
+          <div class="metric-val" id="m-lowStock" style="color:var(--red)">0</div>
+          <div class="metric-delta delta-down" id="m-lowStockDelta">requieren reposición</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Entradas (período)</div>
+          <div class="metric-val" id="m-entries" style="color:var(--green)">0</div>
+          <div class="metric-delta delta-up" id="m-entriesDelta">unidades recibidas</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Salidas (período)</div>
+          <div class="metric-val" id="m-exits" style="color:var(--amber)">0</div>
+          <div class="metric-delta" id="m-exitsDelta" style="color:var(--muted)">unidades despachadas</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:1.25rem;gap:1rem">
+        <!-- Top productos bajo stock -->
+        <div class="card">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.82rem;font-weight:600">Productos con stock bajo</span>
+            <span class="badge badge-red" id="lowStockCount">0</span>
+          </div>
+          <div class="card-pad" id="lowStockList" style="min-height:80px"></div>
+        </div>
+
+        <!-- Top movimientos recientes -->
+        <div class="card">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.82rem;font-weight:600">Movimientos recientes</span>
+            <button class="btn btn-outline btn-sm" onclick="goTo('movements',null)">Ver todos</button>
+          </div>
+          <div class="card-pad" id="recentMovements" style="min-height:80px"></div>
+        </div>
+      </div>
+
+      <!-- Chart barras por categoría -->
+      <div class="card card-pad" style="margin-bottom:1.25rem">
+        <div style="font-size:.82rem;font-weight:600;margin-bottom:1rem">Stock por categoría</div>
+        <div class="chart-bar-wrap" id="categoryChart"></div>
+      </div>
+
+      <!-- Últimos lotes y alertas -->
+      <div class="grid-2">
+        <div class="card">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;font-weight:600">Lotes recientes</span>
+          </div>
+          <div class="card-pad" id="dashLotes"></div>
+        </div>
+        <div class="card">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;font-weight:600">Alertas del sistema</span>
+          </div>
+          <div class="card-pad" id="dashAlerts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PRODUCTOS ====== -->
+    <div class="page" id="page-products">
+      <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="input" id="productSearch" placeholder="Buscar por nombre, SKU..." oninput="renderProducts()" style="padding-left:2rem">
+        </div>
+        <select class="input" style="width:150px" id="filterCategory" onchange="renderProducts()">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select class="input" style="width:130px" id="filterBrand" onchange="renderProducts()">
+          <option value="">Todas las marcas</option>
+        </select>
+        <select class="input" style="width:130px" id="filterStockStatus" onchange="renderProducts()">
+          <option value="">Todo el stock</option>
+          <option value="low">Stock bajo</option>
+          <option value="ok">Stock normal</option>
+          <option value="zero">Sin stock</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Marca</th>
+                <th>Stock actual</th>
+                <th>Stock mín.</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable"></tbody>
+          </table>
+        </div>
+        <div style="padding:.75rem 1.25rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted)" id="productCount"></div>
+      </div>
+    </div>
+
+    <!-- ====== CATEGORÍAS ====== -->
+    <div class="page" id="page-categories">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Productos</th><th>Acciones</th></tr></thead>
+            <tbody id="categoriesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== MARCAS ====== -->
+    <div class="page" id="page-brands">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Marca</th><th>País origen</th><th>Productos</th><th>Acciones</th></tr></thead>
+            <tbody id="brandsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== MOVIMIENTOS ====== -->
+    <div class="page" id="page-movements">
+      <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="input" id="movSearch" placeholder="Buscar por producto, responsable..." oninput="renderMovements()" style="padding-left:2rem">
+        </div>
+        <select class="input" style="width:140px" id="movTypeFilter" onchange="renderMovements()">
+          <option value="">Todos los tipos</option>
+          <option value="entrada">Entrada</option>
+          <option value="salida">Salida</option>
+          <option value="ajuste">Ajuste</option>
+          <option value="dano">Daño/Merma</option>
+        </select>
+        <input type="date" id="movDateFrom" class="input" style="width:140px" onchange="renderMovements()">
+        <input type="date" id="movDateTo" class="input" style="width:140px" onchange="renderMovements()">
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Lote</th>
+                <th>Cant.</th>
+                <th>Responsable</th>
+                <th>Motivo / Nota</th>
+              </tr>
+            </thead>
+            <tbody id="movementsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== LOTES ====== -->
+    <div class="page" id="page-lotes">
+      <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="input" id="loteSearch" placeholder="Buscar lote, producto..." oninput="renderLotes()" style="padding-left:2rem">
+        </div>
+        <select class="input" style="width:140px" id="loteStatusFilter" onchange="renderLotes()">
+          <option value="">Todos</option>
+          <option value="bueno">Buen estado</option>
+          <option value="parcial">Parcialmente dañado</option>
+          <option value="dano">Dañado</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Lote #</th>
+                <th>Producto</th>
+                <th>Fecha entrada</th>
+                <th>Cant. recibida</th>
+                <th>Cant. disponible</th>
+                <th>Cant. dañada</th>
+                <th>Vencimiento</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="lotesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== USUARIOS ====== -->
+    <div class="page" id="page-users">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Último acceso</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ROLES ====== -->
+    <div class="page" id="page-roles">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Descripción</th>
+                <th>Usuarios</th>
+                <th>Permisos</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="rolesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main><!-- /main -->
+
+<!-- ====== MODALS ====== -->
+
+<!-- Modal: Producto -->
+<div class="modal-overlay" id="modalProduct">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="modalProductTitle">Nuevo producto</span>
+      <button class="close-btn" onclick="closeModal('modalProduct')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">SKU *</label>
+          <input class="input" id="pSku" placeholder="Ej: FER-0001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre del producto *</label>
+          <input class="input" id="pName" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría *</label>
+          <select class="input" id="pCategory"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Marca</label>
+          <select class="input" id="pBrand"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock actual</label>
+          <input class="input" id="pStock" type="number" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock mínimo</label>
+          <input class="input" id="pMinStock" type="number" min="0" value="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio costo (S/.)</label>
+          <input class="input" id="pCostPrice" type="number" step="0.01" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio venta (S/.)</label>
+          <input class="input" id="pSalePrice" type="number" step="0.01" min="0" value="0">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Descripción</label>
+          <input class="input" id="pDescription" placeholder="Descripción breve del producto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidad de medida</label>
+          <select class="input" id="pUnit">
+            <option>Unidad</option><option>Par</option><option>Caja</option><option>Bolsa</option><option>Metro</option><option>Litro</option><option>Kg</option><option>Rollo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ubicación en almacén</label>
+          <input class="input" id="pLocation" placeholder="Ej: Estante A-3">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalProduct')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver detalle producto -->
+<div class="modal-overlay" id="modalProductDetail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="detailProductTitle">Detalle del producto</span>
+      <button class="close-btn" onclick="closeModal('modalProductDetail')">×</button>
+    </div>
+    <div class="modal-body" id="modalProductDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalProductDetail')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Categoría -->
+<div class="modal-overlay" id="modalCategory">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalCategoryTitle">Nueva categoría</span>
+      <button class="close-btn" onclick="closeModal('modalCategory')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input class="input" id="catName" placeholder="Nombre de categoría">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="input" id="catDesc" placeholder="Descripción opcional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalCategory')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCategory()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Marca -->
+<div class="modal-overlay" id="modalBrand">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalBrandTitle">Nueva marca</span>
+      <button class="close-btn" onclick="closeModal('modalBrand')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input class="input" id="brandName" placeholder="Nombre de marca">
+      </div>
+      <div class="form-group">
+        <label class="form-label">País de origen</label>
+        <input class="input" id="brandCountry" placeholder="Ej: Perú, China, USA">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalBrand')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBrand()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Movimiento -->
+<div class="modal-overlay" id="modalMovement">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar movimiento</span>
+      <button class="close-btn" onclick="closeModal('modalMovement')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Tipo de movimiento *</label>
+        <select class="input" id="movType">
+          <option value="entrada">Entrada</option>
+          <option value="salida">Salida</option>
+          <option value="ajuste">Ajuste de inventario</option>
+          <option value="dano">Daño / Merma</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Producto *</label>
+        <select class="input" id="movProduct"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lote (opcional)</label>
+        <select class="input" id="movLote"><option value="">Sin lote específico</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cantidad *</label>
+        <input class="input" id="movQty" type="number" min="1" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable *</label>
+        <select class="input" id="movResponsible"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo / Nota</label>
+        <input class="input" id="movNote" placeholder="Ej: Compra a proveedor, venta, etc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="input" id="movDate" type="datetime-local">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalMovement')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMovement()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Lote -->
+<div class="modal-overlay" id="modalLote">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="modalLoteTitle">Registrar lote</span>
+      <button class="close-btn" onclick="closeModal('modalLote')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Número de lote *</label>
+          <input class="input" id="loteNum" placeholder="Ej: LOT-2024-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Producto *</label>
+          <select class="input" id="loteProduct"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de entrada *</label>
+          <input class="input" id="loteEntryDate" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de vencimiento</label>
+          <input class="input" id="loteExpiry" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad recibida *</label>
+          <input class="input" id="loteQtyReceived" type="number" min="1" value="">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad dañada</label>
+          <input class="input" id="loteQtyDamaged" type="number" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proveedor</label>
+          <input class="input" id="loteSupplier" placeholder="Nombre del proveedor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsable recepción</label>
+          <select class="input" id="loteResponsible"></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Observaciones sobre daño</label>
+          <input class="input" id="loteDamageNote" placeholder="Describir daño si aplica...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalLote')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLote()">Registrar lote</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Usuario -->
+<div class="modal-overlay" id="modalUser">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalUserTitle">Nuevo usuario</span>
+      <button class="close-btn" onclick="closeModal('modalUser')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre completo *</label>
+        <input class="input" id="userName" placeholder="Nombre y apellido">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="input" id="userEmail" type="email" placeholder="correo@ferreteria.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input class="input" id="userPass" type="password" placeholder="Contraseña (mín. 6 caracteres)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol *</label>
+        <select class="input" id="userRole"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="input" id="userStatus">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalUser')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Guardar usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rol -->
+<div class="modal-overlay" id="modalRole">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="modalRoleTitle">Nuevo rol</span>
+      <button class="close-btn" onclick="closeModal('modalRole')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del rol *</label>
+        <input class="input" id="roleName" placeholder="Ej: Almacenero, Vendedor...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="input" id="roleDesc" placeholder="Descripción del rol">
+      </div>
+      <div style="margin-top:1rem">
+        <div style="font-size:.78rem;font-weight:600;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)">
+          Permisos del rol
+        </div>
+        <div id="permissionsContainer"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalRole')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRole()">Guardar rol</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver permisos del rol -->
+<div class="modal-overlay" id="modalViewPermissions">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="viewPermTitle">Permisos del rol</span>
+      <button class="close-btn" onclick="closeModal('modalViewPermissions')">×</button>
+    </div>
+    <div class="modal-body" id="viewPermBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalViewPermissions')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar eliminar -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <span class="modal-title">Confirmar acción</span>
+      <button class="close-btn" onclick="closeModal('modalConfirm')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--muted)" id="confirmMsg">¿Estás seguro de que deseas eliminar este elemento?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalConfirm')">Cancelar</button>
+      <button class="btn btn-danger" id="confirmBtn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Marcar daño en lote -->
+<div class="modal-overlay" id="modalMarkDamage">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar daño en lote</span>
+      <button class="close-btn" onclick="closeModal('modalMarkDamage')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="damageLoteInfo" style="background:var(--bg);border-radius:8px;padding:.75rem;margin-bottom:1rem;font-size:.78rem"></div>
+      <div class="form-group">
+        <label class="form-label">Cantidad dañada adicional</label>
+        <input class="input" id="damageQty" type="number" min="1" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción del daño *</label>
+        <input class="input" id="damageNote" placeholder="Ej: Llegó mojado, golpeado, etc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable</label>
+        <select class="input" id="damageResponsible"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalMarkDamage')">Cancelar</button>
+      <button class="btn btn-danger" onclick="saveDamage()">Registrar daño</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA STORE
+// ============================================================
+let db = {
+  categories: [
+    {id:1,name:'Herramientas manuales',desc:'Martillos, destornilladores, llaves'},
+    {id:2,name:'Herramientas eléctricas',desc:'Taladros, esmeriles, sierras'},
+    {id:3,name:'Materiales de construcción',desc:'Cemento, fierro, piedra'},
+    {id:4,name:'Plomería',desc:'Tuberías, válvulas, llaves'},
+    {id:5,name:'Electricidad',desc:'Cables, tomacorrientes, llaves'},
+    {id:6,name:'Pinturas y acabados',desc:'Pinturas, barnices, solventes'},
+    {id:7,name:'Fijaciones',desc:'Clavos, tornillos, pernos, anclajes'},
+  ],
+  brands: [
+    {id:1,name:'Stanley',country:'USA'},
+    {id:2,name:'Bosch',country:'Alemania'},
+    {id:3,name:'Makita',country:'Japón'},
+    {id:4,name:'3M',country:'USA'},
+    {id:5,name:'Pretul',country:'México'},
+    {id:6,name:'Tekno',country:'Perú'},
+  ],
+  products: [
+    {id:1,sku:'FER-0001',name:'Martillo de carpintero 16oz',catId:1,brandId:1,stock:45,minStock:10,costPrice:18.5,salePrice:28.0,description:'Martillo con mango de fibra',unit:'Unidad',location:'A-1'},
+    {id:2,sku:'FER-0002',name:'Destornillador juego 6 pzs',catId:1,brandId:1,stock:3,minStock:8,costPrice:12.0,salePrice:22.0,description:'Set destornilladores plano/estrella',unit:'Juego',location:'A-2'},
+    {id:3,sku:'FER-0003',name:'Taladro percutor 13mm',catId:2,brandId:2,stock:12,minStock:5,costPrice:180.0,salePrice:280.0,description:'Taladro 700W con percutor',unit:'Unidad',location:'B-1'},
+    {id:4,sku:'FER-0004',name:'Disco esmeril 4.5"',catId:2,brandId:3,stock:0,minStock:20,costPrice:4.5,salePrice:8.0,description:'Disco abrasivo 115mm',unit:'Unidad',location:'B-2'},
+    {id:5,sku:'FER-0005',name:'Tubo PVC 4" x 3m',catId:4,brandId:6,stock:28,minStock:15,costPrice:22.0,salePrice:35.0,description:'Tubo PVC presión',unit:'Unidad',location:'C-1'},
+    {id:6,sku:'FER-0006',name:'Cable NYM 2.5mm rollo 100m',catId:5,brandId:4,stock:8,minStock:10,costPrice:120.0,salePrice:185.0,description:'Cable NYM 2x2.5mm blanco',unit:'Rollo',location:'D-1'},
+    {id:7,sku:'FER-0007',name:'Pintura látex blanco 4L',catId:6,brandId:5,stock:35,minStock:10,costPrice:32.0,salePrice:52.0,description:'Pintura látex interior',unit:'Unidad',location:'E-1'},
+    {id:8,sku:'FER-0008',name:'Tornillo autorroscante 1" (caja)',catId:7,brandId:6,stock:4,minStock:20,costPrice:8.0,salePrice:14.0,description:'Tornillo hex 1 pulgada x200',unit:'Caja',location:'F-1'},
+  ],
+  movements: [
+    {id:1,date:'2024-01-15T09:30',type:'entrada',productId:1,loteId:1,qty:50,responsible:'Carlos M.',note:'Compra proveedor Lima'},
+    {id:2,date:'2024-01-15T10:00',type:'salida',productId:1,loteId:null,qty:5,responsible:'Ana R.',note:'Venta al detalle'},
+    {id:3,date:'2024-01-16T08:15',type:'entrada',productId:3,loteId:2,qty:15,responsible:'Carlos M.',note:'Ingreso nuevo stock'},
+    {id:4,date:'2024-01-17T11:00',type:'dano',productId:4,loteId:3,qty:10,responsible:'Luis P.',note:'Llegaron rotos del proveedor'},
+    {id:5,date:'2024-01-18T09:00',type:'salida',productId:7,loteId:null,qty:8,responsible:'Ana R.',note:'Venta por mayor'},
+    {id:6,date:'2024-01-18T14:30',type:'ajuste',productId:6,loteId:null,qty:-2,responsible:'Carlos M.',note:'Ajuste por conteo físico'},
+    {id:7,date:'2024-01-19T10:00',type:'entrada',productId:2,loteId:4,qty:20,responsible:'Luis P.',note:'Reposición mínima'},
+    {id:8,date:'2024-01-20T09:00',type:'salida',productId:8,loteId:null,qty:5,responsible:'Ana R.',note:'Venta'},
+  ],
+  lotes: [
+    {id:1,num:'LOT-2024-001',productId:1,entryDate:'2024-01-15',expiry:'',qtyReceived:50,qtyAvailable:45,qtyDamaged:0,supplier:'Distribuidora Lima SAC',responsibleId:2,damageNote:'',status:'bueno'},
+    {id:2,num:'LOT-2024-002',productId:3,entryDate:'2024-01-16',expiry:'',qtyReceived:15,qtyAvailable:12,qtyDamaged:3,supplier:'Importadora Tech SAC',responsibleId:2,damageNote:'3 unidades con caja deteriorada',status:'parcial'},
+    {id:3,num:'LOT-2024-003',productId:4,entryDate:'2024-01-17',expiry:'2025-01-17',qtyReceived:30,qtyAvailable:0,qtyDamaged:30,supplier:'Ferretería Central',responsibleId:3,damageNote:'Todo el lote llegó aplastado',status:'dano'},
+    {id:4,num:'LOT-2024-004',productId:2,entryDate:'2024-01-19',expiry:'',qtyReceived:20,qtyAvailable:20,qtyDamaged:0,supplier:'Stanley Perú',responsibleId:2,damageNote:'',status:'bueno'},
+  ],
+  users: [
+    {id:1,name:'Admin Salazar',email:'admin@ferreterialazar.com',roleId:1,status:'activo',lastAccess:'2024-01-20'},
+    {id:2,name:'Carlos Mendoza',email:'carlos@ferreterialazar.com',roleId:2,status:'activo',lastAccess:'2024-01-20'},
+    {id:3,name:'Ana Ríos',email:'ana@ferreterialazar.com',roleId:3,status:'activo',lastAccess:'2024-01-19'},
+    {id:4,name:'Luis Palomino',email:'luis@ferreterialazar.com',roleId:3,status:'inactivo',lastAccess:'2024-01-10'},
+  ],
+  roles: [
+    {id:1,name:'Administrador',desc:'Acceso total al sistema',permissions:{products:{ver:true,crear:true,editar:true,eliminar:true},categories:{ver:true,crear:true,editar:true,eliminar:true},brands:{ver:true,crear:true,editar:true,eliminar:true},movements:{ver:true,crear:true,editar:true,eliminar:true},lotes:{ver:true,crear:true,editar:true,eliminar:true},users:{ver:true,crear:true,editar:true,eliminar:true},roles:{ver:true,crear:true,editar:true,eliminar:true}}},
+    {id:2,name:'Almacenero',desc:'Gestión de inventario y lotes',permissions:{products:{ver:true,crear:true,editar:true,eliminar:false},categories:{ver:true,crear:false,editar:false,eliminar:false},brands:{ver:true,crear:false,editar:false,eliminar:false},movements:{ver:true,crear:true,editar:false,eliminar:false},lotes:{ver:true,crear:true,editar:true,eliminar:false},users:{ver:false,crear:false,editar:false,eliminar:false},roles:{ver:false,crear:false,editar:false,eliminar:false}}},
+    {id:3,name:'Vendedor',desc:'Solo consultas y salidas',permissions:{products:{ver:true,crear:false,editar:false,eliminar:false},categories:{ver:true,crear:false,editar:false,eliminar:false},brands:{ver:true,crear:false,editar:false,eliminar:false},movements:{ver:true,crear:true,editar:false,eliminar:false},lotes:{ver:true,crear:false,editar:false,eliminar:false},users:{ver:false,crear:false,editar:false,eliminar:false},roles:{ver:false,crear:false,editar:false,eliminar:false}}},
+  ],
+  nextId:{cat:8,brand:7,product:9,movement:9,lote:5,user:5,role:4}
+};
+
+const MODULES = [
+  {key:'products',label:'Productos'},
+  {key:'categories',label:'Categorías'},
+  {key:'brands',label:'Marcas'},
+  {key:'movements',label:'Movimientos'},
+  {key:'lotes',label:'Lotes'},
+  {key:'users',label:'Usuarios'},
+  {key:'roles',label:'Roles'},
+];
+const PERM_KEYS = ['ver','crear','editar','eliminar'];
+
+let currentPage = 'dashboard';
+let editingId = null;
+let damageLoteId = null;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n=>{
+      if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+page+"'")) n.classList.add('active');
+    });
+  }
+  currentPage = page;
+  const titles = {dashboard:'Dashboard',products:'Productos',categories:'Categorías',brands:'Marcas',movements:'Movimientos',lotes:'Lotes',users:'Usuarios',roles:'Roles y Permisos'};
+  const actions = {dashboard:'Configurar',products:'Nuevo producto',categories:'Nueva categoría',brands:'Nueva marca',movements:'Registrar movimiento',lotes:'Registrar lote',users:'Nuevo usuario',roles:'Nuevo rol'};
+  document.getElementById('pageTitle').textContent = titles[page]||page;
+  document.getElementById('topbarActionLabel').textContent = actions[page]||'Nuevo';
+  
+  if(page==='products'){renderProducts();populateProductSelects();}
+  if(page==='categories') renderCategories();
+  if(page==='brands') renderBrands();
+  if(page==='movements') renderMovements();
+  if(page==='lotes') renderLotes();
+  if(page==='users') renderUsers();
+  if(page==='roles') renderRoles();
+  if(page==='dashboard') renderDashboard();
+  closeSidebar();
+}
+
+function topbarActionFn(){
+  const actions = {
+    dashboard:()=>setRange('today',document.querySelector('.active-range')),
+    products:()=>openProductModal(),
+    categories:()=>openCategoryModal(),
+    brands:()=>openBrandModal(),
+    movements:()=>openMovementModal(),
+    lotes:()=>openLoteModal(),
+    users:()=>openUserModal(),
+    roles:()=>openRoleModal(),
+  };
+  if(actions[currentPage]) actions[currentPage]();
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlayMenu').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlayMenu').classList.remove('open');
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const now = new Date();
+  document.getElementById('pageDate').textContent = now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  
+  const totalProducts = db.products.length;
+  const lowStock = db.products.filter(p=>p.stock>0&&p.stock<=p.minStock).length;
+  const zeroStock = db.products.filter(p=>p.stock===0).length;
+  
+  // Period movements (all by default)
+  const entries = db.movements.filter(m=>m.type==='entrada').reduce((s,m)=>s+(m.qty>0?m.qty:0),0);
+  const exits = db.movements.filter(m=>m.type==='salida').reduce((s,m)=>s+m.qty,0);
+  
+  document.getElementById('m-totalProducts').textContent = totalProducts;
+  document.getElementById('m-totalProductsDelta').textContent = totalProducts+' SKUs activos';
+  document.getElementById('m-lowStock').textContent = lowStock+zeroStock;
+  document.getElementById('m-lowStockDelta').textContent = zeroStock+' sin stock, '+lowStock+' bajo mínimo';
+  document.getElementById('m-entries').textContent = entries;
+  document.getElementById('m-exits').textContent = exits;
+
+  // Low stock list
+  const lowProds = db.products.filter(p=>p.stock<=p.minStock).sort((a,b)=>a.stock-b.stock).slice(0,5);
+  document.getElementById('lowStockCount').textContent = lowProds.length;
+  if(lowProds.length===0){
+    document.getElementById('lowStockList').innerHTML = '<div class="empty-state"><div style="font-size:.78rem">No hay productos con stock bajo ✓</div></div>';
+  } else {
+    document.getElementById('lowStockList').innerHTML = lowProds.map(p=>{
+      const pct = p.minStock>0?Math.round((p.stock/p.minStock)*100):0;
+      const color = p.stock===0?'var(--red)':pct<50?'var(--red)':'var(--amber)';
+      return `<div style="margin-bottom:.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+          <span style="font-size:.75rem;font-weight:500">${p.name}</span>
+          <span style="font-size:.72rem;font-weight:600;color:${color}">${p.stock} / ${p.minStock}</span>
+        </div>
+        <div class="stock-bar"><div class="stock-bar-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent movements
+  const recent = [...db.movements].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  document.getElementById('recentMovements').innerHTML = recent.length===0?'<div class="empty-state"><div>Sin movimientos</div></div>':
+    recent.map(m=>{
+      const p=db.products.find(x=>x.id===m.productId);
+      const typeConf={entrada:{label:'Entrada',color:'badge-green'},salida:{label:'Salida',color:'badge-amber'},ajuste:{label:'Ajuste',color:'badge-blue'},dano:{label:'Daño',color:'badge-red'}};
+      const tc=typeConf[m.type]||{label:m.type,color:'badge-gray'};
+      const d=new Date(m.date).toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'});
+      return `<div class="timeline-item">
+        <div class="timeline-dot ${m.type==='entrada'?'green':m.type==='salida'?'amber':m.type==='dano'?'red':''}"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-size:.75rem;font-weight:500">${p?p.name:'Producto eliminado'}</span>
+            <span style="margin-left:.5rem" class="badge ${tc.color}">${tc.label}</span>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem">${m.responsible} · ${d}</div>
+          </div>
+          <span style="font-size:.78rem;font-weight:600;font-family:'DM Mono',monospace">${m.type==='salida'?'-':''}${Math.abs(m.qty)}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+  // Category chart
+  const catData = db.categories.map(c=>{
+    const total = db.products.filter(p=>p.catId===c.id).reduce((s,p)=>s+p.stock,0);
+    return {name:c.name,val:total};
+  }).filter(c=>c.val>0).sort((a,b)=>b.val-a.val);
+  const maxVal = catData.length?Math.max(...catData.map(c=>c.val)):1;
+  document.getElementById('categoryChart').innerHTML = catData.length===0?'<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:1rem">Sin datos</div>':
+    catData.map(c=>`<div class="chart-bar-row">
+      <span class="chart-bar-label" title="${c.name}">${c.name}</span>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round((c.val/maxVal)*100)}%"></div></div>
+      <span class="chart-bar-val">${c.val}</span>
+    </div>`).join('');
+
+  // Dash lotes
+  const recentLotes = [...db.lotes].sort((a,b)=>new Date(b.entryDate)-new Date(a.entryDate)).slice(0,4);
+  document.getElementById('dashLotes').innerHTML = recentLotes.map(l=>{
+    const p=db.products.find(x=>x.id===l.productId);
+    const statusConf={bueno:{cls:'badge-green',label:'OK'},parcial:{cls:'badge-amber',label:'Parcial'},dano:{cls:'badge-red',label:'Dañado'}};
+    const sc=statusConf[l.status]||{cls:'badge-gray',label:l.status};
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:.75rem;font-weight:500">${l.num}</div>
+        <div style="font-size:.68rem;color:var(--muted)">${p?p.name:'-'}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge ${sc.cls}">${sc.label}</span>
+        <div style="font-size:.65rem;color:var(--muted);margin-top:.2rem">${l.entryDate}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Alerts
+  const alerts=[];
+  db.products.filter(p=>p.stock===0).forEach(p=>alerts.push({type:'red',msg:`Sin stock: ${p.name}`}));
+  db.products.filter(p=>p.stock>0&&p.stock<=p.minStock).forEach(p=>alerts.push({type:'amber',msg:`Stock bajo: ${p.name} (${p.stock} uds.)`}));
+  db.lotes.filter(l=>l.status==='dano').forEach(l=>alerts.push({type:'red',msg:`Lote dañado: ${l.num}`}));
+  document.getElementById('dashAlerts').innerHTML = alerts.length===0?
+    `<div class="empty-state"><div style="font-size:.78rem;color:var(--green)">Sin alertas activas ✓</div></div>`:
+    alerts.slice(0,5).map(a=>`<div class="alert alert-${a.type==='red'?'warning':'warning'}" style="background:${a.type==='red'?'#fee2e2':'#fef3c7'};color:${a.type==='red'?'#b91c1c':'#92400e'};border:1px solid ${a.type==='red'?'#fca5a5':'#fde68a'};margin-bottom:.5rem">
+      <span style="font-size:.75rem">${a.msg}</span>
+    </div>`).join('');
+}
+
+function setRange(r,btn){
+  document.querySelectorAll('.active-range').forEach(b=>{b.classList.remove('active-range');b.style.background='';b.style.color='';});
+  if(btn){btn.classList.add('active-range');btn.style.background='var(--accent)';btn.style.color='#fff';}
+  renderDashboard();
+}
+function applyDateRange(){renderDashboard();}
+
+// ============================================================
+// PRODUCTS
+// ============================================================
+function populateProductSelects(){
+  const catSel = document.getElementById('pCategory');
+  const brandSel = document.getElementById('pBrand');
+  const filterCat = document.getElementById('filterCategory');
+  const filterBrand = document.getElementById('filterBrand');
+  catSel.innerHTML = db.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  brandSel.innerHTML = '<option value="">Sin marca</option>'+db.brands.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+  filterCat.innerHTML = '<option value="">Todas las categorías</option>'+db.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  filterBrand.innerHTML = '<option value="">Todas las marcas</option>'+db.brands.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+}
+
+function renderProducts(){
+  const q=(document.getElementById('productSearch').value||'').toLowerCase();
+  const catF=document.getElementById('filterCategory').value;
+  const brandF=document.getElementById('filterBrand').value;
+  const stockF=document.getElementById('filterStockStatus').value;
+  let prods=db.products.filter(p=>{
+    if(q&&!p.name.toLowerCase().includes(q)&&!p.sku.toLowerCase().includes(q)) return false;
+    if(catF&&p.catId!=catF) return false;
+    if(brandF&&p.brandId!=brandF) return false;
+    if(stockF==='low'&&!(p.stock>0&&p.stock<=p.minStock)) return false;
+    if(stockF==='ok'&&!(p.stock>p.minStock)) return false;
+    if(stockF==='zero'&&p.stock!==0) return false;
+    return true;
+  });
+  document.getElementById('productCount').textContent = `Mostrando ${prods.length} de ${db.products.length} productos`;
+  const tbody=document.getElementById('productsTable');
+  if(!prods.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);font-size:.78rem">Sin resultados</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=prods.map(p=>{
+    const cat=db.categories.find(c=>c.id===p.catId);
+    const brand=db.brands.find(b=>b.id===p.brandId);
+    let statusBadge;
+    if(p.stock===0) statusBadge='<span class="badge badge-red">Sin stock</span>';
+    else if(p.stock<=p.minStock) statusBadge='<span class="badge badge-amber">Stock bajo</span>';
+    else statusBadge='<span class="badge badge-green">Normal</span>';
+    return `<tr>
+      <td><span class="sku-mono">${p.sku}</span></td>
+      <td><span style="font-weight:500;font-size:.78rem">${p.name}</span></td>
+      <td><span style="font-size:.73rem;color:var(--muted)">${cat?cat.name:'-'}</span></td>
+      <td><span style="font-size:.73rem;color:var(--muted)">${brand?brand.name:'-'}</span></td>
+      <td><span style="font-weight:600;font-family:'DM Mono',monospace">${p.stock}</span> <span style="font-size:.65rem;color:var(--muted)">${p.unit}</span></td>
+      <td><span style="font-size:.73rem;color:var(--muted)">${p.minStock}</span></td>
+      <td>${statusBadge}</td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn-icon" title="Ver detalle" onclick="openProductDetail(${p.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn-icon" title="Editar" onclick="openProductModal(${p.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" title="Eliminar" onclick="confirmDelete('product',${p.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openProductModal(id=null){
+  editingId=id;
+  populateProductSelects();
+  document.getElementById('modalProductTitle').textContent = id?'Editar producto':'Nuevo producto';
+  if(id){
+    const p=db.products.find(x=>x.id===id);
+    document.getElementById('pSku').value=p.sku;
+    document.getElementById('pName').value=p.name;
+    document.getElementById('pCategory').value=p.catId;
+    document.getElementById('pBrand').value=p.brandId||'';
+    document.getElementById('pStock').value=p.stock;
+    document.getElementById('pMinStock').value=p.minStock;
+    document.getElementById('pCostPrice').value=p.costPrice;
+    document.getElementById('pSalePrice').value=p.salePrice;
+    document.getElementById('pDescription').value=p.description||'';
+    document.getElementById('pUnit').value=p.unit;
+    document.getElementById('pLocation').value=p.location||'';
+  } else {
+    ['pSku','pName','pDescription','pLocation'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pStock').value=0;
+    document.getElementById('pMinStock').value=5;
+    document.getElementById('pCostPrice').value=0;
+    document.getElementById('pSalePrice').value=0;
+  }
+  openModal('modalProduct');
+}
+
+function saveProduct(){
+  const sku=document.getElementById('pSku').value.trim();
+  const name=document.getElementById('pName').value.trim();
+  if(!sku||!name){alert('SKU y Nombre son obligatorios');return;}
+  const data={
+    sku,name,
+    catId:parseInt(document.getElementById('pCategory').value),
+    brandId:parseInt(document.getElementById('pBrand').value)||null,
+    stock:parseInt(document.getElementById('pStock').value)||0,
+    minStock:parseInt(document.getElementById('pMinStock').value)||0,
+    costPrice:parseFloat(document.getElementById('pCostPrice').value)||0,
+    salePrice:parseFloat(document.getElementById('pSalePrice').value)||0,
+    description:document.getElementById('pDescription').value,
+    unit:document.getElementById('pUnit').value,
+    location:document.getElementById('pLocation').value,
+  };
+  if(editingId){
+    const idx=db.products.findIndex(p=>p.id===editingId);
+    db.products[idx]={...db.products[idx],...data};
+  } else {
+    db.products.push({id:db.nextId.product++,...data});
+  }
+  closeModal('modalProduct');
+  renderProducts();
+}
+
+function openProductDetail(id){
+  const p=db.products.find(x=>x.id===id);
+  const cat=db.categories.find(c=>c.id===p.catId);
+  const brand=db.brands.find(b=>b.id===p.brandId);
+  const lotes=db.lotes.filter(l=>l.productId===id);
+  const movs=db.movements.filter(m=>m.productId===id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+  let statusBadge=p.stock===0?'<span class="badge badge-red">Sin stock</span>':p.stock<=p.minStock?'<span class="badge badge-amber">Stock bajo</span>':'<span class="badge badge-green">Normal</span>';
+  document.getElementById('detailProductTitle').textContent=p.name;
+  document.getElementById('modalProductDetailBody').innerHTML=`
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
+      <div style="flex:1;min-width:200px">
+        <div class="metric-card" style="margin-bottom:.75rem">
+          <div class="metric-label">Stock actual</div>
+          <div class="metric-val">${p.stock} <span style="font-size:.9rem;font-weight:400;color:var(--muted)">${p.unit}</span></div>
+          <div style="margin-top:.5rem">${statusBadge}</div>
+        </div>
+        <table style="width:100%;font-size:.75rem">
+          <tr><td style="color:var(--muted);padding:.3rem 0">SKU</td><td style="text-align:right;font-family:'DM Mono',monospace">${p.sku}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Categoría</td><td style="text-align:right">${cat?cat.name:'-'}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Marca</td><td style="text-align:right">${brand?brand.name:'-'}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Stock mínimo</td><td style="text-align:right">${p.minStock}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Ubicación</td><td style="text-align:right">${p.location||'-'}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Precio costo</td><td style="text-align:right">S/. ${p.costPrice.toFixed(2)}</td></tr>
+          <tr><td style="color:var(--muted);padding:.3rem 0">Precio venta</td><td style="text-align:right">S/. ${p.salePrice.toFixed(2)}</td></tr>
+        </table>
+      </div>
+      <div style="flex:2;min-width:260px">
+        <div style="font-size:.78rem;font-weight:600;margin-bottom:.75rem">Lotes activos (${lotes.length})</div>
+        ${lotes.length===0?'<p style="font-size:.75rem;color:var(--muted)">Sin lotes registrados</p>':lotes.map(l=>{
+          const sc={bueno:'badge-green',parcial:'badge-amber',dano:'badge-red'}[l.status]||'badge-gray';
+          return `<div class="lote-card ${l.status==='dano'?'damaged':''}" style="margin-bottom:.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:600;font-size:.75rem">${l.num}</span>
+              <span class="badge ${sc}">${l.status}</span>
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Disponible: ${l.qtyAvailable} | Dañado: ${l.qtyDamaged} | Proveedor: ${l.supplier}</div>
+            ${l.damageNote?`<div style="font-size:.68rem;color:var(--red);margin-top:.2rem">⚠ ${l.damageNote}</div>`:''}
+          </div>`;
+        }).join('')}
+        <div style="font-size:.78rem;font-weight:600;margin-top:1rem;margin-bottom:.75rem">Historial de movimientos</div>
+        ${movs.length===0?'<p style="font-size:.75rem;color:var(--muted)">Sin movimientos</p>':movs.map(m=>{
+          const typeConf={entrada:{label:'Entrada',color:'var(--green)'},salida:{label:'Salida',color:'var(--amber)'},ajuste:{label:'Ajuste',color:'var(--blue)'},dano:{label:'Daño',color:'var(--red)'}};
+          const tc=typeConf[m.type]||{label:m.type,color:'var(--muted)'};
+          return `<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.72rem">
+            <div>
+              <span style="color:${tc.color};font-weight:600">${tc.label}</span>
+              <span style="color:var(--muted);margin-left:.5rem">${m.responsible}</span>
+              ${m.note?`<span style="color:var(--muted);margin-left:.5rem">· ${m.note}</span>`:''}
+            </div>
+            <div style="font-family:'DM Mono',monospace;font-weight:600;color:${tc.color}">${m.type==='salida'?'-':''}${Math.abs(m.qty)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  openModal('modalProductDetail');
+}
+
+// ============================================================
+// CATEGORIES
+// ============================================================
+function renderCategories(){
+  const tbody=document.getElementById('categoriesTable');
+  tbody.innerHTML=db.categories.map(c=>{
+    const count=db.products.filter(p=>p.catId===c.id).length;
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${c.id}</td>
+      <td style="font-weight:500;font-size:.8rem">${c.name}</td>
+      <td style="font-size:.75rem;color:var(--muted)">${c.desc||'-'}</td>
+      <td><span class="badge badge-dark">${count}</span></td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn-icon" onclick="openCategoryModal(${c.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" onclick="confirmDelete('category',${c.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openCategoryModal(id=null){
+  editingId=id;
+  document.getElementById('modalCategoryTitle').textContent=id?'Editar categoría':'Nueva categoría';
+  if(id){const c=db.categories.find(x=>x.id===id);document.getElementById('catName').value=c.name;document.getElementById('catDesc').value=c.desc||'';}
+  else{document.getElementById('catName').value='';document.getElementById('catDesc').value='';}
+  openModal('modalCategory');
+}
+
+function saveCategory(){
+  const name=document.getElementById('catName').value.trim();
+  if(!name){alert('Nombre requerido');return;}
+  const data={name,desc:document.getElementById('catDesc').value};
+  if(editingId){const idx=db.categories.findIndex(c=>c.id===editingId);db.categories[idx]={...db.categories[idx],...data};}
+  else db.categories.push({id:db.nextId.cat++,...data});
+  closeModal('modalCategory');
+  renderCategories();
+  populateProductSelects();
+}
+
+// ============================================================
+// BRANDS
+// ============================================================
+function renderBrands(){
+  const tbody=document.getElementById('brandsTable');
+  tbody.innerHTML=db.brands.map(b=>{
+    const count=db.products.filter(p=>p.brandId===b.id).length;
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)">${b.id}</td>
+      <td style="font-weight:500;font-size:.8rem">${b.name}</td>
+      <td style="font-size:.75rem;color:var(--muted)">${b.country||'-'}</td>
+      <td><span class="badge badge-dark">${count}</span></td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn-icon" onclick="openBrandModal(${b.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" onclick="confirmDelete('brand',${b.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openBrandModal(id=null){
+  editingId=id;
+  document.getElementById('modalBrandTitle').textContent=id?'Editar marca':'Nueva marca';
+  if(id){const b=db.brands.find(x=>x.id===id);document.getElementById('brandName').value=b.name;document.getElementById('brandCountry').value=b.country||'';}
+  else{document.getElementById('brandName').value='';document.getElementById('brandCountry').value='';}
+  openModal('modalBrand');
+}
+
+function saveBrand(){
+  const name=document.getElementById('brandName').value.trim();
+  if(!name){alert('Nombre requerido');return;}
+  const data={name,country:document.getElementById('brandCountry').value};
+  if(editingId){const idx=db.brands.findIndex(b=>b.id===editingId);db.brands[idx]={...db.brands[idx],...data};}
+  else db.brands.push({id:db.nextId.brand++,...data});
+  closeModal('modalBrand');
+  renderBrands();
+}
+
+// ============================================================
+// MOVEMENTS
+// ============================================================
+function renderMovements(){
+  const q=(document.getElementById('movSearch').value||'').toLowerCase();
+  const typeF=document.getElementById('movTypeFilter').value;
+  const dateFrom=document.getElementById('movDateFrom').value;
+  const dateTo=document.getElementById('movDateTo').value;
+  let movs=[...db.movements].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  movs=movs.filter(m=>{
+    const p=db.products.find(x=>x.id===m.productId);
+    if(q&&!(p&&p.name.toLowerCase().includes(q))&&!m.responsible.toLowerCase().includes(q)) return false;
+    if(typeF&&m.type!==typeF) return false;
+    if(dateFrom&&m.date<dateFrom) return false;
+    if(dateTo&&m.date>dateTo+'T23:59') return false;
+    return true;
+  });
+  const tbody=document.getElementById('movementsTable');
+  if(!movs.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);font-size:.78rem">Sin movimientos</td></tr>`;return;}
+  const typeConf={
+    entrada:{label:'Entrada',cls:'badge-green'},
+    salida:{label:'Salida',cls:'badge-amber'},
+    ajuste:{label:'Ajuste',cls:'badge-blue'},
+    dano:{label:'Daño',cls:'badge-red'}
+  };
+  tbody.innerHTML=movs.map(m=>{
+    const p=db.products.find(x=>x.id===m.productId);
+    const lote=m.loteId?db.lotes.find(l=>l.id===m.loteId):null;
+    const tc=typeConf[m.type]||{label:m.type,cls:'badge-gray'};
+    const dt=new Date(m.date).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td style="font-size:.72rem;color:var(--muted);white-space:nowrap">${dt}</td>
+      <td><span class="badge ${tc.cls}">${tc.label}</span></td>
+      <td>
+        <span style="font-weight:500;font-size:.78rem">${p?p.name:'Eliminado'}</span>
+        ${p?`<div class="sku-mono">${p.sku}</div>`:''}
+      </td>
+      <td style="font-size:.72rem;color:var(--muted)">${lote?lote.num:'-'}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600;color:${m.type==='entrada'?'var(--green)':m.type==='dano'?'var(--red)':m.type==='salida'?'var(--amber)':'var(--blue)'}">${m.type==='salida'?'-':''}${Math.abs(m.qty)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <div class="user-avatar" style="width:24px;height:24px;font-size:.55rem">${m.responsible.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+          <span style="font-size:.75rem">${m.responsible}</span>
+        </div>
+      </td>
+      <td style="font-size:.72rem;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis">${m.note||'-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openMovementModal(){
+  const movProd=document.getElementById('movProduct');
+  movProd.innerHTML=db.products.map(p=>`<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+  const movLote=document.getElementById('movLote');
+  movLote.innerHTML='<option value="">Sin lote específico</option>'+db.lotes.map(l=>{
+    const p=db.products.find(x=>x.id===l.productId);
+    return `<option value="${l.id}">${l.num} — ${p?p.name:'-'}</option>`;
+  }).join('');
+  const movResp=document.getElementById('movResponsible');
+  movResp.innerHTML=db.users.filter(u=>u.status==='activo').map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const now=new Date();
+  document.getElementById('movDate').value=now.toISOString().slice(0,16);
+  openModal('modalMovement');
+}
+
+function saveMovement(){
+  const type=document.getElementById('movType').value;
+  const productId=parseInt(document.getElementById('movProduct').value);
+  const loteId=parseInt(document.getElementById('movLote').value)||null;
+  const qty=parseInt(document.getElementById('movQty').value)||0;
+  const responsible=document.getElementById('movResponsible').value;
+  const note=document.getElementById('movNote').value;
+  const date=document.getElementById('movDate').value;
+  if(!qty||qty<1){alert('Cantidad inválida');return;}
+  db.movements.push({id:db.nextId.movement++,date,type,productId,loteId,qty,responsible,note});
+  // Update product stock
+  const prod=db.products.find(p=>p.id===productId);
+  if(prod){
+    if(type==='entrada') prod.stock+=qty;
+    else if(type==='salida'||type==='dano') prod.stock=Math.max(0,prod.stock-qty);
+    else if(type==='ajuste') prod.stock=Math.max(0,prod.stock+qty);
+  }
+  // Update lote if specified
+  if(loteId){
+    const lote=db.lotes.find(l=>l.id===loteId);
+    if(lote){
+      if(type==='salida') lote.qtyAvailable=Math.max(0,lote.qtyAvailable-qty);
+      else if(type==='dano'){lote.qtyDamaged+=qty;lote.qtyAvailable=Math.max(0,lote.qtyAvailable-qty);lote.status=lote.qtyAvailable===0?'dano':'parcial';}
+    }
+  }
+  closeModal('modalMovement');
+  renderMovements();
+}
+
+// ============================================================
+// LOTES
+// ============================================================
+function renderLotes(){
+  const q=(document.getElementById('loteSearch').value||'').toLowerCase();
+  const statusF=document.getElementById('loteStatusFilter').value;
+  let lotes=[...db.lotes].sort((a,b)=>new Date(b.entryDate)-new Date(a.entryDate));
+  lotes=lotes.filter(l=>{
+    const p=db.products.find(x=>x.id===l.productId);
+    if(q&&!l.num.toLowerCase().includes(q)&&!(p&&p.name.toLowerCase().includes(q))) return false;
+    if(statusF&&l.status!==statusF) return false;
+    return true;
+  });
+  const tbody=document.getElementById('lotesTable');
+  if(!lotes.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted);font-size:.78rem">Sin lotes</td></tr>`;return;}
+  tbody.innerHTML=lotes.map(l=>{
+    const p=db.products.find(x=>x.id===l.productId);
+    const sc={bueno:'badge-green',parcial:'badge-amber',dano:'badge-red'}[l.status]||'badge-gray';
+    const today=new Date().toISOString().slice(0,10);
+    const expiredClass=l.expiry&&l.expiry<today?'style="color:var(--red);font-weight:600"':'';
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-weight:500;font-size:.78rem">${l.num}</td>
+      <td>
+        <span style="font-weight:500;font-size:.78rem">${p?p.name:'-'}</span>
+        ${p?`<div class="sku-mono">${p.sku}</div>`:''}
+      </td>
+      <td style="font-size:.73rem">${l.entryDate}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${l.qtyReceived}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600;color:var(--green)">${l.qtyAvailable}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600;color:${l.qtyDamaged>0?'var(--red)':'var(--muted)'}">${l.qtyDamaged}</td>
+      <td style="font-size:.73rem" ${expiredClass}>${l.expiry||'—'}</td>
+      <td><span class="badge ${sc}">${l.status}</span></td>
+      <td>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+          <button class="btn-icon" title="Registrar daño" onclick="openMarkDamage(${l.id})" style="color:var(--amber)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </button>
+          <button class="btn-icon" title="Editar" onclick="openLoteModal(${l.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" title="Eliminar" onclick="confirmDelete('lote',${l.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openLoteModal(id=null){
+  editingId=id;
+  document.getElementById('modalLoteTitle').textContent=id?'Editar lote':'Registrar lote';
+  const loteProd=document.getElementById('loteProduct');
+  loteProd.innerHTML=db.products.map(p=>`<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+  const loteResp=document.getElementById('loteResponsible');
+  loteResp.innerHTML=db.users.filter(u=>u.status==='activo').map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  if(id){
+    const l=db.lotes.find(x=>x.id===id);
+    document.getElementById('loteNum').value=l.num;
+    document.getElementById('loteProduct').value=l.productId;
+    document.getElementById('loteEntryDate').value=l.entryDate;
+    document.getElementById('loteExpiry').value=l.expiry||'';
+    document.getElementById('loteQtyReceived').value=l.qtyReceived;
+    document.getElementById('loteQtyDamaged').value=l.qtyDamaged;
+    document.getElementById('loteSupplier').value=l.supplier||'';
+    document.getElementById('loteResponsible').value=l.responsibleId||'';
+    document.getElementById('loteDamageNote').value=l.damageNote||'';
+  } else {
+    ['loteNum','loteExpiry','loteSupplier','loteDamageNote'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('loteEntryDate').value=new Date().toISOString().slice(0,10);
+    document.getElementById('loteQtyReceived').value='';
+    document.getElementById('loteQtyDamaged').value='0';
+  }
+  openModal('modalLote');
+}
+
+function saveLote(){
+  const num=document.getElementById('loteNum').value.trim();
+  const productId=parseInt(document.getElementById('loteProduct').value);
+  const qtyReceived=parseInt(document.getElementById('loteQtyReceived').value)||0;
+  if(!num||!qtyReceived){alert('Número de lote y cantidad son obligatorios');return;}
+  const qtyDamaged=parseInt(document.getElementById('loteQtyDamaged').value)||0;
+  const qtyAvailable=Math.max(0,qtyReceived-qtyDamaged);
+  const status=qtyDamaged===0?'bueno':qtyAvailable===0?'dano':'parcial';
+  const data={
+    num,productId,
+    entryDate:document.getElementById('loteEntryDate').value,
+    expiry:document.getElementById('loteExpiry').value,
+    qtyReceived,qtyAvailable,qtyDamaged,
+    supplier:document.getElementById('loteSupplier').value,
+    responsibleId:parseInt(document.getElementById('loteResponsible').value)||null,
+    damageNote:document.getElementById('loteDamageNote').value,
+    status
+  };
+  if(editingId){
+    const idx=db.lotes.findIndex(l=>l.id===editingId);
+    db.lotes[idx]={...db.lotes[idx],...data};
+  } else {
+    db.lotes.push({id:db.nextId.lote++,...data});
+    // Auto-add entry movement
+    const user=db.users.find(u=>u.id===data.responsibleId);
+    db.movements.push({
+      id:db.nextId.movement++,
+      date:data.entryDate+'T08:00',
+      type:'entrada',
+      productId,
+      loteId:db.nextId.lote-1,
+      qty:qtyAvailable,
+      responsible:user?user.name:'Sistema',
+      note:`Ingreso lote ${num}`
+    });
+    // Update product stock
+    const prod=db.products.find(p=>p.id===productId);
+    if(prod) prod.stock+=qtyAvailable;
+    // Register damage movement if any
+    if(qtyDamaged>0){
+      db.movements.push({
+        id:db.nextId.movement++,
+        date:data.entryDate+'T08:01',
+        type:'dano',
+        productId,
+        loteId:db.nextId.lote-1,
+        qty:qtyDamaged,
+        responsible:user?user.name:'Sistema',
+        note:`Daño en lote ${num}: ${data.damageNote||'registrado en ingreso'}`
+      });
+    }
+  }
+  closeModal('modalLote');
+  renderLotes();
+}
+
+function openMarkDamage(loteId){
+  damageLoteId=loteId;
+  const l=db.lotes.find(x=>x.id===loteId);
+  const p=db.products.find(x=>x.id===l.productId);
+  document.getElementById('damageLoteInfo').innerHTML=`
+    <strong>${l.num}</strong> — ${p?p.name:'-'}<br>
+    <span style="color:var(--muted)">Disponible: ${l.qtyAvailable} | Ya dañado: ${l.qtyDamaged}</span>`;
+  document.getElementById('damageQty').value=1;
+  document.getElementById('damageNote').value='';
+  const dr=document.getElementById('damageResponsible');
+  dr.innerHTML=db.users.filter(u=>u.status==='activo').map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  openModal('modalMarkDamage');
+}
+
+function saveDamage(){
+  const l=db.lotes.find(x=>x.id===damageLoteId);
+  if(!l) return;
+  const qty=parseInt(document.getElementById('damageQty').value)||0;
+  const note=document.getElementById('damageNote').value.trim();
+  const responsible=document.getElementById('damageResponsible').value;
+  if(!qty||qty<1){alert('Cantidad inválida');return;}
+  if(!note){alert('Descripción del daño requerida');return;}
+  l.qtyDamaged+=qty;
+  l.qtyAvailable=Math.max(0,l.qtyAvailable-qty);
+  l.damageNote=(l.damageNote?l.damageNote+'; ':'')+note;
+  l.status=l.qtyAvailable===0?'dano':'parcial';
+  const prod=db.products.find(p=>p.id===l.productId);
+  if(prod) prod.stock=Math.max(0,prod.stock-qty);
+  db.movements.push({id:db.nextId.movement++,date:new Date().toISOString().slice(0,16),type:'dano',productId:l.productId,loteId:damageLoteId,qty,responsible,note:`Daño en lote ${l.num}: ${note}`});
+  closeModal('modalMarkDamage');
+  renderLotes();
+}
+
+// ============================================================
+// USERS
+// ============================================================
+function renderUsers(){
+  const tbody=document.getElementById('usersTable');
+  tbody.innerHTML=db.users.map(u=>{
+    const role=db.roles.find(r=>r.id===u.roleId);
+    const initials=u.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <div class="user-avatar">${initials}</div>
+          <span style="font-weight:500;font-size:.8rem">${u.name}</span>
+        </div>
+      </td>
+      <td style="font-size:.75rem;color:var(--muted)">${u.email}</td>
+      <td>${role?`<span class="badge badge-dark">${role.name}</span>`:'-'}</td>
+      <td><span class="badge ${u.status==='activo'?'badge-green':'badge-gray'}">${u.status}</span></td>
+      <td style="font-size:.73rem;color:var(--muted)">${u.lastAccess||'Nunca'}</td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn-icon" onclick="openUserModal(${u.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" onclick="confirmDelete('user',${u.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openUserModal(id=null){
+  editingId=id;
+  document.getElementById('modalUserTitle').textContent=id?'Editar usuario':'Nuevo usuario';
+  const roleSelect=document.getElementById('userRole');
+  roleSelect.innerHTML=db.roles.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+  if(id){
+    const u=db.users.find(x=>x.id===id);
+    document.getElementById('userName').value=u.name;
+    document.getElementById('userEmail').value=u.email;
+    document.getElementById('userPass').value='';
+    document.getElementById('userRole').value=u.roleId;
+    document.getElementById('userStatus').value=u.status;
+  } else {
+    ['userName','userEmail','userPass'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('userStatus').value='activo';
+  }
+  openModal('modalUser');
+}
+
+function saveUser(){
+  const name=document.getElementById('userName').value.trim();
+  const email=document.getElementById('userEmail').value.trim();
+  if(!name||!email){alert('Nombre y email son obligatorios');return;}
+  const data={name,email,roleId:parseInt(document.getElementById('userRole').value),status:document.getElementById('userStatus').value};
+  if(editingId){const idx=db.users.findIndex(u=>u.id===editingId);db.users[idx]={...db.users[idx],...data};}
+  else db.users.push({id:db.nextId.user++,...data,lastAccess:null});
+  closeModal('modalUser');
+  renderUsers();
+}
+
+// ============================================================
+// ROLES & PERMISSIONS
+// ============================================================
+function renderRoles(){
+  const tbody=document.getElementById('rolesTable');
+  tbody.innerHTML=db.roles.map(r=>{
+    const userCount=db.users.filter(u=>u.roleId===r.id).length;
+    const totalPerms=Object.values(r.permissions).reduce((s,m)=>s+Object.values(m).filter(Boolean).length,0);
+    return `<tr>
+      <td style="font-weight:600;font-size:.8rem">${r.name}</td>
+      <td style="font-size:.75rem;color:var(--muted)">${r.desc||'-'}</td>
+      <td><span class="badge badge-dark">${userCount}</span></td>
+      <td>
+        <span class="badge badge-blue">${totalPerms} permisos</span>
+        <button class="btn-icon" style="margin-left:.4rem" onclick="viewPermissions(${r.id})" title="Ver permisos">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn-icon" onclick="openRoleModal(${r.id})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon" onclick="confirmDelete('role',${r.id})" style="color:var(--red)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openRoleModal(id=null){
+  editingId=id;
+  document.getElementById('modalRoleTitle').textContent=id?'Editar rol':'Nuevo rol';
+  let currentPerms={};
+  if(id){
+    const r=db.roles.find(x=>x.id===id);
+    document.getElementById('roleName').value=r.name;
+    document.getElementById('roleDesc').value=r.desc||'';
+    currentPerms=JSON.parse(JSON.stringify(r.permissions));
+  } else {
+    document.getElementById('roleName').value='';
+    document.getElementById('roleDesc').value='';
+    MODULES.forEach(m=>{currentPerms[m.key]={ver:false,crear:false,editar:false,eliminar:false};});
+  }
+  // Render permissions checkboxes
+  const container=document.getElementById('permissionsContainer');
+  container.innerHTML='';
+  // Header
+  const header=document.createElement('div');
+  header.style.cssText='display:grid;grid-template-columns:140px repeat(4,1fr);gap:.5rem;margin-bottom:.5rem;font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:.3rem 0;border-bottom:1px solid var(--border)';
+  header.innerHTML='<div>Módulo</div><div style="text-align:center">Ver</div><div style="text-align:center">Crear</div><div style="text-align:center">Editar</div><div style="text-align:center">Eliminar</div>';
+  container.appendChild(header);
+  MODULES.forEach(mod=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:140px repeat(4,1fr);gap:.5rem;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border)';
+    const perms=currentPerms[mod.key]||{ver:false,crear:false,editar:false,eliminar:false};
+    row.innerHTML=`<span style="font-size:.78rem;font-weight:500">${mod.label}</span>`+
+      PERM_KEYS.map(pk=>`<div style="display:flex;justify-content:center"><input type="checkbox" id="perm_${mod.key}_${pk}" ${perms[pk]?'checked':''} style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></div>`).join('');
+    container.appendChild(row);
+  });
+  openModal('modalRole');
+}
+
+function saveRole(){
+  const name=document.getElementById('roleName').value.trim();
+  if(!name){alert('Nombre del rol requerido');return;}
+  const permissions={};
+  MODULES.forEach(mod=>{
+    permissions[mod.key]={};
+    PERM_KEYS.forEach(pk=>{
+      permissions[mod.key][pk]=document.getElementById(`perm_${mod.key}_${pk}`).checked;
+    });
+  });
+  const data={name,desc:document.getElementById('roleDesc').value,permissions};
+  if(editingId){const idx=db.roles.findIndex(r=>r.id===editingId);db.roles[idx]={...db.roles[idx],...data};}
+  else db.roles.push({id:db.nextId.role++,...data});
+  closeModal('modalRole');
+  renderRoles();
+}
+
+function viewPermissions(id){
+  const r=db.roles.find(x=>x.id===id);
+  document.getElementById('viewPermTitle').textContent=`Permisos: ${r.name}`;
+  let html='<div style="display:grid;grid-template-columns:140px repeat(4,1fr);gap:.5rem;margin-bottom:.75rem;font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:.5rem;border-bottom:1px solid var(--border)"><div>Módulo</div><div style="text-align:center">Ver</div><div style="text-align:center">Crear</div><div style="text-align:center">Editar</div><div style="text-align:center">Eliminar</div></div>';
+  MODULES.forEach(mod=>{
+    const perms=r.permissions[mod.key]||{};
+    const icon=(v)=>v?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    html+=`<div style="display:grid;grid-template-columns:140px repeat(4,1fr);gap:.5rem;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:.78rem;font-weight:500">${mod.label}</span>
+      ${PERM_KEYS.map(pk=>`<div style="display:flex;justify-content:center">${icon(perms[pk])}</div>`).join('')}
+    </div>`;
+  });
+  document.getElementById('viewPermBody').innerHTML=html;
+  openModal('modalViewPermissions');
+}
+
+// ============================================================
+// DELETE CONFIRM
+// ============================================================
+function confirmDelete(type, id){
+  const msgs={
+    product:'¿Eliminar este producto? Se eliminarán también sus movimientos asociados.',
+    category:'¿Eliminar esta categoría?',
+    brand:'¿Eliminar esta marca?',
+    lote:'¿Eliminar este lote?',
+    user:'¿Eliminar este usuario?',
+    role:'¿Eliminar este rol? Los usuarios con este rol quedarán sin rol.',
+  };
+  document.getElementById('confirmMsg').textContent=msgs[type]||'¿Confirmar eliminación?';
+  document.getElementById('confirmBtn').onclick=()=>{
+    if(type==='product') db.products=db.products.filter(p=>p.id!==id);
+    else if(type==='category') db.categories=db.categories.filter(c=>c.id!==id);
+    else if(type==='brand') db.brands=db.brands.filter(b=>b.id!==id);
+    else if(type==='lote') db.lotes=db.lotes.filter(l=>l.id!==id);
+    else if(type==='user') db.users=db.users.filter(u=>u.id!==id);
+    else if(type==='role') db.roles=db.roles.filter(r=>r.id!==id);
+    closeModal('modalConfirm');
+    const renders={product:renderProducts,category:renderCategories,brand:renderBrands,lote:renderLotes,user:renderUsers,role:renderRoles};
+    if(renders[type]) renders[type]();
+  };
+  openModal('modalConfirm');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload=function(){
+  const now=new Date();
+  document.getElementById('pageDate').textContent=now.toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dateFrom').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+  document.getElementById('dateTo').value=now.toISOString().slice(0,10);
+  renderDashboard();
+  populateProductSelects();
+};
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click',function(e){
+    if(e.target===this) this.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

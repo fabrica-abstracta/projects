@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BaseApp — La plataforma para tu equipo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: { accent: '#0070f3' }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .nav-link {
+      transition: color 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: #000;
+    }
+
+    .btn-primary {
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-primary:hover {
+      background: #0061d5;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: #000;
+      color: #000;
+    }
+
+    .card {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .plan-card {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .plan-card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.10);
+    }
+
+    .feature-icon {
+      color: #0070f3;
+    }
+  </style>
+</head>
+
+<body class="bg-white font-sans text-gray-900">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="index.html" class="text-sm font-semibold tracking-tight">BaseApp</a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="nav-link text-sm text-gray-500">Características</a>
+        <a href="#pricing" class="nav-link text-sm text-gray-500">Precios</a>
+        <a href="dashboard.html" class="nav-link text-sm text-gray-500">Dashboard</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="dashboard.html" class="text-sm text-gray-500 hover:text-black transition-colors">Entrar</a>
+        <a href="dashboard.html"
+          class="btn-primary bg-accent text-white text-sm px-4 py-1.5 rounded-md font-medium">Empezar gratis</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="pt-64 pb-32 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-6 text-gray-950">
+        La plataforma que<br />tu equipo necesita.
+      </h1>
+      <p class="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+        Gestiona proyectos, datos y usuarios desde un solo lugar. Rápido, limpio y sin fricción.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="dashboard.html"
+          class="btn-primary bg-accent text-white text-sm px-6 py-2.5 rounded-md font-medium w-full sm:w-auto text-center">
+          Empezar gratis
+        </a>
+        <a href="crud.html"
+          class="btn-secondary border border-gray-200 text-gray-600 text-sm px-6 py-2.5 rounded-md font-medium w-full sm:w-auto text-center">
+          Ver demo
+        </a>
+      </div>
+      <p class="text-xs text-gray-400 mt-4">Sin tarjeta de crédito. Cancela cuando quieras.</p>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-100"></div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-100"></div>
+  </div>
+
+  <section id="features" class="py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="max-w-2xl mb-20">
+        <p class="text-xs text-accent uppercase tracking-widest font-medium mb-4">Características</p>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-4 text-gray-950">
+          Todo lo que necesitas,<br />nada que no.
+        </h2>
+        <p class="text-gray-500 text-lg font-light leading-relaxed">
+          Diseñado para velocidad y claridad. Sin configuraciones innecesarias.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-px bg-gray-100 border border-gray-100 rounded-xl overflow-hidden">
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="zap" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">Velocidad extrema</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Interfaz optimizada para responder en milisegundos. Sin
+            esperas, sin fricciones.</p>
+        </div>
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="shield" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">Seguridad integrada</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Autenticación, roles y permisos por defecto. Tu data siempre
+            protegida.</p>
+        </div>
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">Analytics en tiempo real</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Visualiza métricas clave de tu negocio sin necesitar una
+            herramienta externa.</p>
+        </div>
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="users" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">Gestión de equipo</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Invita miembros, asigna roles y colabora sin límites desde el
+            primer día.</p>
+        </div>
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="database" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">CRUD instantáneo</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Crea, lee, edita y elimina registros desde una interfaz
+            limpia y rápida.</p>
+        </div>
+
+        <div class="card bg-white p-8">
+          <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center mb-5">
+            <i data-lucide="plug" class="w-4 h-4 feature-icon"></i>
+          </div>
+          <h3 class="text-base font-semibold mb-2 tracking-tight">Integraciones API</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Conecta con tus herramientas favoritas en minutos usando
+            nuestra API REST.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-100"></div>
+  </div>
+
+  <section id="pricing" class="py-32 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="max-w-2xl mb-20">
+        <p class="text-xs text-accent uppercase tracking-widest font-medium mb-4">Precios</p>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-4 text-gray-950">
+          Simple y transparente.
+        </h2>
+        <p class="text-gray-500 text-lg font-light">Sin sorpresas. Cambia de plan cuando quieras.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="plan-card border border-gray-200 rounded-xl p-8 bg-white">
+          <div class="mb-8">
+            <h3 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Hobby</h3>
+            <div class="flex items-end gap-1 mb-2">
+              <span class="text-4xl font-bold tracking-tighter text-gray-950">$0</span>
+              <span class="text-gray-400 text-sm mb-1">/mes</span>
+            </div>
+            <p class="text-sm text-gray-500">Para proyectos personales y exploración.</p>
+          </div>
+          <a href="dashboard.html"
+            class="block w-full text-center btn-secondary border border-gray-200 text-gray-700 text-sm py-2.5 rounded-md font-medium mb-8 hover:border-gray-400 transition-colors">
+            Empezar gratis
+          </a>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              3 proyectos
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              1 usuario
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              1 GB de almacenamiento
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Analytics básico
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-400">
+              <i data-lucide="minus" class="w-4 h-4 shrink-0"></i>
+              Soporte prioritario
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-400">
+              <i data-lucide="minus" class="w-4 h-4 shrink-0"></i>
+              API access
+            </li>
+          </ul>
+        </div>
+
+        <div class="plan-card border-2 border-gray-950 rounded-xl p-8 bg-white relative">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+            <span class="bg-gray-950 text-white text-xs font-medium px-3 py-1 rounded-full">Más popular</span>
+          </div>
+          <div class="mb-8">
+            <h3 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Pro</h3>
+            <div class="flex items-end gap-1 mb-2">
+              <span class="text-4xl font-bold tracking-tighter text-gray-950">$19</span>
+              <span class="text-gray-400 text-sm mb-1">/mes</span>
+            </div>
+            <p class="text-sm text-gray-500">Para equipos pequeños en crecimiento.</p>
+          </div>
+          <a href="dashboard.html"
+            class="block w-full text-center btn-primary bg-gray-950 text-white text-sm py-2.5 rounded-md font-medium mb-8">
+            Comenzar con Pro
+          </a>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Proyectos ilimitados
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Hasta 10 usuarios
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              50 GB de almacenamiento
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Analytics avanzado
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Soporte prioritario
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-400">
+              <i data-lucide="minus" class="w-4 h-4 shrink-0"></i>
+              API access
+            </li>
+          </ul>
+        </div>
+
+        <div class="plan-card border border-gray-200 rounded-xl p-8 bg-white">
+          <div class="mb-8">
+            <h3 class="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Enterprise</h3>
+            <div class="flex items-end gap-1 mb-2">
+              <span class="text-4xl font-bold tracking-tighter text-gray-950">$79</span>
+              <span class="text-gray-400 text-sm mb-1">/mes</span>
+            </div>
+            <p class="text-sm text-gray-500">Para organizaciones con necesidades avanzadas.</p>
+          </div>
+          <a href="dashboard.html"
+            class="block w-full text-center btn-secondary border border-gray-200 text-gray-700 text-sm py-2.5 rounded-md font-medium mb-8 hover:border-gray-400 transition-colors">
+            Contactar ventas
+          </a>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Proyectos ilimitados
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Usuarios ilimitados
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              500 GB de almacenamiento
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Analytics avanzado
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              Soporte 24/7 dedicado
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <i data-lucide="check" class="w-4 h-4 text-accent shrink-0"></i>
+              API access completo
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-100"></div>
+  </div>
+
+  <section class="py-32 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-4xl md:text-6xl font-bold tracking-tighter leading-none mb-6 text-gray-950">
+        Empieza hoy.<br />Es gratis.
+      </h2>
+      <p class="text-gray-500 text-lg font-light mb-10">
+        Configura tu espacio de trabajo en menos de dos minutos.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="dashboard.html"
+          class="btn-primary bg-accent text-white text-sm px-8 py-3 rounded-md font-medium w-full sm:w-auto text-center">
+          Ir al Dashboard →
+        </a>
+        <a href="crud.html"
+          class="btn-secondary border border-gray-200 text-gray-600 text-sm px-8 py-3 rounded-md font-medium w-full sm:w-auto text-center">
+          Explorar CRUD
+        </a>
+      </div>
+    </div>
+  </section>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MockAPI — Mockea contratos, arranca proyectos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: '#0B0E14',
+        surface: '#12151D',
+        surface2: '#1A1E29',
+        surface3: '#20263380',
+        border: '#262B38',
+        ink: '#E7E9EE',
+        muted: '#8992A6',
+        faint: '#5B6478',
+        violet: { DEFAULT:'#7C6CFF', dim:'#3B3670' },
+        amber: { DEFAULT:'#F2A93B', dim:'#4A3A1C' },
+        get: '#3DA5F2', post:'#3DD68C', put:'#F2A93B', del:'#FF5D6C', patch:'#B98CFF',
+      },
+      fontFamily: {
+        display: ['"Space Grotesk"','sans-serif'],
+        body: ['"IBM Plex Sans"','sans-serif'],
+        mono: ['"JetBrains Mono"','monospace'],
+      },
+      boxShadow: { panel: '0 20px 60px -20px rgba(0,0,0,0.6)' }
+    }
+  }
+}
+</script>
+<script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
+<style>
+  html{scroll-behavior:smooth}
+  body{ background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(124,108,255,0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(242,169,59,0.06), transparent 55%),
+    #0B0E14;
+  }
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#262B38;border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:#333a4a}
+  .stamp{
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:11px;
+    letter-spacing:.04em; padding:3px 8px; border-radius:6px; border:1.5px dashed currentColor;
+    transform: rotate(-1.4deg); text-transform:uppercase;
+  }
+  .stamp-get{color:#3DA5F2; background:rgba(61,165,242,0.08)}
+  .stamp-post{color:#3DD68C; background:rgba(61,214,140,0.08)}
+  .stamp-put{color:#F2A93B; background:rgba(242,169,59,0.08)}
+  .stamp-delete{color:#FF5D6C; background:rgba(255,93,108,0.08)}
+  .stamp-patch{color:#B98CFF; background:rgba(185,140,255,0.08)}
+  .fade-in{animation:fadeIn .35s ease both}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)}}
+  .glow-line{background:linear-gradient(90deg, transparent, rgba(124,108,255,.5), transparent)}
+  [x-cloak]{display:none!important}
+  .json-key{color:#7C6CFF}
+  .json-str{color:#3DD68C}
+  .json-num{color:#F2A93B}
+  .json-punc{color:#5B6478}
+  .scrollbar-thin::-webkit-scrollbar{width:6px}
+  .caret{display:inline-block;width:7px;height:16px;background:#7C6CFF;vertical-align:middle;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body class="font-body text-ink min-h-screen" x-data="app()" x-init="init()">
+
+<!-- ============ SHELL ============ -->
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="w-[248px] shrink-0 border-r border-border bg-surface/60 backdrop-blur flex flex-col">
+    <div class="h-16 flex items-center gap-2.5 px-5 border-b border-border">
+      <div class="w-8 h-8 rounded-lg bg-violet/15 border border-violet/40 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12L10 18L20 6" stroke="#7C6CFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="font-display font-bold text-[15px] tracking-tight">Mock<span class="text-violet">API</span></div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+      <div class="space-y-0.5">
+        <button @click="go('dashboard')" :class="view==='dashboard' ? 'bg-surface2 text-ink' : 'text-muted hover:text-ink hover:bg-surface2/60'" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          Panel
+        </button>
+        <button @click="openNewProject()" :class="view==='builder' ? 'bg-surface2 text-ink' : 'text-muted hover:text-ink hover:bg-surface2/60'" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Constructor visual
+        </button>
+        <button @click="go('ai')" :class="view==='ai' ? 'bg-surface2 text-ink' : 'text-muted hover:text-ink hover:bg-surface2/60'" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3Z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8Z"/></svg>
+          Asistente IA
+        </button>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between px-3 mb-2">
+          <span class="text-[10.5px] font-semibold text-faint uppercase tracking-wider">Proyectos</span>
+          <button @click="openNewProject()" class="text-faint hover:text-violet transition text-lg leading-none">+</button>
+        </div>
+        <div class="space-y-0.5">
+          <template x-for="p in projects" :key="p.id">
+            <button @click="openProject(p.id)" :class="view==='project' && activeProjectId===p.id ? 'bg-surface2 text-ink' : 'text-muted hover:text-ink hover:bg-surface2/60'" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition group">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="p.status==='Activo' ? 'bg-post' : 'bg-amber'"></span>
+              <span class="truncate flex-1 text-left" x-text="p.name"></span>
+              <span class="text-[10px] text-faint font-mono" x-text="p.endpoints.length"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </nav>
+
+    <div class="p-3 border-t border-border">
+      <div class="rounded-xl border border-border bg-surface2/60 p-3">
+        <div class="text-[11px] text-muted leading-relaxed">Sin soporte de YAML a mano. Construye contratos por formulario o describe tu API y nosotros escribimos el resto.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- TOPBAR -->
+    <header class="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-bg/80 backdrop-blur">
+      <div class="flex items-center gap-2 text-[13px] text-muted">
+        <template x-if="view==='dashboard'"><span class="text-ink font-medium">Panel</span></template>
+        <template x-if="view==='builder'"><span class="text-ink font-medium">Constructor visual de contratos</span></template>
+        <template x-if="view==='ai'"><span class="text-ink font-medium">Asistente IA</span></template>
+        <template x-if="view==='project' && activeProject">
+          <div class="flex items-center gap-2">
+            <button @click="go('dashboard')" class="hover:text-ink transition">Proyectos</button>
+            <span class="text-faint">/</span>
+            <span class="text-ink font-medium" x-text="activeProject.name"></span>
+          </div>
+        </template>
+      </div>
+      <div class="flex items-center gap-3">
+        <button @click="openNewProject()" class="flex items-center gap-1.5 bg-violet hover:bg-violet/90 text-white text-[13px] font-semibold px-3.5 py-2 rounded-lg transition shadow-lg shadow-violet/20">
+          <span class="text-base leading-none">+</span> Nuevo proyecto
+        </button>
+        <div class="w-8 h-8 rounded-full bg-surface2 border border-border flex items-center justify-center text-[12px] font-semibold text-muted">MR</div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto scrollbar-thin">
+
+      <!-- ============ DASHBOARD ============ -->
+      <template x-if="view==='dashboard'">
+        <div class="p-8 max-w-6xl mx-auto fade-in">
+          <div class="mb-8">
+            <h1 class="font-display text-2xl font-bold tracking-tight">Buenas, Marcela</h1>
+            <p class="text-muted text-[13.5px] mt-1">Estos son tus contratos mockeados. Importa uno, constrúyelo o descríbelo — nosotros lo dejamos listo para arrancar.</p>
+          </div>
+
+          <div class="grid grid-cols-4 gap-4 mb-8">
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="text-[11px] text-muted uppercase tracking-wide">Proyectos activos</div>
+              <div class="font-display text-2xl font-bold mt-1.5" x-text="projects.filter(p=>p.status==='Activo').length"></div>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="text-[11px] text-muted uppercase tracking-wide">Endpoints mockeados</div>
+              <div class="font-display text-2xl font-bold mt-1.5" x-text="totalEndpoints"></div>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="text-[11px] text-muted uppercase tracking-wide">Llamadas simuladas hoy</div>
+              <div class="font-display text-2xl font-bold mt-1.5 text-post">1,248</div>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="text-[11px] text-muted uppercase tracking-wide">Proyectos generados</div>
+              <div class="font-display text-2xl font-bold mt-1.5">7</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-display font-semibold text-[15px]">Tus proyectos</h2>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <template x-for="p in projects" :key="p.id">
+              <button @click="openProject(p.id)" class="text-left rounded-xl border border-border bg-surface hover:border-violet/50 hover:bg-surface2/40 transition p-4 group">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center text-[13px] font-bold font-display" :style="`background:${p.color}22; color:${p.color}`" x-text="p.initials"></div>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-medium" :class="p.status==='Activo' ? 'bg-post/10 text-post' : 'bg-amber/10 text-amber'" x-text="p.status"></span>
+                </div>
+                <div class="font-display font-semibold text-[14.5px] group-hover:text-violet transition" x-text="p.name"></div>
+                <div class="text-[12.5px] text-muted mt-1 leading-snug" x-text="p.description"></div>
+                <div class="flex items-center gap-3 mt-3.5 text-[11.5px] text-faint font-mono">
+                  <span x-text="p.language"></span>
+                  <span>·</span>
+                  <span x-text="p.endpoints.length + ' endpoints'"></span>
+                  <span>·</span>
+                  <span x-text="p.updatedAt"></span>
+                </div>
+              </button>
+            </template>
+
+            <button @click="openNewProject()" class="rounded-xl border border-dashed border-border hover:border-violet/50 transition p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[148px] text-muted hover:text-violet">
+              <span class="text-2xl leading-none">+</span>
+              <span class="text-[12.5px] font-medium">Nuevo proyecto</span>
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <!-- ============ BUILDER (visual contract builder) ============ -->
+      <template x-if="view==='builder'">
+        <div class="flex h-full fade-in">
+          <div class="flex-1 overflow-y-auto p-8 max-w-3xl">
+            <div class="mb-1 text-[11px] font-semibold text-violet uppercase tracking-wider">Sin YAML</div>
+            <h1 class="font-display text-xl font-bold mb-1">Construye tu contrato por formulario</h1>
+            <p class="text-muted text-[13px] mb-6">Define entradas y salidas de cada endpoint. Generamos el contrato OpenAPI y el mock al instante — a la derecha ves el resultado en vivo.</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+              <div>
+                <label class="text-[12px] font-medium text-muted block mb-1.5">Nombre del proyecto</label>
+                <input x-model="builder.name" type="text" placeholder="Ej. API de Reservas" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-[13.5px] focus:outline-none focus:border-violet/60 focus:ring-1 focus:ring-violet/30">
+              </div>
+              <div>
+                <label class="text-[12px] font-medium text-muted block mb-1.5">URL base</label>
+                <input x-model="builder.baseUrl" type="text" placeholder="/api/v1" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-[13.5px] font-mono focus:outline-none focus:border-violet/60 focus:ring-1 focus:ring-violet/30">
+              </div>
+            </div>
+
+            <div class="space-y-3 mb-4">
+              <template x-for="(ep, idx) in builder.endpoints" :key="ep.id">
+                <div class="rounded-xl border border-border bg-surface overflow-hidden">
+                  <div class="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface2/40">
+                    <select x-model="ep.method" class="stamp bg-transparent" :class="'stamp-'+ep.method.toLowerCase()">
+                      <option value="GET">GET</option><option value="POST">POST</option><option value="PUT">PUT</option><option value="PATCH">PATCH</option><option value="DELETE">DELETE</option>
+                    </select>
+                    <input x-model="ep.path" type="text" placeholder="/recurso/{id}" class="flex-1 bg-transparent font-mono text-[13px] focus:outline-none placeholder:text-faint">
+                    <button @click="removeEndpoint(ep.id)" class="text-faint hover:text-del transition text-[16px] leading-none px-1">×</button>
+                  </div>
+                  <div class="p-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-[11px] font-medium text-muted block mb-1">Entrada (request)</label>
+                      <textarea x-model="ep.reqBody" rows="4" placeholder='{ "campo": "tipo" }' class="w-full bg-surface2/50 border border-border rounded-lg px-2.5 py-2 text-[11.5px] font-mono focus:outline-none focus:border-violet/50 resize-none"></textarea>
+                    </div>
+                    <div>
+                      <label class="text-[11px] font-medium text-muted block mb-1">Salida (response · <input x-model="ep.statusCode" class="w-10 bg-transparent border-b border-border text-faint focus:outline-none focus:border-violet"> )</label>
+                      <textarea x-model="ep.resBody" rows="4" placeholder='{ "campo": "tipo" }' class="w-full bg-surface2/50 border border-border rounded-lg px-2.5 py-2 text-[11.5px] font-mono focus:outline-none focus:border-violet/50 resize-none"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <button @click="addEndpoint()" class="w-full border border-dashed border-border hover:border-violet/50 hover:text-violet text-muted rounded-xl py-2.5 text-[13px] font-medium transition mb-8">+ Agregar endpoint</button>
+
+            <div class="flex items-center gap-3">
+              <button @click="createFromBuilder()" class="bg-violet hover:bg-violet/90 text-white text-[13.5px] font-semibold px-4 py-2.5 rounded-lg transition shadow-lg shadow-violet/20">Crear proyecto y mockear</button>
+              <button @click="go('dashboard')" class="text-muted hover:text-ink text-[13.5px] px-2">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- live preview rail -->
+          <div class="w-[380px] shrink-0 border-l border-border bg-surface/60 flex flex-col">
+            <div class="px-4 py-3 border-b border-border flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-muted uppercase tracking-wider">Contrato en vivo</span>
+              <span class="text-[10px] font-mono text-violet">openapi.json</span>
+            </div>
+            <pre class="flex-1 overflow-y-auto p-4 text-[11.5px] font-mono leading-relaxed" x-html="contractPreview"></pre>
+          </div>
+        </div>
+      </template>
+
+      <!-- ============ AI ASSISTANT ============ -->
+      <template x-if="view==='ai'">
+        <div class="p-8 max-w-4xl mx-auto fade-in">
+          <div class="mb-1 text-[11px] font-semibold text-violet uppercase tracking-wider">Contrato + backend, en un paso</div>
+          <h1 class="font-display text-xl font-bold mb-1">Describe lo que necesitas</h1>
+          <p class="text-muted text-[13px] mb-6">Cuéntanos qué API necesitas en lenguaje natural. Diseñamos los endpoints, el contrato y generamos el código del backend por debajo.</p>
+
+          <div class="rounded-xl border border-border bg-surface p-4 mb-3">
+            <textarea x-model="ai.prompt" :disabled="ai.loading" rows="4" placeholder="Ej. Necesito una API para un sistema de reservas de canchas: usuarios, canchas disponibles, reservas y pagos." class="w-full bg-transparent text-[13.5px] focus:outline-none resize-none placeholder:text-faint"></textarea>
+            <div class="flex items-center justify-between mt-2 pt-3 border-t border-border">
+              <div class="flex gap-1.5">
+                <template x-for="chip in aiChips" :key="chip">
+                  <button @click="ai.prompt=chip" class="text-[11px] px-2.5 py-1 rounded-full border border-border text-muted hover:border-violet/50 hover:text-violet transition" x-text="chip"></button>
+                </template>
+              </div>
+              <button @click="runAI()" :disabled="!ai.prompt || ai.loading" class="flex items-center gap-1.5 bg-violet hover:bg-violet/90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[13px] font-semibold px-4 py-2 rounded-lg transition shrink-0">
+                <span x-show="!ai.loading">✨ Generar API</span>
+                <span x-show="ai.loading">Generando…</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- process log -->
+          <div x-show="ai.started" x-cloak class="rounded-xl border border-border bg-surface2/40 p-4 mb-6 space-y-2">
+            <template x-for="(step, i) in ai.steps" :key="i">
+              <div class="flex items-center gap-2.5 text-[13px]" x-show="i <= ai.stepIndex">
+                <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" :class="i < ai.stepIndex || ai.done ? 'bg-post/20 text-post' : 'bg-violet/20 text-violet'">
+                  <span x-show="i < ai.stepIndex || ai.done" class="text-[10px]">✓</span>
+                  <span x-show="i === ai.stepIndex && !ai.done" class="w-1.5 h-1.5 rounded-full bg-violet animate-pulse"></span>
+                </span>
+                <span :class="i < ai.stepIndex || ai.done ? 'text-muted' : 'text-ink'" x-text="step"></span>
+              </div>
+            </template>
+          </div>
+
+          <!-- result -->
+          <div x-show="ai.done" x-cloak class="fade-in">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-2 h-2 rounded-full bg-post"></span>
+              <span class="text-[13px] font-medium">API generada: <span class="text-violet" x-text="ai.result?.name"></span></span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="rounded-xl border border-border bg-surface p-4">
+                <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2.5">Endpoints detectados</div>
+                <div class="space-y-1.5">
+                  <template x-for="ep in ai.result?.endpoints || []" :key="ep.path+ep.method">
+                    <div class="flex items-center gap-2 text-[12px]">
+                      <span class="stamp" :class="'stamp-'+ep.method.toLowerCase()" x-text="ep.method"></span>
+                      <span class="font-mono text-muted" x-text="ep.path"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div class="rounded-xl border border-border bg-surface p-4">
+                <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2.5">Backend generado</div>
+                <div class="text-[12px] font-mono text-faint leading-relaxed space-y-0.5">
+                  <div>📁 src/routes/*.js</div>
+                  <div>📁 src/mocks/*.json</div>
+                  <div>📄 server.js</div>
+                  <div>📄 package.json</div>
+                </div>
+                <div class="text-[11.5px] text-muted mt-2" x-text="ai.result?.stack"></div>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <button @click="createFromAI()" class="bg-violet hover:bg-violet/90 text-white text-[13.5px] font-semibold px-4 py-2.5 rounded-lg transition shadow-lg shadow-violet/20">Crear proyecto</button>
+              <button @click="editAIInBuilder()" class="border border-border hover:border-violet/50 text-ink text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition">Editar contrato</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ============ PROJECT DETAIL ============ -->
+      <template x-if="view==='project' && activeProject">
+        <div class="flex h-full fade-in">
+          <!-- endpoints list -->
+          <div class="w-[280px] shrink-0 border-r border-border bg-surface/40 overflow-y-auto scrollbar-thin">
+            <div class="p-4 border-b border-border">
+              <div class="font-display font-semibold text-[14.5px]" x-text="activeProject.name"></div>
+              <div class="text-[11.5px] text-faint font-mono mt-0.5" x-text="activeProject.baseUrl"></div>
+            </div>
+            <div class="p-2">
+              <template x-for="ep in activeProject.endpoints" :key="ep.id">
+                <button @click="activeEndpointId=ep.id; testResult=null" class="w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition" :class="activeEndpointId===ep.id ? 'bg-surface2' : 'hover:bg-surface2/50'">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="stamp text-[10px] px-1.5 py-0.5" :class="'stamp-'+ep.method.toLowerCase()" x-text="ep.method"></span>
+                  </div>
+                  <div class="font-mono text-[12px] text-muted truncate" x-text="ep.path"></div>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- endpoint canvas -->
+          <div class="flex-1 overflow-y-auto" x-show="activeEndpoint">
+            <div class="border-b border-border px-8 py-5 flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2.5 mb-1.5">
+                  <span class="stamp" :class="'stamp-'+activeEndpoint.method.toLowerCase()" x-text="activeEndpoint.method"></span>
+                  <span class="font-mono text-[15px]" x-text="activeProject.baseUrl + activeEndpoint.path"></span>
+                </div>
+                <div class="text-[12.5px] text-muted" x-text="activeEndpoint.summary"></div>
+              </div>
+              <button @click="showExportDrawer=true" class="flex items-center gap-1.5 border border-border hover:border-violet/50 text-ink text-[12.5px] font-medium px-3.5 py-2 rounded-lg transition">⬇ Generar proyecto</button>
+            </div>
+
+            <div class="px-8 pt-4">
+              <div class="flex gap-1 border-b border-border">
+                <template x-for="t in ['preview','try','schema','code']" :key="t">
+                  <button @click="tab=t" class="px-3.5 py-2 text-[12.5px] font-medium border-b-2 -mb-px transition" :class="tab===t ? 'border-violet text-ink' : 'border-transparent text-muted hover:text-ink'" x-text="{preview:'Vista previa', try:'Pruébalo', schema:'Esquema', code:'Código generado'}[t]"></button>
+                </template>
+              </div>
+            </div>
+
+            <div class="p-8 max-w-3xl">
+              <!-- preview -->
+              <template x-if="tab==='preview'">
+                <div>
+                  <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">Respuesta simulada · <span class="text-post font-mono" x-text="activeEndpoint.status"></span></div>
+                  <pre class="rounded-xl border border-border bg-surface p-4 text-[12.5px] font-mono leading-relaxed overflow-x-auto" x-html="highlight(activeEndpoint.response)"></pre>
+                </div>
+              </template>
+
+              <!-- try it -->
+              <template x-if="tab==='try'">
+                <div>
+                  <div class="flex items-center gap-2 mb-4">
+                    <span class="stamp" :class="'stamp-'+activeEndpoint.method.toLowerCase()" x-text="activeEndpoint.method"></span>
+                    <code class="font-mono text-[13px] text-muted" x-text="activeProject.baseUrl + activeEndpoint.path"></code>
+                    <button @click="sendTest()" :disabled="testLoading" class="ml-auto bg-post/15 hover:bg-post/25 text-post text-[12.5px] font-semibold px-3.5 py-1.5 rounded-lg transition disabled:opacity-50" x-text="testLoading ? 'Enviando…' : 'Enviar'"></button>
+                  </div>
+                  <div x-show="testResult" x-cloak class="fade-in">
+                    <div class="flex items-center gap-2 mb-2 text-[12px]">
+                      <span class="text-post font-mono font-semibold" x-text="activeEndpoint.status"></span>
+                      <span class="text-faint">·</span>
+                      <span class="text-faint" x-text="testLatency + ' ms · mock'"></span>
+                    </div>
+                    <pre class="rounded-xl border border-border bg-surface p-4 text-[12.5px] font-mono leading-relaxed overflow-x-auto" x-html="highlight(activeEndpoint.response)"></pre>
+                  </div>
+                  <div x-show="!testResult && !testLoading" class="text-[12.5px] text-faint border border-dashed border-border rounded-xl p-6 text-center">Envía una petición para ver la respuesta mockeada.</div>
+                </div>
+              </template>
+
+              <!-- schema -->
+              <template x-if="tab==='schema'">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">Entrada</div>
+                    <pre class="rounded-xl border border-border bg-surface p-4 text-[12px] font-mono leading-relaxed overflow-x-auto" x-html="highlight(activeEndpoint.request || '// sin cuerpo de entrada')"></pre>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">Salida</div>
+                    <pre class="rounded-xl border border-border bg-surface p-4 text-[12px] font-mono leading-relaxed overflow-x-auto" x-html="highlight(activeEndpoint.response)"></pre>
+                  </div>
+                </div>
+              </template>
+
+              <!-- code -->
+              <template x-if="tab==='code'">
+                <div>
+                  <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2" x-text="'Ruta generada · ' + activeProject.language"></div>
+                  <pre class="rounded-xl border border-border bg-surface p-4 text-[12px] font-mono leading-relaxed overflow-x-auto" x-text="activeEndpoint.code"></pre>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODAL: NUEVO PROYECTO ============ -->
+<div x-show="showNewProjectModal" x-cloak class="fixed inset-0 z-40 flex items-center justify-center p-6" x-transition.opacity>
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showNewProjectModal=false"></div>
+  <div class="relative bg-surface border border-border rounded-2xl shadow-panel w-full max-w-2xl p-6 fade-in">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="font-display text-lg font-bold">¿Cómo quieres crear tu contrato?</h2>
+      <button @click="showNewProjectModal=false" class="text-faint hover:text-ink text-xl leading-none">×</button>
+    </div>
+    <p class="text-muted text-[13px] mb-5">Elige el camino que se ajuste a lo que ya tienes.</p>
+
+    <div class="grid grid-cols-3 gap-3">
+      <button @click="showNewProjectModal=false; showImport=true" class="text-left rounded-xl border border-border hover:border-amber/50 hover:bg-amber/5 transition p-4">
+        <div class="w-8 h-8 rounded-lg bg-amber/15 text-amber flex items-center justify-center mb-3 text-[14px]">⬆</div>
+        <div class="font-display font-semibold text-[13.5px] mb-1">Importar contrato</div>
+        <div class="text-[11.5px] text-muted leading-snug">Sube tu OpenAPI/Swagger en YAML o JSON y lo mockeamos al instante.</div>
+      </button>
+      <button @click="showNewProjectModal=false; goBuilderFresh()" class="text-left rounded-xl border border-border hover:border-violet/50 hover:bg-violet/5 transition p-4">
+        <div class="w-8 h-8 rounded-lg bg-violet/15 text-violet flex items-center justify-center mb-3 text-[14px]">✎</div>
+        <div class="font-display font-semibold text-[13.5px] mb-1">Crear con formulario</div>
+        <div class="text-[11.5px] text-muted leading-snug">Define entradas y salidas paso a paso, sin escribir YAML.</div>
+      </button>
+      <button @click="showNewProjectModal=false; go('ai')" class="text-left rounded-xl border border-border hover:border-post/50 hover:bg-post/5 transition p-4">
+        <div class="w-8 h-8 rounded-lg bg-post/15 text-post flex items-center justify-center mb-3 text-[14px]">✨</div>
+        <div class="font-display font-semibold text-[13.5px] mb-1">Generar con IA</div>
+        <div class="text-[11.5px] text-muted leading-snug">Describe tu API en lenguaje natural y generamos contrato + backend.</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: IMPORTAR CONTRATO ============ -->
+<div x-show="showImport" x-cloak class="fixed inset-0 z-40 flex items-center justify-center p-6" x-transition.opacity>
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="closeImport()"></div>
+  <div class="relative bg-surface border border-border rounded-2xl shadow-panel w-full max-w-xl p-6 fade-in">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="font-display text-lg font-bold">Importar contrato</h2>
+      <button @click="closeImport()" class="text-faint hover:text-ink text-xl leading-none">×</button>
+    </div>
+
+    <template x-if="!importState.file">
+      <div>
+        <p class="text-muted text-[13px] mb-4">Acepta OpenAPI/Swagger en <span class="font-mono text-ink">.yaml</span> o <span class="font-mono text-ink">.json</span>.</p>
+        <button @click="dropImportFile()" class="w-full border-2 border-dashed border-border hover:border-amber/50 rounded-xl py-10 flex flex-col items-center gap-2 text-muted hover:text-amber transition">
+          <span class="text-2xl">⬆</span>
+          <span class="text-[13px] font-medium">Arrastra tu archivo aquí o haz clic para elegir</span>
+          <span class="text-[11px] text-faint">pagos-api.yaml</span>
+        </button>
+      </div>
+    </template>
+
+    <template x-if="importState.file && importState.parsing">
+      <div class="py-10 flex flex-col items-center gap-3">
+        <div class="w-8 h-8 border-2 border-amber/30 border-t-amber rounded-full animate-spin"></div>
+        <div class="text-[13px] text-muted">Analizando <span class="font-mono text-ink" x-text="importState.file"></span>…</div>
+      </div>
+    </template>
+
+    <template x-if="importState.file && !importState.parsing">
+      <div class="fade-in">
+        <div class="flex items-center gap-2 text-[13px] mb-3">
+          <span class="text-post">✓</span>
+          <span>Detectamos <span class="font-semibold text-ink" x-text="importState.result.endpoints.length"></span> endpoints en <span class="font-mono text-ink" x-text="importState.file"></span></span>
+        </div>
+        <div class="max-h-56 overflow-y-auto space-y-1.5 mb-4 pr-1">
+          <template x-for="ep in importState.result.endpoints" :key="ep.path+ep.method">
+            <div class="flex items-center gap-2 text-[12px] rounded-lg border border-border px-3 py-2">
+              <span class="stamp text-[10px] px-1.5 py-0.5" :class="'stamp-'+ep.method.toLowerCase()" x-text="ep.method"></span>
+              <span class="font-mono text-muted" x-text="ep.path"></span>
+            </div>
+          </template>
+        </div>
+        <button @click="createFromImport()" class="w-full bg-amber hover:bg-amber/90 text-[#1a1206] text-[13.5px] font-semibold px-4 py-2.5 rounded-lg transition">Crear proyecto y mockear</button>
+      </div>
+    </template>
+  </div>
+</div>
+
+<!-- ============ DRAWER: GENERAR / EXPORTAR PROYECTO ============ -->
+<div x-show="showExportDrawer" x-cloak class="fixed inset-0 z-40" x-transition.opacity>
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeExport()"></div>
+  <div class="absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-border shadow-panel flex flex-col" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
+    <div class="px-6 py-5 border-b border-border flex items-center justify-between">
+      <div>
+        <h2 class="font-display text-[16px] font-bold">Generar proyecto</h2>
+        <p class="text-[12px] text-muted mt-0.5" x-text="activeProject?.name"></p>
+      </div>
+      <button @click="closeExport()" class="text-faint hover:text-ink text-xl leading-none">×</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6">
+      <template x-if="!exportState.done">
+        <div>
+          <div class="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">Elige el stack de arranque</div>
+          <div class="grid grid-cols-2 gap-2.5 mb-6">
+            <template x-for="lang in stacks" :key="lang.id">
+              <button @click="exportState.lang=lang.id" class="text-left rounded-lg border p-3 transition" :class="exportState.lang===lang.id ? 'border-violet bg-violet/10' : 'border-border hover:border-violet/40'">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold" :style="`background:${lang.color}22; color:${lang.color}`" x-text="lang.tag"></span>
+                  <span class="text-[12.5px] font-medium" x-text="lang.name"></span>
+                </div>
+                <div class="text-[11px] text-faint" x-text="lang.desc"></div>
+              </button>
+            </template>
+          </div>
+
+          <div x-show="exportState.generating" x-cloak class="space-y-2 mb-4">
+            <template x-for="(s,i) in exportSteps" :key="i">
+              <div class="flex items-center gap-2 text-[12.5px]" x-show="i <= exportState.stepIndex">
+                <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0" :class="i < exportState.stepIndex ? 'bg-post/20 text-post' : 'bg-violet/20 text-violet'">
+                  <span x-show="i < exportState.stepIndex" class="text-[9px]">✓</span>
+                </span>
+                <span :class="i < exportState.stepIndex ? 'text-muted' : 'text-ink'" x-text="s"></span>
+              </div>
+            </template>
+          </div>
+
+          <button @click="generateExport()" :disabled="!exportState.lang || exportState.generating" class="w-full bg-violet hover:bg-violet/90 disabled:opacity-40 text-white text-[13.5px] font-semibold px-4 py-2.5 rounded-lg transition" x-text="exportState.generating ? 'Generando…' : 'Generar proyecto'"></button>
+        </div>
+      </template>
+
+      <template x-if="exportState.done">
+        <div class="fade-in">
+          <div class="flex items-center gap-2 text-[13.5px] mb-4">
+            <span class="text-post text-lg">✓</span>
+            <span class="font-medium">Proyecto listo para arrancar</span>
+          </div>
+          <div class="rounded-xl border border-border bg-surface2/40 p-4 mb-4 font-mono text-[12px] text-muted leading-relaxed">
+            <div>📁 src/</div>
+            <div class="pl-4">📁 routes/</div>
+            <div class="pl-4">📁 mocks/</div>
+            <div class="pl-4">📄 app.js</div>
+            <div>📄 package.json</div>
+            <div>📄 README.md</div>
+          </div>
+          <button class="w-full bg-post hover:bg-post/90 text-[#06210f] text-[13.5px] font-semibold px-4 py-2.5 rounded-lg transition">⬇ Descargar proyecto.zip</button>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+function app(){
+  return {
+    view: 'dashboard',
+    activeProjectId: null,
+    activeEndpointId: null,
+    tab: 'preview',
+    showNewProjectModal: false,
+    showImport: false,
+    showExportDrawer: false,
+    testLoading: false,
+    testResult: null,
+    testLatency: 0,
+
+    aiChips: ['API de e-commerce','Sistema de reservas','Red social simple'],
+
+    ai: { prompt:'', loading:false, started:false, done:false, stepIndex:-1, steps:[], result:null },
+    exportState: { lang:null, generating:false, done:false, stepIndex:-1 },
+    exportSteps: ['Generando estructura del proyecto','Configurando rutas mock','Empaquetando dependencias'],
+    importState: { file:null, parsing:false, result:null },
+
+    stacks: [
+      {id:'node', name:'Node.js + Express', desc:'API REST lista', color:'#3DD68C', tag:'JS'},
+      {id:'fastapi', name:'Python + FastAPI', desc:'Tipado y rápido', color:'#3DA5F2', tag:'PY'},
+      {id:'spring', name:'Java + Spring Boot', desc:'Empresarial', color:'#F2A93B', tag:'JV'},
+      {id:'go', name:'Go + Fiber', desc:'Ligero y veloz', color:'#00ADD8', tag:'GO'},
+      {id:'laravel', name:'PHP + Laravel', desc:'Convención clara', color:'#FF5D6C', tag:'PHP'},
+      {id:'dotnet', name:'.NET + ASP.NET', desc:'Robusto', color:'#B98CFF', tag:'C#'},
+    ],
+
+    builder: { name:'', baseUrl:'/api/v1', endpoints: [] },
+
+    projects: [
+      {
+        id:1, name:'Tienda Norte API', description:'Catálogo, carrito, pedidos y auth para e-commerce.',
+        language:'Node.js · Express', status:'Activo', updatedAt:'hace 2h', color:'#3DD68C', initials:'TN', baseUrl:'https://mock.mockapi.dev/tienda-norte',
+        endpoints:[
+          {id:'e1', method:'GET', path:'/products', summary:'Lista el catálogo de productos activos.', status:'200 OK',
+            request:null,
+            response:'{\n  "data": [\n    { "id": "prd_101", "name": "Zapatilla Urbana", "price": 189.90, "stock": 42 },\n    { "id": "prd_102", "name": "Mochila Trail", "price": 249.00, "stock": 15 }\n  ],\n  "page": 1,\n  "total": 58\n}',
+            code:'router.get("/products", (req, res) => {\n  return res.status(200).json(mocks.products);\n});'},
+          {id:'e2', method:'GET', path:'/products/{id}', summary:'Detalle de un producto por id.', status:'200 OK',
+            request:null,
+            response:'{\n  "id": "prd_101",\n  "name": "Zapatilla Urbana",\n  "price": 189.90,\n  "stock": 42,\n  "category": "calzado"\n}',
+            code:'router.get("/products/:id", (req, res) => {\n  return res.status(200).json(mocks.productById(req.params.id));\n});'},
+          {id:'e3', method:'POST', path:'/cart', summary:'Crea un carrito nuevo para la sesión.', status:'201 Created',
+            request:'{\n  "userId": "usr_88"\n}',
+            response:'{\n  "cartId": "cart_552",\n  "items": [],\n  "total": 0\n}',
+            code:'router.post("/cart", (req, res) => {\n  return res.status(201).json(mocks.newCart(req.body));\n});'},
+          {id:'e4', method:'POST', path:'/orders', summary:'Confirma un pedido a partir del carrito.', status:'201 Created',
+            request:'{\n  "cartId": "cart_552",\n  "address": "Av. Larco 345"\n}',
+            response:'{\n  "orderId": "ord_7781",\n  "status": "pendiente",\n  "total": 438.90\n}',
+            code:'router.post("/orders", (req, res) => {\n  return res.status(201).json(mocks.createOrder(req.body));\n});'},
+          {id:'e5', method:'POST', path:'/auth/login', summary:'Autentica un usuario y devuelve un token.', status:'200 OK',
+            request:'{\n  "email": "cliente@correo.com",\n  "password": "••••••••"\n}',
+            response:'{\n  "token": "mock_eyJhbGciOi...",\n  "expiresIn": 3600\n}',
+            code:'router.post("/auth/login", (req, res) => {\n  return res.status(200).json(mocks.session());\n});'},
+          {id:'e6', method:'DELETE', path:'/cart/{itemId}', summary:'Elimina un ítem del carrito.', status:'204 No Content',
+            request:null, response:'{}',
+            code:'router.delete("/cart/:itemId", (req, res) => {\n  return res.status(204).send();\n});'},
+        ]
+      },
+      {
+        id:2, name:'Auth Service', description:'Registro, sesión y recuperación de contraseña.',
+        language:'Python · FastAPI', status:'Activo', updatedAt:'ayer', color:'#3DA5F2', initials:'AS', baseUrl:'https://mock.mockapi.dev/auth-service',
+        endpoints:[
+          {id:'e1', method:'POST', path:'/register', summary:'Registra un nuevo usuario.', status:'201 Created',
+            request:'{\n  "email": "nuevo@correo.com",\n  "password": "••••••••"\n}',
+            response:'{\n  "userId": "usr_501",\n  "email": "nuevo@correo.com"\n}',
+            code:'@app.post("/register")\ndef register(body: RegisterIn):\n    return mocks.new_user(body)'},
+          {id:'e2', method:'POST', path:'/login', summary:'Inicia sesión y entrega un token.', status:'200 OK',
+            request:'{\n  "email": "nuevo@correo.com",\n  "password": "••••••••"\n}',
+            response:'{\n  "token": "mock_jwt...",\n  "expiresIn": 3600\n}',
+            code:'@app.post("/login")\ndef login(body: LoginIn):\n    return mocks.session()'},
+          {id:'e3', method:'GET', path:'/me', summary:'Devuelve el perfil del usuario autenticado.', status:'200 OK',
+            request:null,
+            response:'{\n  "userId": "usr_501",\n  "email": "nuevo@correo.com",\n  "role": "cliente"\n}',
+            code:'@app.get("/me")\ndef me():\n    return mocks.current_user()'},
+          {id:'e4', method:'PUT', path:'/password', summary:'Actualiza la contraseña del usuario.', status:'200 OK',
+            request:'{\n  "current": "••••••••",\n  "next": "••••••••"\n}',
+            response:'{\n  "updated": true\n}',
+            code:'@app.put("/password")\ndef change_password(body: PasswordIn):\n    return {"updated": True}'},
+        ]
+      },
+      {
+        id:3, name:'Rastreo de Envíos', description:'Generado con IA a partir de un requerimiento en texto.',
+        language:'Go · Fiber', status:'Borrador', updatedAt:'hace 5 min', color:'#F2A93B', initials:'RE', baseUrl:'https://mock.mockapi.dev/rastreo-envios',
+        endpoints:[
+          {id:'e1', method:'GET', path:'/shipments/{id}', summary:'Consulta el estado de un envío.', status:'200 OK',
+            request:null,
+            response:'{\n  "shipmentId": "shp_339",\n  "status": "en tránsito",\n  "eta": "2026-07-02"\n}',
+            code:'app.Get("/shipments/:id", func(c *fiber.Ctx) error {\n  return c.JSON(mocks.Shipment(c.Params("id")))\n})'},
+          {id:'e2', method:'POST', path:'/shipments', summary:'Crea un nuevo envío.', status:'201 Created',
+            request:'{\n  "origin": "Lima",\n  "destination": "Arequipa"\n}',
+            response:'{\n  "shipmentId": "shp_340",\n  "status": "creado"\n}',
+            code:'app.Post("/shipments", func(c *fiber.Ctx) error {\n  return c.Status(201).JSON(mocks.NewShipment())\n})'},
+        ]
+      },
+    ],
+
+    init(){},
+
+    go(v){ this.view = v; },
+
+    openNewProject(){ this.showNewProjectModal = true; },
+
+    goBuilderFresh(){
+      this.builder = { name:'', baseUrl:'/api/v1', endpoints: [this.blankEndpoint()] };
+      this.view = 'builder';
+    },
+
+    blankEndpoint(){
+      return { id: 'ep_'+Math.random().toString(36).slice(2,8), method:'GET', path:'', reqBody:'', resBody:'', statusCode:200 };
+    },
+    addEndpoint(){ this.builder.endpoints.push(this.blankEndpoint()); },
+    removeEndpoint(id){ this.builder.endpoints = this.builder.endpoints.filter(e=>e.id!==id); },
+
+    get contractPreview(){
+      const b = this.builder;
+      const paths = {};
+      b.endpoints.forEach(ep=>{
+        if(!ep.path) return;
+        paths[ep.path] = paths[ep.path] || {};
+        paths[ep.path][ep.method.toLowerCase()] = {
+          responses: { [ep.statusCode||200]: { description: 'Mock generado', example: this.tryParse(ep.resBody) } }
+        };
+      });
+      const obj = { openapi:'3.0.0', info:{ title: b.name || 'Sin título', version:'1.0.0' }, basePath: b.baseUrl, paths };
+      return this.highlight(JSON.stringify(obj, null, 2));
+    },
+
+    tryParse(s){ try{ return JSON.parse(s); }catch(e){ return s || null; } },
+
+    highlight(str){
+      if(!str) return '';
+      let s = str
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      s = s.replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span><span class="json-punc">:</span>');
+      s = s.replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>');
+      s = s.replace(/: (-?\d+(\.\d+)?)/g, ': <span class="json-num">$1</span>');
+      s = s.replace(/\btrue\b|\bfalse\b|\bnull\b/g, '<span class="json-num">$&</span>');
+      return s;
+    },
+
+    createFromBuilder(){
+      const id = Math.max(...this.projects.map(p=>p.id)) + 1;
+      const eps = this.builder.endpoints.filter(e=>e.path).map((e,i)=>({
+        id:'e'+(i+1), method:e.method, path:e.path, summary:'Endpoint definido en el constructor visual.',
+        status: (e.statusCode||200)+' '+(e.statusCode==201?'Created':'OK'),
+        request: e.reqBody||null, response: e.resBody || '{}',
+        code:'// generado a partir del contrato del constructor visual'
+      }));
+      this.projects.unshift({
+        id, name: this.builder.name || 'Proyecto sin título', description:'Creado con el constructor visual.',
+        language:'Node.js · Express', status:'Activo', updatedAt:'ahora', color:'#7C6CFF', initials:(this.builder.name||'PN').slice(0,2).toUpperCase(),
+        baseUrl:'https://mock.mockapi.dev/'+ (this.builder.name||'proyecto').toLowerCase().replace(/\s+/g,'-'),
+        endpoints: eps.length ? eps : [{id:'e1', method:'GET', path:'/', summary:'Endpoint raíz.', status:'200 OK', request:null, response:'{}', code:''}]
+      });
+      this.openProject(id);
+    },
+
+    runAI(){
+      if(!this.ai.prompt) return;
+      this.ai.loading = true; this.ai.started = true; this.ai.done = false; this.ai.stepIndex = -1;
+      this.ai.steps = [
+        'Analizando requerimiento',
+        'Detectando entidades y relaciones',
+        'Diseñando endpoints REST',
+        'Generando esquemas de entrada y salida',
+        'Escribiendo código del backend'
+      ];
+      let i = 0;
+      const tick = () => {
+        this.ai.stepIndex = i;
+        i++;
+        if(i < this.ai.steps.length){ setTimeout(tick, 550); }
+        else {
+          setTimeout(()=>{
+            this.ai.done = true; this.ai.loading = false;
+            this.ai.result = {
+              name: 'Reservas de Canchas API',
+              stack: 'Node.js + Express · generado automáticamente',
+              endpoints: [
+                {method:'GET', path:'/courts'},
+                {method:'GET', path:'/courts/{id}/availability'},
+                {method:'POST', path:'/bookings'},
+                {method:'GET', path:'/bookings/{id}'},
+                {method:'POST', path:'/payments'},
+              ]
+            };
+          }, 500);
+        }
+      };
+      tick();
+    },
+
+    createFromAI(){
+      const id = Math.max(...this.projects.map(p=>p.id)) + 1;
+      const eps = this.ai.result.endpoints.map((e,i)=>({
+        id:'e'+(i+1), method:e.method, path:e.path, summary:'Endpoint generado por el asistente IA.',
+        status:'200 OK', request: e.method==='POST' ? '{\n  "campo": "valor"\n}' : null,
+        response:'{\n  "ok": true,\n  "data": {}\n}',
+        code:'// código generado automáticamente por el asistente IA'
+      }));
+      this.projects.unshift({
+        id, name: this.ai.result.name, description:'Generado con el asistente IA a partir de un requerimiento en texto.',
+        language:'Node.js · Express', status:'Borrador', updatedAt:'ahora', color:'#3DD68C', initials:'RC',
+        baseUrl:'https://mock.mockapi.dev/reservas-canchas', endpoints: eps
+      });
+      this.openProject(id);
+    },
+
+    editAIInBuilder(){
+      this.builder = {
+        name: this.ai.result.name, baseUrl:'/api/v1',
+        endpoints: this.ai.result.endpoints.map(e=>({ id:'ep_'+Math.random().toString(36).slice(2,8), method:e.method, path:e.path, reqBody:'', resBody:'{\n  "ok": true\n}', statusCode:200 }))
+      };
+      this.view = 'builder';
+    },
+
+    dropImportFile(){
+      this.importState.file = 'pagos-api.yaml';
+      this.importState.parsing = true;
+      setTimeout(()=>{
+        this.importState.parsing = false;
+        this.importState.result = {
+          endpoints: [
+            {method:'GET', path:'/payments'},
+            {method:'POST', path:'/payments'},
+            {method:'GET', path:'/payments/{id}'},
+            {method:'POST', path:'/payments/{id}/refund'},
+            {method:'GET', path:'/methods'},
+          ]
+        };
+      }, 1200);
+    },
+
+    closeImport(){ this.showImport = false; this.importState = { file:null, parsing:false, result:null }; },
+
+    createFromImport(){
+      const id = Math.max(...this.projects.map(p=>p.id)) + 1;
+      const eps = this.importState.result.endpoints.map((e,i)=>({
+        id:'e'+(i+1), method:e.method, path:e.path, summary:'Importado desde pagos-api.yaml.',
+        status:'200 OK', request: e.method==='POST' ? '{\n  "campo": "valor"\n}' : null,
+        response:'{\n  "ok": true,\n  "data": {}\n}',
+        code:'// generado a partir del contrato importado'
+      }));
+      this.projects.unshift({
+        id, name:'Pagos API', description:'Importado desde OpenAPI (pagos-api.yaml).',
+        language:'Node.js · Express', status:'Activo', updatedAt:'ahora', color:'#F2A93B', initials:'PA',
+        baseUrl:'https://mock.mockapi.dev/pagos-api', endpoints: eps
+      });
+      this.closeImport();
+      this.openProject(id);
+    },
+
+    openProject(id){
+      this.activeProjectId = id;
+      this.view = 'project';
+      this.tab = 'preview';
+      const proj = this.projects.find(p=>p.id===id);
+      this.activeEndpointId = proj?.endpoints?.[0]?.id || null;
+      this.testResult = null;
+    },
+
+    get activeProject(){ return this.projects.find(p=>p.id===this.activeProjectId); },
+    get activeEndpoint(){ return this.activeProject?.endpoints.find(e=>e.id===this.activeEndpointId); },
+    get totalEndpoints(){ return this.projects.reduce((a,p)=>a+p.endpoints.length,0); },
+
+    sendTest(){
+      this.testLoading = true; this.testResult = null;
+      setTimeout(()=>{
+        this.testLoading = false;
+        this.testLatency = Math.floor(Math.random()*40)+18;
+        this.testResult = true;
+      }, 700);
+    },
+
+    closeExport(){ this.showExportDrawer = false; this.exportState = { lang:null, generating:false, done:false, stepIndex:-1 }; },
+
+    generateExport(){
+      if(!this.exportState.lang) return;
+      this.exportState.generating = true;
+      let i = 0;
+      const tick = () => {
+        this.exportState.stepIndex = i; i++;
+        if(i < this.exportSteps.length){ setTimeout(tick, 500); }
+        else { setTimeout(()=>{ this.exportState.done = true; }, 500); }
+      };
+      tick();
+    },
+  }
+}
+</script>
+</body>
+</html>

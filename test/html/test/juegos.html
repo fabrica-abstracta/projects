@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Juegos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { cream:'#FDF6EC', caramel:'#C8872A', choco:'#3B1F0E', blush:'#F2C4C4', rose:'#E8929A', gold:'#F0C060' } } }
+}
+</script>
+<style>
+body { background-color: #FDF6EC; font-family: 'Georgia', serif; }
+.sidebar-link:hover { background: rgba(200,135,42,0.15); }
+.game-card { transition: all 0.25s; }
+.game-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+.pulse-badge { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+</style>
+</head>
+<body x-data="{ sidebarOpen: true, modalConfigOpen: false, juegoConfig: null }" class="flex min-h-screen">
+
+<aside :class="sidebarOpen ? 'w-64' : 'w-16'" class="bg-choco text-cream flex flex-col transition-all duration-300 min-h-screen fixed z-20">
+  <div class="flex items-center justify-between p-4 border-b border-yellow-900">
+    <span x-show="sidebarOpen" class="text-gold font-bold text-lg tracking-wide">🍰 SweetStamp</span>
+    <button @click="sidebarOpen = !sidebarOpen" class="text-gold hover:text-white transition">
+      <i :class="sidebarOpen ? 'fa-solid fa-angles-left' : 'fa-solid fa-angles-right'"></i>
+    </button>
+  </div>
+  <nav class="flex-1 py-4 space-y-1">
+    <a href="index.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-house w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Dashboard</span></a>
+    <a href="clientes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-users w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Clientes & Cartillas</span></a>
+    <a href="premios.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-gift w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Premios</span></a>
+    <a href="juegos.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gold rounded mx-2 bg-yellow-900/30"><i class="fa-solid fa-dice w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm font-medium">Juegos</span></a>
+  </nav>
+</aside>
+
+<div :class="sidebarOpen ? 'ml-64' : 'ml-16'" class="flex-1 transition-all duration-300">
+  <header class="bg-white shadow-sm px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+    <div>
+      <h1 class="text-2xl font-bold text-choco">Centro de Juegos</h1>
+      <p class="text-sm text-gray-500">Selecciona un juego para configurarlo y ejecutarlo</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="pulse-badge bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold"><i class="fa-solid fa-circle text-green-500 mr-1 text-xs"></i>3 premios disponibles</span>
+    </div>
+  </header>
+
+  <main class="p-8">
+    <div class="mb-8 bg-choco text-cream rounded-2xl p-6 flex items-center justify-between">
+      <div>
+        <p class="text-gold text-sm font-semibold uppercase tracking-wide mb-1">¿Cómo funciona?</p>
+        <h2 class="text-xl font-bold mb-2">Selecciona un juego → Elige el premio → ¡Juega!</h2>
+        <p class="text-cream/70 text-sm max-w-xl">Configura el juego seleccionando qué premio se puede ganar, luego ingresa al detalle del juego para ejecutarlo con tus clientes y ver la tabla de ganadores en tiempo real.</p>
+      </div>
+      <div class="text-6xl opacity-30">🎮</div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <div class="game-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer border border-gray-100">
+        <div class="h-40 bg-gradient-to-br from-purple-600 to-purple-900 flex items-center justify-center relative">
+          <span class="text-6xl">🎟️</span>
+          <span class="absolute top-3 right-3 bg-white/20 text-white text-xs px-2 py-1 rounded-full">Sorteo</span>
+          <span class="absolute bottom-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold pulse-badge">ACTIVO</span>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-choco">Sorteo de Premios</h3>
+          <p class="text-sm text-gray-500 mt-1 mb-4">Elige clientes participantes, define el premio y realiza el sorteo. El ganador se elige al azar entre todos los participantes registrados.</p>
+          <div class="flex items-center gap-3 text-xs text-gray-500 mb-4">
+            <span><i class="fa-solid fa-users mr-1 text-purple-500"></i>Múltiples participantes</span>
+            <span><i class="fa-solid fa-trophy mr-1 text-caramel"></i>1 ganador</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="
+              Swal.fire({
+                title:'Configurar Sorteo',
+                html:'<select id=\'ps\' class=\'swal2-input\'><option>Torta Familiar Entera</option><option>Caja de Alfajores Premium</option><option>Taza + Galletas</option></select>',
+                showCancelButton:true,confirmButtonColor:\'#7C3AED\',confirmButtonText:\'Guardar Configuración\'
+              }).then(r=>{ if(r.isConfirmed) { Toastify({text:\'⚙️ Sorteo configurado con premio: \'+document.getElementById(\'ps\').value, duration:3000, style:{background:\'#7C3AED\'}}).showToast() } })
+            " class="border border-purple-200 text-purple-700 py-2 rounded-lg text-xs font-semibold hover:bg-purple-50 transition">
+              <i class="fa-solid fa-gear mr-1"></i> Configurar
+            </button>
+            <a href="juego-sorteo.html" class="bg-purple-600 text-white py-2 rounded-lg text-xs font-semibold hover:bg-purple-700 transition text-center">
+              <i class="fa-solid fa-play mr-1"></i> Entrar al Juego
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer border border-gray-100">
+        <div class="h-40 bg-gradient-to-br from-rose-500 to-pink-800 flex items-center justify-center relative">
+          <span class="text-6xl">🎡</span>
+          <span class="absolute top-3 right-3 bg-white/20 text-white text-xs px-2 py-1 rounded-full">Ruleta</span>
+          <span class="absolute bottom-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold pulse-badge">ACTIVO</span>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-choco">Ruleta de Premios</h3>
+          <p class="text-sm text-gray-500 mt-1 mb-4">Gira la ruleta con los premios disponibles. El cliente ve la animación y descubre qué ganó en tiempo real con efectos visuales.</p>
+          <div class="flex items-center gap-3 text-xs text-gray-500 mb-4">
+            <span><i class="fa-solid fa-user mr-1 text-rose-500"></i>Un cliente a la vez</span>
+            <span><i class="fa-solid fa-gift mr-1 text-caramel"></i>Premio aleatorio</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="
+              Swal.fire({
+                title:'Configurar Ruleta',
+                html:'<p class=\'text-sm text-left mb-2\'>Premios en la ruleta:</p><label class=\'flex items-center gap-2 text-sm\'><input type=\'checkbox\' checked> Torta Familiar</label><label class=\'flex items-center gap-2 text-sm\'><input type=\'checkbox\' checked> Café + Pastel</label><label class=\'flex items-center gap-2 text-sm\'><input type=\'checkbox\' checked> Descuento 50%</label><label class=\'flex items-center gap-2 text-sm\'><input type=\'checkbox\'> Alfajores</label>',
+                showCancelButton:true,confirmButtonColor:\'#E8929A\',confirmButtonText:\'Guardar Ruleta\'
+              }).then(r=>{ if(r.isConfirmed) Toastify({text:\'🎡 Ruleta configurada con 3 premios\', duration:3000, style:{background:\'#E8929A\'}}).showToast() })
+            " class="border border-rose-200 text-rose-700 py-2 rounded-lg text-xs font-semibold hover:bg-rose-50 transition">
+              <i class="fa-solid fa-gear mr-1"></i> Configurar
+            </button>
+            <a href="juego-ruleta.html" class="bg-rose-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-rose-600 transition text-center">
+              <i class="fa-solid fa-play mr-1"></i> Entrar al Juego
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer border border-gray-100">
+        <div class="h-40 bg-gradient-to-br from-caramel to-yellow-800 flex items-center justify-center relative">
+          <span class="text-6xl">📋</span>
+          <span class="absolute top-3 right-3 bg-white/20 text-white text-xs px-2 py-1 rounded-full">Cartilla</span>
+          <span class="absolute bottom-3 left-3 bg-yellow-300 text-yellow-900 text-xs px-2 py-1 rounded-full font-semibold">7 listas hoy</span>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-choco">Cartillas Completadas</h3>
+          <p class="text-sm text-gray-500 mt-1 mb-4">Gestiona los clientes que completaron su cartilla de sellos. Entrega premios directamente o envíalos al sorteo como participantes especiales.</p>
+          <div class="flex items-center gap-3 text-xs text-gray-500 mb-4">
+            <span><i class="fa-solid fa-stamp mr-1 text-caramel"></i>10 sellos = 1 premio</span>
+            <span><i class="fa-solid fa-check mr-1 text-green-500"></i>Entrega directa</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <a href="clientes.html" class="border border-caramel text-caramel py-2 rounded-lg text-xs font-semibold hover:bg-caramel/10 transition text-center">
+              <i class="fa-solid fa-users mr-1"></i> Ver Clientes
+            </a>
+            <button onclick="
+              Swal.fire({title:'Cartillas Completadas Hoy', html:'<div class=\'text-left space-y-2\'><div class=\'flex justify-between\'><span>Camilo Herrera</span><span class=\'text-green-600 font-bold\'>✅ Pendiente</span></div><div class=\'flex justify-between\'><span>Rodrigo Fuentes</span><span class=\'text-green-600 font-bold\'>✅ Pendiente</span></div></div>', confirmButtonColor:\'#C8872A\', confirmButtonText:\'Gestionar Premios\', showCancelButton:true})
+              .then(r=>{ if(r.isConfirmed) window.location.href=\'clientes.html\' })
+            " class="bg-caramel text-white py-2 rounded-lg text-xs font-semibold hover:bg-yellow-700 transition">
+              <i class="fa-solid fa-trophy mr-1"></i> Ver Pendientes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 bg-white rounded-2xl shadow p-6">
+      <h3 class="font-bold text-choco mb-4 text-lg">Resumen de Actividad – Juegos</h3>
+      <div class="grid grid-cols-4 gap-4">
+        <template x-for="m in [
+          {label:'Sorteos realizados', val:'12', icon:'fa-ticket', color:'text-purple-600', bg:'bg-purple-50'},
+          {label:'Ruletas giradas', val:'38', icon:'fa-circle-notch', color:'text-rose-500', bg:'bg-rose-50'},
+          {label:'Premios de juego entregados', val:'50', icon:'fa-gift', color:'text-caramel', bg:'bg-yellow-50'},
+          {label:'Último ganador', val:'Tomás B.', icon:'fa-crown', color:'text-gold', bg:'bg-yellow-50'},
+        ]" :key="m.label">
+          <div :class="m.bg" class="rounded-xl p-4">
+            <i :class="'fa-solid ' + m.icon + ' ' + m.color + ' text-xl mb-2'"></i>
+            <p class="text-2xl font-bold text-choco" x-text="m.val"></p>
+            <p class="text-xs text-gray-500 mt-1" x-text="m.label"></p>
+          </div>
+        </template>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

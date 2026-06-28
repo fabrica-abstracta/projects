@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BURGR — Artisan Burgers</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Playfair Display', 'serif'],
+            heading: ['Cormorant Garamond', 'serif'],
+            body: ['Poppins', 'sans-serif'],
+            accent: ['DM Mono', 'monospace'],
+          },
+          colors: {
+            ember: '#C84B31',
+            coal: '#1A1A18',
+            cream: '#FDF8F2',
+            gold: '#E8B84B',
+            smoke: '#F2EDE7',
+          },
+          animation: {
+            'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            'fade-up': 'fadeUp 0.6s ease both',
+            'wiggle': 'wiggle 0.3s ease',
+          },
+          keyframes: {
+            slideIn: { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+            fadeUp: { from: { opacity: 0, transform: 'translateY(24px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+            wiggle: { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.15)' } },
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-cream font-body text-coal overflow-x-hidden">
+
+  <!-- CART SIDEBAR -->
+  <div id="cartOverlay" class="fixed inset-0 bg-coal/40 z-40 hidden backdrop-blur-sm" onclick="toggleCart()"></div>
+  <aside id="cartSidebar" class="fixed top-0 right-0 h-full w-96 bg-white z-50 shadow-2xl translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col">
+    <div class="flex items-center justify-between px-8 py-6 border-b border-smoke">
+      <div>
+        <p class="font-accent text-xs tracking-[0.2em] text-ember uppercase">Tu pedido</p>
+        <h2 class="font-display text-2xl font-bold mt-0.5">Carrito</h2>
+      </div>
+      <button onclick="toggleCart()" class="w-10 h-10 rounded-full bg-smoke flex items-center justify-center hover:bg-ember hover:text-white transition-all duration-200">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div id="cartItems" class="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+      <div class="text-center py-16 text-coal/30">
+        <i data-lucide="shopping-bag" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
+        <p class="font-body text-sm">Tu carrito está vacío</p>
+      </div>
+    </div>
+
+    <div class="px-8 py-6 border-t border-smoke">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-body text-sm text-coal/60">Subtotal</span>
+        <span id="cartSubtotal" class="font-accent text-sm">S/ 0.00</span>
+      </div>
+      <div class="flex justify-between items-center mb-5">
+        <span class="font-body text-sm text-coal/60">Delivery</span>
+        <span class="font-accent text-sm text-emerald-500">Gratis</span>
+      </div>
+      <div class="flex justify-between items-center mb-6 pb-4 border-t border-smoke pt-4">
+        <span class="font-heading text-xl font-semibold">Total</span>
+        <span id="cartTotal" class="font-display text-2xl font-bold text-ember">S/ 0.00</span>
+      </div>
+      <button class="w-full bg-coal text-cream font-body font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-ember transition-all duration-300 group">
+        <i data-lucide="credit-card" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+        Ordenar ahora
+      </button>
+    </div>
+  </aside>
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 left-0 right-0 z-30 bg-cream/90 backdrop-blur-md border-b border-smoke/60">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-ember rounded-xl flex items-center justify-center">
+          <i data-lucide="flame" class="w-5 h-5 text-cream"></i>
+        </div>
+        <span class="font-display text-2xl font-black tracking-tight">BURGR</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#menu" class="font-body text-sm font-medium text-coal/70 hover:text-ember transition-colors">Menú</a>
+        <a href="#about" class="font-body text-sm font-medium text-coal/70 hover:text-ember transition-colors">Nosotros</a>
+        <a href="#" class="font-body text-sm font-medium text-coal/70 hover:text-ember transition-colors">Ubicación</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="toggleCart()" class="relative w-11 h-11 bg-coal rounded-2xl flex items-center justify-center hover:bg-ember transition-all duration-300 group">
+          <i data-lucide="shopping-cart" class="w-5 h-5 text-cream group-hover:scale-110 transition-transform"></i>
+          <span id="cartBadge" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-ember text-cream text-xs rounded-full flex items-center justify-center font-accent font-medium hidden">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="min-h-screen pt-20 flex items-center relative overflow-hidden bg-cream">
+    <!-- decorative blobs -->
+    <div class="absolute top-1/4 -right-32 w-96 h-96 bg-gold/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-ember/8 rounded-full blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center py-16">
+      <!-- left -->
+      <div class="animate-fade-up">
+        <h1 class="font-display text-7xl lg:text-8xl font-black leading-[0.92] tracking-tight mb-6">
+          Sabor<br/>
+          <em class="text-ember not-italic">que</em><br/>
+          Arde
+        </h1>
+        <p class="font-body text-coal/60 text-lg leading-relaxed max-w-md mb-10">
+          Hamburguesas artesanales con carne de res local, brioche horneado en casa y salsas secretas que llevan años perfeccionándose.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a href="#menu" class="bg-coal text-cream font-body font-semibold px-8 py-4 rounded-2xl flex items-center gap-2 hover:bg-ember transition-all duration-300 group">
+            Ver menú completo
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          <a href="#about" class="bg-smoke text-coal font-body font-medium px-8 py-4 rounded-2xl hover:bg-gold/20 transition-all duration-300">
+            Nuestra historia
+          </a>
+        </div>
+        <!-- stats -->
+        <div class="flex gap-10 mt-12 pt-10 border-t border-smoke">
+          <div>
+            <p class="font-display text-3xl font-black text-coal">4.9<span class="text-ember">★</span></p>
+            <p class="font-body text-xs text-coal/50 mt-0.5">Rating promedio</p>
+          </div>
+          <div>
+            <p class="font-display text-3xl font-black text-coal">2k+</p>
+            <p class="font-body text-xs text-coal/50 mt-0.5">Clientes felices</p>
+          </div>
+          <div>
+            <p class="font-display text-3xl font-black text-coal">12</p>
+            <p class="font-body text-xs text-coal/50 mt-0.5">Recetas únicas</p>
+          </div>
+        </div>
+      </div>
+      <!-- right: hero visual -->
+      <div class="relative flex justify-center lg:justify-end">
+        <div class="relative w-80 h-80 lg:w-[420px] lg:h-[420px]">
+          <!-- ring -->
+          <div class="absolute inset-0 rounded-full border-2 border-dashed border-gold/30 animate-spin" style="animation-duration:20s;"></div>
+          <!-- main circle -->
+          <div class="absolute inset-6 rounded-full bg-gradient-to-br from-gold/20 via-ember/10 to-smoke flex items-center justify-center shadow-2xl">
+            <div class="text-center">
+              <div class="text-9xl leading-none select-none">🍔</div>
+              <p class="font-display text-lg font-bold mt-2 text-coal">Signature Smash</p>
+            </div>
+          </div>
+          <!-- floating badges -->
+          <div class="absolute -top-4 -left-4 bg-white shadow-xl rounded-2xl px-4 py-3 flex items-center gap-2">
+            <i data-lucide="flame" class="w-4 h-4 text-ember"></i>
+            <span class="font-accent text-xs font-medium">100% res local</span>
+          </div>
+          <div class="absolute -bottom-4 -right-4 bg-coal text-cream shadow-xl rounded-2xl px-4 py-3 flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
+            <span class="font-accent text-xs font-medium">15 min listo</span>
+          </div>
+          <div class="absolute top-1/2 -right-8 bg-ember text-cream shadow-xl rounded-2xl px-4 py-3 flex items-center gap-2 -translate-y-1/2">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+            <span class="font-accent text-xs font-medium">Smash style</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU SECTION -->
+  <section id="menu" class="py-24 max-w-7xl mx-auto px-6">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
+      <div>
+        <p class="font-accent text-xs tracking-[0.25em] text-ember uppercase mb-3">Nuestras creaciones</p>
+        <h2 class="font-display text-5xl lg:text-6xl font-black leading-tight">Menú<br/><em class="text-ember not-italic">Principal</em></h2>
+      </div>
+      <p class="font-body text-coal/50 max-w-sm mt-4 md:mt-0 text-sm leading-relaxed">
+        Todos los panes son horneados diariamente. La carne llega fresca cada mañana de productores locales de San Martín.
+      </p>
+    </div>
+
+    <!-- filter tabs -->
+    <div class="flex flex-wrap gap-3 mb-10" id="filterTabs">
+      <button onclick="filterMenu('all',this)" class="filter-btn active font-body font-medium text-sm px-5 py-2.5 rounded-xl bg-coal text-cream transition-all duration-200">Todos</button>
+      <button onclick="filterMenu('burgers',this)" class="filter-btn font-body font-medium text-sm px-5 py-2.5 rounded-xl bg-smoke text-coal hover:bg-coal hover:text-cream transition-all duration-200">Hamburguesas</button>
+      <button onclick="filterMenu('sides',this)" class="filter-btn font-body font-medium text-sm px-5 py-2.5 rounded-xl bg-smoke text-coal hover:bg-coal hover:text-cream transition-all duration-200">Acompañamientos</button>
+      <button onclick="filterMenu('drinks',this)" class="filter-btn font-body font-medium text-sm px-5 py-2.5 rounded-xl bg-smoke text-coal hover:bg-coal hover:text-cream transition-all duration-200">Bebidas</button>
+    </div>
+
+    <!-- products grid -->
+    <div id="menuGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="bg-coal py-24 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5" style="background-image:radial-gradient(circle, #E8B84B 1px, transparent 1px);background-size:40px 40px;"></div>
+    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center relative">
+      <div class="text-cream">
+        <p class="font-accent text-xs tracking-[0.25em] text-gold uppercase mb-4">Desde 2018</p>
+        <h2 class="font-display text-5xl lg:text-6xl font-black leading-tight mb-6">Pasión<br/>en cada<br/><em class="text-ember not-italic">mordida</em></h2>
+        <p class="font-body text-cream/60 leading-relaxed mb-6">
+          Nacimos en el corazón de Moyobamba con una sola misión: crear la hamburguesa perfecta usando lo mejor de San Martín. Cada ingrediente tiene una historia, cada receta tiene un alma.
+        </p>
+        <p class="font-body text-cream/60 leading-relaxed mb-10">
+          Nuestro pan brioche se hornea cada mañana. La carne viene de fincas locales. Las salsas son recetas familiares que guardamos celosamente.
+        </p>
+        <div class="grid grid-cols-3 gap-6">
+          <div class="bg-white/5 rounded-2xl p-5 text-center">
+            <i data-lucide="leaf" class="w-6 h-6 text-gold mx-auto mb-2"></i>
+            <p class="font-heading text-lg font-semibold">Local</p>
+            <p class="font-body text-xs text-cream/40 mt-1">Ingredientes</p>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-5 text-center">
+            <i data-lucide="award" class="w-6 h-6 text-gold mx-auto mb-2"></i>
+            <p class="font-heading text-lg font-semibold">Premium</p>
+            <p class="font-body text-xs text-cream/40 mt-1">Calidad</p>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-5 text-center">
+            <i data-lucide="heart" class="w-6 h-6 text-gold mx-auto mb-2"></i>
+            <p class="font-heading text-lg font-semibold">Artesanal</p>
+            <p class="font-body text-xs text-cream/40 mt-1">Proceso</p>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white/5 rounded-3xl p-8 flex flex-col items-center justify-center aspect-square">
+          <span class="text-7xl">🥩</span>
+          <p class="font-heading text-sm text-cream/60 mt-4 text-center">Carne premium<br/>fresquísima</p>
+        </div>
+        <div class="bg-ember/20 rounded-3xl p-8 flex flex-col items-center justify-center aspect-square mt-8">
+          <span class="text-7xl">🍞</span>
+          <p class="font-heading text-sm text-cream/60 mt-4 text-center">Brioche<br/>horneado hoy</p>
+        </div>
+        <div class="bg-gold/10 rounded-3xl p-8 flex flex-col items-center justify-center aspect-square">
+          <span class="text-7xl">🧀</span>
+          <p class="font-heading text-sm text-cream/60 mt-4 text-center">Quesos<br/>importados</p>
+        </div>
+        <div class="bg-white/5 rounded-3xl p-8 flex flex-col items-center justify-center aspect-square mt-8">
+          <span class="text-7xl">🌿</span>
+          <p class="font-heading text-sm text-cream/60 mt-4 text-center">Vegetales<br/>del huerto</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <script>
+    // PRODUCTS DATA
+    const products = [
+      { id:1, cat:'burgers', name:'Classic Smash', desc:'Doble smash patty, queso americano, cebolla caramelizada, mostaza ahumada', price:24.90, emoji:'🍔', badge:'Más pedido', badgeColor:'bg-ember text-cream' },
+      { id:2, cat:'burgers', name:'Crispy BBQ', desc:'Pollo crujiente, queso cheddar, bacon crocante, salsa BBQ de la casa', price:22.90, emoji:'🍗', badge:'Nuevo', badgeColor:'bg-gold text-coal' },
+      { id:3, cat:'burgers', name:'The Truffle', desc:'Doble res, queso gruyere, mayonesa de trufa, rúcula, pan brioche negro', price:29.90, emoji:'🖤', badge:'Premium', badgeColor:'bg-coal text-cream' },
+      { id:4, cat:'burgers', name:'Spicy Diablo', desc:'Patty de res, jalapeños frescos, queso pepper jack, salsa sriracha casera', price:23.90, emoji:'🌶️', badge:'Picante', badgeColor:'bg-red-500 text-cream' },
+      { id:5, cat:'sides', name:'Loaded Fries', desc:'Papas fritas gruesas, queso fundido, bacon, cebolla crujiente, sour cream', price:14.90, emoji:'🍟', badge:'Fan fav', badgeColor:'bg-gold text-coal' },
+      { id:6, cat:'sides', name:'Onion Rings', desc:'Aros de cebolla en tempura ligera, salsa ranch de la casa', price:11.90, emoji:'🧅', badge:null },
+      { id:7, cat:'drinks', name:'Shake de Oreo', desc:'Helado de vainilla, galletas Oreo, crema batida, sirope de chocolate', price:13.90, emoji:'🥤', badge:'Especial', badgeColor:'bg-purple-500 text-cream' },
+      { id:8, cat:'drinks', name:'Limonada Menta', desc:'Limonada artesanal, menta fresca, hielo granizado, un toque de jengibre', price:9.90, emoji:'🍋', badge:null },
+      { id:9, cat:'burgers', name:'Mushroom Swiss', desc:'Patty doble, champiñones salteados, queso suizo, salsa de ajo rostizado', price:25.90, emoji:'🍄', badge:null },
+    ];
+
+    let cart = [];
+
+    function renderMenu(items) {
+      const grid = document.getElementById('menuGrid');
+      grid.innerHTML = items.map(p => `
+        <div class="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
+          <div class="bg-smoke/70 h-44 flex items-center justify-center relative overflow-hidden">
+            <span class="text-7xl group-hover:scale-110 transition-transform duration-300 select-none">${p.emoji}</span>
+            ${p.badge ? `<span class="absolute top-4 left-4 font-accent text-xs px-3 py-1 rounded-full ${p.badgeColor}">${p.badge}</span>` : ''}
+          </div>
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="font-heading text-xl font-bold mb-1">${p.name}</h3>
+            <p class="font-body text-xs text-coal/50 leading-relaxed flex-1">${p.desc}</p>
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-smoke">
+              <div>
+                <p class="font-accent text-xs text-coal/40 mb-0.5">Precio</p>
+                <p class="font-display text-2xl font-bold text-ember">S/ ${p.price.toFixed(2)}</p>
+              </div>
+              <button onclick="addToCart(${p.id})" class="add-btn w-11 h-11 bg-coal text-cream rounded-2xl flex items-center justify-center hover:bg-ember transition-all duration-200 hover:scale-105 active:scale-95">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function filterMenu(cat, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-coal','text-cream');
+        b.classList.add('bg-smoke','text-coal');
+      });
+      btn.classList.remove('bg-smoke','text-coal');
+      btn.classList.add('bg-coal','text-cream');
+      const filtered = cat === 'all' ? products : products.filter(p => p.cat === cat);
+      renderMenu(filtered);
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(i => i.id === id);
+      if (existing) existing.qty++;
+      else cart.push({ ...product, qty: 1 });
+      updateCart();
+      // wiggle the cart button
+      const btn = document.querySelector(`[onclick="addToCart(${id})"]`);
+      if(btn){ btn.classList.add('animate-wiggle'); setTimeout(()=>btn.classList.remove('animate-wiggle'),300); }
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      updateCart();
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+      updateCart();
+    }
+
+    function updateCart() {
+      const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+      const count = cart.reduce((sum, i) => sum + i.qty, 0);
+      document.getElementById('cartTotal').textContent = `S/ ${total.toFixed(2)}`;
+      document.getElementById('cartSubtotal').textContent = `S/ ${total.toFixed(2)}`;
+      const badge = document.getElementById('cartBadge');
+      if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+
+      const itemsEl = document.getElementById('cartItems');
+      if (cart.length === 0) {
+        itemsEl.innerHTML = `<div class="text-center py-16 text-coal/30"><i data-lucide="shopping-bag" class="w-12 h-12 mx-auto mb-3 opacity-40"></i><p class="font-body text-sm">Tu carrito está vacío</p></div>`;
+      } else {
+        itemsEl.innerHTML = cart.map(item => `
+          <div class="flex gap-4 items-center bg-smoke rounded-2xl p-4">
+            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shrink-0">${item.emoji}</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-heading font-semibold text-sm truncate">${item.name}</p>
+              <p class="font-accent text-xs text-ember mt-0.5">S/ ${item.price.toFixed(2)}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button onclick="changeQty(${item.id},-1)" class="w-6 h-6 rounded-lg bg-white flex items-center justify-center hover:bg-ember hover:text-cream transition-all text-sm font-bold">−</button>
+                <span class="font-accent text-sm w-4 text-center">${item.qty}</span>
+                <button onclick="changeQty(${item.id},1)" class="w-6 h-6 rounded-lg bg-white flex items-center justify-center hover:bg-ember hover:text-cream transition-all text-sm font-bold">+</button>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="font-display font-bold text-sm">S/ ${(item.price*item.qty).toFixed(2)}</p>
+              <button onclick="removeFromCart(${item.id})" class="mt-2 text-coal/30 hover:text-ember transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleCart() {
+      const sidebar = document.getElementById('cartSidebar');
+      const overlay = document.getElementById('cartOverlay');
+      const isOpen = !sidebar.classList.contains('translate-x-full');
+      if (isOpen) {
+        sidebar.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      } else {
+        sidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+      }
+    }
+
+    // Marquee duplication
+    const tpl = document.getElementById('marqTpl');
+    const strip = tpl.parentElement;
+    const content = tpl.innerHTML.repeat(6);
+    strip.innerHTML = content + content;
+
+    // Init
+    renderMenu(products);
+    lucide.createIcons();
+  </script>
+</body>
+</html>

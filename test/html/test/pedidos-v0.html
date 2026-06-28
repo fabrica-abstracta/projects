@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BURGR — Moyobamba</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Bebas Neue"', 'sans-serif'],
+        serif: ['"Playfair Display"', 'serif'],
+        sans: ['"Outfit"', 'sans-serif'],
+        mono: ['"DM Mono"', 'monospace'],
+      },
+      colors: {
+        brand: '#D4380D',
+        dark: '#0F0E0C',
+        warm: '#F5F0E8',
+        muted: '#8C8070',
+        gold: '#C9A84C',
+      },
+      screens: { '3xl': '1600px' }
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#F5F0E8;color:#0F0E0C;font-family:'Outfit',sans-serif;overflow-x:hidden;cursor:default}
+
+  /* CART DRAWER */
+  #drawer{transform:translateX(100%);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+  #drawer.open{transform:translateX(0)}
+  #overlay{opacity:0;pointer-events:none;transition:opacity .3s}
+  #overlay.open{opacity:1;pointer-events:all}
+
+  /* HERO IMAGE */
+  .hero-img{
+    background-image:url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1400&q=85&auto=format&fit=crop');
+    background-size:cover;
+    background-position:center 60%;
+  }
+  .hero-img::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(to right, rgba(15,14,12,.85) 0%, rgba(15,14,12,.4) 55%, rgba(15,14,12,.1) 100%);
+  }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:999;opacity:.4;
+  }
+
+  /* PRODUCT CARD IMAGE */
+  .card-img{background-size:cover;background-position:center;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+  .product-card:hover .card-img{transform:scale(1.06)}
+
+  /* NAV LINK */
+  .nav-link{position:relative}
+  .nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:#D4380D;transition:width .25s ease}
+  .nav-link:hover::after{width:100%}
+
+  /* SCROLL REVEAL */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease, transform .7s ease}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+
+  /* TAG PILL */
+  .tag{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+
+  /* FILTER BTN */
+  .filter-btn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .2s}
+  .filter-btn.active{background:#0F0E0C;color:#F5F0E8;border-color:#0F0E0C}
+  .filter-btn:not(.active){background:transparent;color:#8C8070;border-color:#D9D0C0}
+  .filter-btn:not(.active):hover{border-color:#0F0E0C;color:#0F0E0C}
+
+  /* QTY CONTROL */
+  .qty-btn{width:28px;height:28px;border-radius:6px;border:1px solid #E0D8CC;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:14px;font-family:'DM Mono',monospace}
+  .qty-btn:hover{background:#0F0E0C;color:#F5F0E8;border-color:#0F0E0C}
+
+  /* LINE SEPARATOR */
+  .line{width:40px;height:2px;background:#D4380D}
+
+  /* STAGGER */
+  .s1{transition-delay:.05s}.s2{transition-delay:.12s}.s3{transition-delay:.19s}.s4{transition-delay:.26s}.s5{transition-delay:.33s}.s6{transition-delay:.40s}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ CART OVERLAY ═══════════════════════════ -->
+<div id="overlay" class="fixed inset-0 bg-dark/50 z-40 backdrop-blur-sm open" onclick="closeCart()" style="opacity:0;pointer-events:none"></div>
+
+<!-- ═══════════════════════════ CART DRAWER ═══════════════════════════ -->
+<aside id="drawer" class="fixed top-0 right-0 h-full w-full max-w-sm bg-warm z-50 flex flex-col shadow-2xl">
+  <!-- header -->
+  <div class="flex items-center justify-between px-7 py-6 border-b border-dark/10">
+    <div>
+      <p class="font-mono text-[10px] tracking-[.2em] text-muted uppercase">Tu pedido</p>
+      <h2 class="font-serif text-2xl font-bold mt-1">Carrito</h2>
+    </div>
+    <button onclick="closeCart()" class="w-9 h-9 rounded-full border border-dark/15 flex items-center justify-center hover:bg-dark hover:text-warm transition-all duration-200">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <!-- items -->
+  <div id="cartItems" class="flex-1 overflow-y-auto px-7 py-6 space-y-4"></div>
+
+  <!-- footer -->
+  <div class="px-7 py-6 border-t border-dark/10 bg-white/40">
+    <div class="flex justify-between text-sm font-sans mb-1">
+      <span class="text-muted">Delivery</span>
+      <span class="text-green-600 font-mono text-xs tracking-wider">GRATIS</span>
+    </div>
+    <div class="flex justify-between items-baseline mt-4 mb-6">
+      <span class="font-serif text-lg">Total</span>
+      <span id="cartTotal" class="font-display text-4xl text-brand tracking-tight">S/ 0.00</span>
+    </div>
+    <button class="w-full bg-dark text-warm font-sans font-semibold py-4 rounded-lg flex items-center justify-center gap-2.5 hover:bg-brand transition-all duration-300 text-sm tracking-wide">
+      <i data-lucide="credit-card" class="w-4 h-4"></i>
+      Confirmar pedido
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
+<header id="navbar" class="fixed top-0 left-0 right-0 z-30 transition-all duration-500">
+  <div class="max-w-[1380px] mx-auto px-8 flex items-center justify-between h-16">
+    <!-- logo -->
+    <a href="#" class="flex items-center gap-2.5 group">
+      <div class="w-7 h-7 bg-brand rounded flex items-center justify-center">
+        <i data-lucide="flame" class="w-3.5 h-3.5 text-white"></i>
+      </div>
+      <span class="font-display text-[26px] tracking-widest text-warm group-hover:text-brand transition-colors">BURGR</span>
+    </a>
+    <!-- nav -->
+    <nav class="hidden md:flex items-center gap-8">
+      <a href="#menu" class="nav-link font-sans text-sm font-medium text-warm/80 hover:text-warm transition-colors">Menú</a>
+      <a href="#nosotros" class="nav-link font-sans text-sm font-medium text-warm/80 hover:text-warm transition-colors">Nosotros</a>
+      <a href="#contacto" class="nav-link font-sans text-sm font-medium text-warm/80 hover:text-warm transition-colors">Contacto</a>
+    </nav>
+    <!-- cart -->
+    <button onclick="openCart()" class="relative flex items-center gap-2 bg-brand/90 hover:bg-brand text-white font-sans text-sm font-medium px-4 py-2 rounded-lg transition-all duration-200 group">
+      <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+      <span class="hidden sm:inline">Carrito</span>
+      <span id="cartBadge" class="hidden font-mono text-xs bg-white text-brand rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="hero-img relative min-h-screen flex items-end pb-20">
+  <div class="relative z-10 max-w-[1380px] mx-auto px-8 w-full">
+    <div class="max-w-xl">
+      <div class="tag bg-brand/20 border border-brand/40 text-brand/90 mb-6">
+        <i data-lucide="map-pin" class="w-3 h-3"></i>
+        Moyobamba, San Martín
+      </div>
+      <h1 class="font-display text-[clamp(80px,14vw,160px)] leading-[.88] tracking-wide text-warm mb-6">
+        HECHO<br/>PARA<br/><span class="text-brand">ARDER</span>
+      </h1>
+      <p class="font-serif italic text-warm/70 text-lg leading-relaxed max-w-sm mb-10">
+        Hamburguesas artesanales con carne de res local, pan brioche horneado en casa y recetas que llevan años perfeccionándose en el corazón de la Amazonía.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a href="#menu" class="bg-brand text-white font-sans font-semibold text-sm px-7 py-3.5 rounded-lg flex items-center gap-2 hover:bg-brand/90 transition-all group">
+          Ver el menú
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+        <a href="#nosotros" class="border border-warm/30 text-warm font-sans font-medium text-sm px-7 py-3.5 rounded-lg hover:bg-warm/10 transition-all">
+          Nuestra historia
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- scroll hint -->
+  <div class="absolute bottom-8 right-8 z-10 flex flex-col items-center gap-2 text-warm/40">
+    <span class="font-mono text-[10px] tracking-widest uppercase" style="writing-mode:vertical-rl">Scroll</span>
+    <div class="w-px h-12 bg-warm/20 relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-full bg-warm/60 animate-bounce" style="animation-duration:1.6s"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ MARQUEE STRIP ═══════════════════════════ -->
+<div class="bg-dark overflow-hidden py-3.5 border-y border-dark">
+  <div class="flex gap-0 whitespace-nowrap" id="marqueeStrip">
+    <div class="flex gap-16 items-center shrink-0 pr-16 animate-[marquee_22s_linear_infinite]" id="mContent">
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">Smash Burger</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">Crispy Chicken</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">Loaded Fries</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">Artisan Shakes</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">100% Carne Local</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+      <span class="font-display text-[13px] tracking-[.35em] text-warm/25 uppercase">Pan Brioche Diario</span>
+      <span class="w-1 h-1 rounded-full bg-brand/40 shrink-0"></span>
+    </div>
+  </div>
+</div>
+<style>@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}</style>
+
+<!-- ═══════════════════════════ MENU SECTION ═══════════════════════════ -->
+<section id="menu" class="py-24 max-w-[1380px] mx-auto px-8">
+  <!-- section header -->
+  <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-14 reveal">
+    <div>
+      <div class="line mb-4"></div>
+      <h2 class="font-display text-[clamp(54px,8vw,96px)] leading-none tracking-wide">MENÚ</h2>
+      <p class="font-serif italic text-muted text-xl mt-2">Artesanal · Local · Fresco</p>
+    </div>
+    <!-- filters -->
+    <div class="flex flex-wrap gap-2" id="filters">
+      <button class="filter-btn active" onclick="filter('all',this)">Todos</button>
+      <button class="filter-btn" onclick="filter('burgers',this)">Hamburguesas</button>
+      <button class="filter-btn" onclick="filter('sides',this)">Acompañamientos</button>
+      <button class="filter-btn" onclick="filter('drinks',this)">Bebidas</button>
+    </div>
+  </div>
+
+  <!-- grid -->
+  <div id="menuGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</section>
+
+<!-- ═══════════════════════════ NOSOTROS ═══════════════════════════ -->
+<section id="nosotros" class="bg-dark py-24 relative overflow-hidden">
+  <!-- subtle grid bg -->
+  <div class="absolute inset-0 opacity-[.03]" style="background-image:linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:60px 60px"></div>
+
+  <div class="max-w-[1380px] mx-auto px-8 relative">
+    <div class="grid lg:grid-cols-2 gap-20 items-center">
+      <!-- text -->
+      <div class="reveal">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-px bg-brand"></div>
+          <span class="font-mono text-[10px] tracking-[.25em] text-brand uppercase">Desde 2018 · Moyobamba</span>
+        </div>
+        <h2 class="font-display text-[clamp(52px,6vw,80px)] leading-none tracking-wide text-warm mb-8">
+          PASIÓN<br/>EN CADA<br/><span class="text-brand">MORDIDA</span>
+        </h2>
+        <p class="font-serif italic text-warm/60 text-lg leading-relaxed mb-5">
+          Nacimos en el corazón de la Amazonía peruana con una sola obsesión: la hamburguesa perfecta.
+        </p>
+        <p class="font-sans text-warm/50 text-sm leading-relaxed mb-5">
+          Cada mañana horneamos el pan brioche. La carne llega fresca de productores locales de San Martín. Nuestras salsas son recetas guardadas celosamente desde el primer día.
+        </p>
+        <p class="font-sans text-warm/50 text-sm leading-relaxed mb-10">
+          No usamos congelados. No usamos atajos. Solo ingredientes reales, técnica y el fuego que nos define.
+        </p>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="border border-warm/10 rounded-lg p-5">
+            <i data-lucide="leaf" class="w-5 h-5 text-brand mb-3"></i>
+            <p class="font-sans text-warm text-sm font-medium">Ingredientes<br/>locales</p>
+          </div>
+          <div class="border border-warm/10 rounded-lg p-5">
+            <i data-lucide="fire" class="w-5 h-5 text-brand mb-3"></i>
+            <p class="font-sans text-warm text-sm font-medium">Cocinado al<br/>momento</p>
+          </div>
+          <div class="border border-warm/10 rounded-lg p-5">
+            <i data-lucide="award" class="w-5 h-5 text-brand mb-3"></i>
+            <p class="font-sans text-warm text-sm font-medium">Proceso<br/>artesanal</p>
+          </div>
+        </div>
+      </div>
+      <!-- image collage -->
+      <div class="grid grid-cols-2 gap-4 reveal">
+        <div class="rounded-xl overflow-hidden h-64 relative">
+          <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&q=80&auto=format&fit=crop" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="Burger artesanal"/>
+        </div>
+        <div class="rounded-xl overflow-hidden h-64 mt-10 relative">
+          <img src="https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&q=80&auto=format&fit=crop" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="Papas fritas"/>
+        </div>
+        <div class="rounded-xl overflow-hidden h-48 relative">
+          <img src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&q=80&auto=format&fit=crop" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="Ingredientes frescos"/>
+        </div>
+        <div class="rounded-xl overflow-hidden h-48 -mt-6 relative">
+          <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&q=80&auto=format&fit=crop" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="Burger con queso"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ CONTACT BANNER ═══════════════════════════ -->
+<section id="contacto" class="py-16 max-w-[1380px] mx-auto px-8">
+  <div class="bg-dark rounded-2xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 reveal">
+    <div>
+      <p class="font-mono text-[10px] tracking-[.2em] text-brand uppercase mb-2">Estamos aquí</p>
+      <h3 class="font-display text-4xl md:text-5xl tracking-wide text-warm leading-none">¿TIENES<br/>HAMBRE?</h3>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="tel:+51999999999" class="flex items-center gap-3 border border-warm/15 text-warm font-sans text-sm font-medium px-6 py-3.5 rounded-lg hover:bg-warm/10 transition-all">
+        <i data-lucide="phone" class="w-4 h-4 text-brand"></i>
+        Llamar ahora
+      </a>
+      <a href="#menu" class="flex items-center gap-3 bg-brand text-white font-sans text-sm font-semibold px-6 py-3.5 rounded-lg hover:bg-brand/90 transition-all">
+        <i data-lucide="utensils" class="w-4 h-4"></i>
+        Pedir en línea
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+const PRODUCTS = [
+  {
+    id:1, cat:'burgers',
+    name:'Classic Smash',
+    desc:'Doble smash patty de res, queso americano fundido, cebolla caramelizada, pepinillos, mostaza ahumada. Pan brioche horneado hoy.',
+    price:24.90,
+    img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&q=80&auto=format&fit=crop',
+    tag:'Signature',
+    tagStyle:'bg-brand text-white'
+  },
+  {
+    id:2, cat:'burgers',
+    name:'BBQ Bacon Smash',
+    desc:'Patty doble, queso cheddar madurado, bacon ahumado crocante, salsa BBQ de la casa, lechuga romana, tomate fresco.',
+    price:26.90,
+    img:'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=700&q=80&auto=format&fit=crop',
+    tag:'Nuevo',
+    tagStyle:'bg-gold text-dark'
+  },
+  {
+    id:3, cat:'burgers',
+    name:'The Truffle',
+    desc:'Doble patty de res, queso gruyere, mayonesa de trufa negra, rúcula, cebolla morada encurtida. Pan brioche negro al carbón.',
+    price:31.90,
+    img:'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=700&q=80&auto=format&fit=crop',
+    tag:'Premium',
+    tagStyle:'bg-dark text-warm'
+  },
+  {
+    id:4, cat:'burgers',
+    name:'Crispy Chicken',
+    desc:'Muslo de pollo empanado al buttermilk, queso pepper jack, coleslaw casero, salsa ranch de la casa, jalapeños encurtidos.',
+    price:22.90,
+    img:'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=700&q=80&auto=format&fit=crop',
+    tag:null
+  },
+  {
+    id:5, cat:'sides',
+    name:'Loaded Smash Fries',
+    desc:'Papas fritas corte grueso, queso cheddar fundido en tabla, bacon triturado, cebolla crujiente, crema ácida, cebollino.',
+    price:14.90,
+    img:'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=700&q=80&auto=format&fit=crop',
+    tag:'Favorito',
+    tagStyle:'bg-gold text-dark'
+  },
+  {
+    id:6, cat:'sides',
+    name:'Onion Rings',
+    desc:'Aros de cebolla dulce en tempura de cerveza, ligeros y crujientes. Servidos con salsa chipotle casera.',
+    price:11.90,
+    img:'https://images.unsplash.com/photo-1639024471283-03518883512d?w=700&q=80&auto=format&fit=crop',
+    tag:null
+  },
+  {
+    id:7, cat:'drinks',
+    name:'Shake Oreo',
+    desc:'Helado de vainilla artesanal, Oreo triturada, leche entera, crema batida, sirope de chocolate belga.',
+    price:13.90,
+    img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&q=80&auto=format&fit=crop&sat=-100',
+    tag:'Especial',
+    tagStyle:'bg-dark text-warm'
+  },
+  {
+    id:8, cat:'drinks',
+    name:'Limonada Amazónica',
+    desc:'Limón tahití de San Martín, maracuyá fresco, menta de huerto, jengibre, hielo granizado. Endulzada al gusto.',
+    price:9.90,
+    img:'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=700&q=80&auto=format&fit=crop',
+    tag:'Casa',
+    tagStyle:'bg-brand text-white'
+  },
+  {
+    id:9, cat:'burgers',
+    name:'Mushroom Swiss',
+    desc:'Doble patty, champiñones Portobello salteados en mantequilla, queso suizo, salsa de ajo negro rostizado, espinaca fresca.',
+    price:27.90,
+    img:'https://images.unsplash.com/photo-1551615593-ef5fe247e8f7?w=700&q=80&auto=format&fit=crop',
+    tag:null
+  },
+];
+
+let cart = [];
+
+// ── RENDER PRODUCTS ───────────────────────────────────────────────────
+function renderProducts(items) {
+  const grid = document.getElementById('menuGrid');
+  grid.innerHTML = items.map((p,i) => `
+    <article class="product-card group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 flex flex-col reveal s${(i%6)+1}">
+      <div class="h-56 overflow-hidden relative">
+        <div class="card-img w-full h-full" style="background-image:url('${p.img}')"></div>
+        ${p.tag ? `<span class="absolute top-4 left-4 tag ${p.tagStyle} border-0">${p.tag}</span>` : ''}
+        <button onclick="addToCart(${p.id},event)" class="absolute bottom-4 right-4 w-10 h-10 bg-brand text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-dark shadow-lg">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-6 flex flex-col flex-1">
+        <h3 class="font-serif font-bold text-xl mb-2">${p.name}</h3>
+        <p class="font-sans text-muted text-xs leading-relaxed flex-1">${p.desc}</p>
+        <div class="flex items-center justify-between mt-5 pt-5 border-t border-warm">
+          <div>
+            <p class="font-mono text-[10px] tracking-wider text-muted uppercase mb-0.5">precio</p>
+            <p class="font-display text-3xl tracking-wide text-dark">S/ ${p.price.toFixed(2)}</p>
+          </div>
+          <button onclick="addToCart(${p.id},event)" class="font-sans text-xs font-semibold px-4 py-2.5 bg-dark text-warm rounded-lg hover:bg-brand transition-all duration-200 flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            Agregar
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+  lucide.createIcons();
+  observeReveal();
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────
+function filter(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts(cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === cat));
+}
+
+// ── CART ──────────────────────────────────────────────────────────────
+function addToCart(id, e) {
+  if(e) { e.stopPropagation(); const btn=e.currentTarget; btn.classList.add('scale-90'); setTimeout(()=>btn.classList.remove('scale-90'),200); }
+  const p = PRODUCTS.find(p => p.id === id);
+  const ex = cart.find(i => i.id === id);
+  if (ex) ex.qty++; else cart.push({...p, qty:1});
+  syncCart();
+}
+function changeQty(id, d) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  syncCart();
+}
+function syncCart() {
+  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const count = cart.reduce((s,i) => s + i.qty, 0);
+  document.getElementById('cartTotal').textContent = `S/ ${total.toFixed(2)}`;
+  const badge = document.getElementById('cartBadge');
+  if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+  else { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+
+  const el = document.getElementById('cartItems');
+  if (!cart.length) {
+    el.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center py-16 text-muted/50">
+      <i data-lucide="shopping-bag" class="w-10 h-10 mb-3 opacity-40"></i>
+      <p class="font-sans text-sm">Tu carrito está vacío</p>
+      <p class="font-sans text-xs mt-1 opacity-60">Agrega algo del menú</p>
+    </div>`;
+  } else {
+    el.innerHTML = cart.map(item => `
+      <div class="flex gap-4 items-start bg-white rounded-xl p-4">
+        <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0">
+          <img src="${item.img}" class="w-full h-full object-cover" alt="${item.name}"/>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-serif font-bold text-sm">${item.name}</p>
+          <p class="font-mono text-xs text-brand mt-0.5">S/ ${item.price.toFixed(2)}</p>
+          <div class="flex items-center gap-2 mt-2.5">
+            <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+            <span class="font-mono text-sm w-5 text-center">${item.qty}</span>
+            <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="font-display text-xl tracking-wide">S/ ${(item.price*item.qty).toFixed(2)}</p>
+          <button onclick="changeQty(${item.id},-${item.qty})" class="mt-1.5 text-muted/40 hover:text-brand transition-colors">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+  lucide.createIcons();
+}
+function openCart() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeCart() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── NAVBAR SCROLL ─────────────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 80) {
+    navbar.style.background='rgba(15,14,12,.92)';
+    navbar.style.backdropFilter='blur(12px)';
+    navbar.style.borderBottom='1px solid rgba(255,255,255,.06)';
+  } else {
+    navbar.style.background='transparent';
+    navbar.style.backdropFilter='none';
+    navbar.style.borderBottom='none';
+  }
+});
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────
+function observeReveal() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+}
+
+// ── MARQUEE DUPLICATE ────────────────────────────────────────────────
+const mc = document.getElementById('mContent');
+mc.parentElement.innerHTML = mc.outerHTML + mc.outerHTML;
+
+// ── INIT ──────────────────────────────────────────────────────────────
+renderProducts(PRODUCTS);
+syncCart();
+lucide.createIcons();
+observeReveal();
+</script>
+</body>
+</html>

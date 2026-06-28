@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>APIMode — Contract-First API Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca' },
+            surface: { 900:'#0f1117', 800:'#161b27', 700:'#1e2535', 600:'#252d3d', 500:'#2d3748' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e2e8f0; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0f1117; } ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
+    .glow { box-shadow: 0 0 12px rgba(99,102,241,0.4); }
+    .glow-green { box-shadow: 0 0 8px rgba(34,197,94,0.35); }
+    .glow-yellow { box-shadow: 0 0 8px rgba(234,179,8,0.35); }
+    .sidebar-item.active { background: linear-gradient(90deg, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.04) 100%); border-left: 2px solid #6366f1; }
+    .sidebar-item { border-left: 2px solid transparent; transition: all 0.15s; }
+    .sidebar-item:hover { background: rgba(99,102,241,0.08); }
+    .card { background: #161b27; border: 1px solid #1e2535; border-radius: 12px; }
+    .badge-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+    .method-get { color: #4ade80; background: rgba(74,222,128,0.1); }
+    .method-post { color: #60a5fa; background: rgba(96,165,250,0.1); }
+    .method-put { color: #fbbf24; background: rgba(251,191,36,0.1); }
+    .method-delete { color: #f87171; background: rgba(248,113,113,0.1); }
+    .method-patch { color: #c084fc; background: rgba(192,132,252,0.1); }
+    .modal-backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+    .fade-in { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .pulse-dot { animation: pulseDot 2s infinite; }
+    @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .tab-active { color: #6366f1; border-bottom: 2px solid #6366f1; }
+    .tab-inactive { color: #64748b; border-bottom: 2px solid transparent; }
+    .drag-zone { border: 2px dashed #2d3748; transition: all 0.2s; }
+    .drag-zone:hover, .drag-zone.dragover { border-color: #6366f1; background: rgba(99,102,241,0.05); }
+    .skeleton { background: linear-gradient(90deg, #1e2535 25%, #252d3d 50%, #1e2535 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-60 flex-shrink-0 flex flex-col border-r border-surface-700" style="background:#0d1120;">
+    <!-- Logo -->
+    <div class="px-5 py-5 flex items-center gap-2.5 border-b border-surface-700">
+      <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center glow">
+        <i class="fa-solid fa-bolt text-white text-sm"></i>
+      </div>
+      <span class="font-bold text-white tracking-tight text-base">APIMode</span>
+      <span class="ml-auto text-xs bg-brand-500/20 text-brand-100 px-2 py-0.5 rounded-full font-medium">Beta</span>
+    </div>
+
+    <!-- Workspace selector -->
+    <div class="px-4 py-3 border-b border-surface-700">
+      <button onclick="toggleWorkspaceDropdown()" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-700 transition-all text-sm">
+        <div class="w-6 h-6 rounded bg-purple-500/30 flex items-center justify-center text-purple-300 text-xs font-bold">A</div>
+        <span class="flex-1 text-left text-slate-300 font-medium">Acme Corp</span>
+        <i class="fa-solid fa-chevron-down text-slate-500 text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <p class="text-xs text-slate-600 uppercase tracking-widest font-semibold px-3 pb-2">Platform</p>
+      <button onclick="navigate('contracts')" id="nav-contracts" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-200">
+        <i class="fa-solid fa-file-contract w-4 text-brand-500 text-sm"></i> Contracts
+        <span class="ml-auto text-xs bg-surface-600 text-slate-400 px-1.5 py-0.5 rounded font-mono">3</span>
+      </button>
+      <button onclick="navigate('mocks')" id="nav-mocks" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+        <i class="fa-solid fa-server w-4 text-sm"></i> Mock Endpoints
+        <span class="ml-auto text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-mono">12</span>
+      </button>
+      <button onclick="navigate('scaffolding')" id="nav-scaffolding" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+        <i class="fa-solid fa-layer-group w-4 text-sm"></i> Scaffolding
+      </button>
+      <button onclick="navigate('templates')" id="nav-templates" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+        <i class="fa-solid fa-rectangles-mixed w-4 text-sm"></i> Templates
+        <span class="ml-auto text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">New</span>
+      </button>
+      <div class="pt-4">
+        <p class="text-xs text-slate-600 uppercase tracking-widest font-semibold px-3 pb-2">Settings</p>
+        <button onclick="navigate('team')" id="nav-team" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+          <i class="fa-solid fa-users w-4 text-sm"></i> Team
+        </button>
+        <button onclick="navigate('settings')" id="nav-settings" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+          <i class="fa-solid fa-gear w-4 text-sm"></i> Settings
+        </button>
+      </div>
+    </nav>
+
+    <!-- User -->
+    <div class="px-4 py-4 border-t border-surface-700 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">JD</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-200 truncate">Jane Doe</p>
+        <p class="text-xs text-slate-500 truncate">Pro Plan</p>
+      </div>
+      <button class="text-slate-500 hover:text-slate-300 transition-colors"><i class="fa-solid fa-ellipsis-vertical text-sm"></i></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <!-- Topbar -->
+    <header class="flex items-center justify-between px-6 py-4 border-b border-surface-700" style="background:#0d1120;">
+      <div>
+        <h1 id="page-title" class="text-lg font-semibold text-white">Contracts</h1>
+        <p id="page-subtitle" class="text-xs text-slate-500 mt-0.5">Upload and manage your OpenAPI/YAML contracts</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input placeholder="Search..." class="bg-surface-700 border border-surface-600 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-brand-500 w-52 transition-colors"/>
+        </div>
+        <button onclick="openModal('notif-modal')" class="relative p-2 text-slate-400 hover:text-slate-200 transition-colors">
+          <i class="fa-solid fa-bell text-sm"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-brand-500 rounded-full"></span>
+        </button>
+        <button id="main-cta" onclick="openModal('upload-modal')" class="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors glow">
+          <i class="fa-solid fa-plus text-xs"></i> Upload Contract
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div id="page-content" class="flex-1 overflow-y-auto p-6">
+      <!-- Contracts page rendered by JS -->
+    </div>
+  </main>
+
+  <!-- RIGHT DETAIL PANEL (hidden by default) -->
+  <aside id="detail-panel" class="hidden w-96 border-l border-surface-700 flex flex-col overflow-hidden" style="background:#0d1120;">
+    <div class="px-5 py-4 border-b border-surface-700 flex items-center justify-between">
+      <h3 id="panel-title" class="font-semibold text-white text-sm">Endpoint Detail</h3>
+      <button onclick="closePanel()" class="text-slate-500 hover:text-slate-300 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="panel-content" class="flex-1 overflow-y-auto p-5"></div>
+  </aside>
+
+  <!-- ========================= MODALS ========================= -->
+
+  <!-- Upload Contract Modal -->
+  <div id="upload-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="card w-[520px] fade-in">
+      <div class="px-6 py-5 border-b border-surface-700 flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold text-white">Upload Contract</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Supports OpenAPI 3.x and Swagger 2.0 (YAML/JSON)</p>
+        </div>
+        <button onclick="closeModal('upload-modal')" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-6 space-y-4">
+        <!-- Drag zone -->
+        <div id="drag-zone" class="drag-zone rounded-xl p-8 text-center cursor-pointer" onclick="document.getElementById('file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleDrop(event)">
+          <div class="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-cloud-arrow-up text-brand-500 text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-slate-300">Drop your YAML or JSON file here</p>
+          <p class="text-xs text-slate-500 mt-1">or click to browse</p>
+          <input id="file-input" type="file" class="hidden" accept=".yaml,.yml,.json" onchange="handleFileSelect(event)"/>
+        </div>
+        <div id="file-preview" class="hidden card p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+            <i class="fa-solid fa-file-code text-green-400"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p id="file-name" class="text-sm font-medium text-slate-200 truncate">api-contract.yaml</p>
+            <p id="file-size" class="text-xs text-slate-500">24 KB</p>
+          </div>
+          <button onclick="clearFile()" class="text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <!-- Fields -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-medium text-slate-400 block mb-1.5">Contract Name</label>
+            <input value="User Service API" class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition-colors"/>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-400 block mb-1.5">Version</label>
+            <input value="v2.1.0" class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition-colors"/>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-400 block mb-1.5">Tags</label>
+          <input value="users, auth, production" placeholder="Add tags..." class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition-colors"/>
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <div class="w-9 h-5 bg-brand-500 rounded-full relative cursor-pointer">
+              <div class="w-3.5 h-3.5 bg-white rounded-full absolute right-0.5 top-0.5 shadow transition-all"></div>
+            </div>
+            <span class="text-xs text-slate-400">Auto-generate mocks after upload</span>
+          </label>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-surface-700 flex justify-end gap-3">
+        <button onclick="closeModal('upload-modal')" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors">Cancel</button>
+        <button onclick="simulateUpload()" class="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors glow flex items-center gap-2">
+          <i class="fa-solid fa-upload text-xs"></i> Upload & Parse
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Scaffolding Modal -->
+  <div id="scaffold-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="card w-[580px] fade-in">
+      <div class="px-6 py-5 border-b border-surface-700 flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold text-white">Generate Scaffolding</h2>
+          <p class="text-xs text-slate-500 mt-0.5">From: <span class="text-brand-100">User Service API v2.1</span></p>
+        </div>
+        <button onclick="closeModal('scaffold-modal')" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-6 space-y-5">
+        <!-- Framework selector -->
+        <div>
+          <label class="text-xs font-medium text-slate-400 block mb-2">Framework</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="selectFramework(this,'Node.js')" class="framework-btn selected p-3 rounded-lg border border-brand-500 bg-brand-500/10 text-center transition-all">
+              <i class="fa-brands fa-node-js text-green-400 text-xl mb-1"></i>
+              <p class="text-xs text-slate-300 font-medium">Node.js</p>
+            </button>
+            <button onclick="selectFramework(this,'Python')" class="framework-btn p-3 rounded-lg border border-surface-600 bg-surface-700 text-center transition-all hover:border-brand-500/50">
+              <i class="fa-brands fa-python text-yellow-400 text-xl mb-1"></i>
+              <p class="text-xs text-slate-400">Python</p>
+            </button>
+            <button onclick="selectFramework(this,'Go')" class="framework-btn p-3 rounded-lg border border-surface-600 bg-surface-700 text-center transition-all hover:border-brand-500/50">
+              <i class="fa-brands fa-golang text-cyan-400 text-xl mb-1"></i>
+              <p class="text-xs text-slate-400">Go</p>
+            </button>
+            <button onclick="selectFramework(this,'Java')" class="framework-btn p-3 rounded-lg border border-surface-600 bg-surface-700 text-center transition-all hover:border-brand-500/50">
+              <i class="fa-brands fa-java text-orange-400 text-xl mb-1"></i>
+              <p class="text-xs text-slate-400">Java</p>
+            </button>
+          </div>
+        </div>
+        <!-- Options -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-medium text-slate-400 block mb-1.5">Template</label>
+            <select class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+              <option>Express + TypeScript</option>
+              <option>Fastify</option>
+              <option>Hapi.js</option>
+              <option>Koa</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-400 block mb-1.5">ORM / Database</label>
+            <select class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+              <option>Prisma + PostgreSQL</option>
+              <option>TypeORM</option>
+              <option>Mongoose + MongoDB</option>
+              <option>None (in-memory)</option>
+            </select>
+          </div>
+        </div>
+        <!-- Include toggles -->
+        <div>
+          <label class="text-xs font-medium text-slate-400 block mb-2">Include</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-surface-700">
+              <input type="checkbox" checked class="w-4 h-4 accent-indigo-500 rounded"/>
+              <span class="text-sm text-slate-300">Authentication middleware (JWT)</span>
+              <span class="ml-auto text-xs text-slate-600 font-mono">+auth</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-surface-700">
+              <input type="checkbox" checked class="w-4 h-4 accent-indigo-500 rounded"/>
+              <span class="text-sm text-slate-300">Request validation (Zod)</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-surface-700">
+              <input type="checkbox" checked class="w-4 h-4 accent-indigo-500 rounded"/>
+              <span class="text-sm text-slate-300">Docker + docker-compose</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-surface-700">
+              <input type="checkbox" class="w-4 h-4 accent-indigo-500 rounded"/>
+              <span class="text-sm text-slate-300">Unit test boilerplate (Jest)</span>
+            </label>
+          </div>
+        </div>
+        <!-- Preview paths -->
+        <div class="card p-3 font-mono text-xs text-slate-400 space-y-1 leading-relaxed">
+          <p class="text-slate-600">// Output structure preview</p>
+          <p><span class="text-brand-100">user-service/</span></p>
+          <p class="pl-3"><span class="text-green-400">src/</span> routes/ controllers/ middleware/ models/</p>
+          <p class="pl-3"><span class="text-yellow-400">prisma/</span> schema.prisma migrations/</p>
+          <p class="pl-3">docker-compose.yml package.json tsconfig.json</p>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-surface-700 flex justify-between items-center">
+        <span class="text-xs text-slate-500"><i class="fa-solid fa-clock mr-1"></i>Estimated ~8 files, ~2.4KB</span>
+        <div class="flex gap-3">
+          <button onclick="closeModal('scaffold-modal')" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors">Cancel</button>
+          <button onclick="simulateScaffold()" class="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg transition-colors glow flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Generate
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div id="notif-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end p-4 pt-16 pr-6">
+    <div class="card w-80 fade-in shadow-2xl">
+      <div class="px-4 py-3 border-b border-surface-700 flex items-center justify-between">
+        <h3 class="font-semibold text-white text-sm">Notifications</h3>
+        <button onclick="closeModal('notif-modal')" class="text-slate-500 hover:text-slate-300 text-xs">Mark all read</button>
+      </div>
+      <div class="divide-y divide-surface-700">
+        <div class="px-4 py-3 flex gap-3 hover:bg-surface-700/50 cursor-pointer">
+          <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-green-400 text-xs"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-200">Contract parsed successfully</p>
+            <p class="text-xs text-slate-500 mt-0.5">Payment API v3 • 12 endpoints found</p>
+            <p class="text-xs text-slate-600 mt-1">2 min ago</p>
+          </div>
+        </div>
+        <div class="px-4 py-3 flex gap-3 hover:bg-surface-700/50 cursor-pointer">
+          <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fa-solid fa-server text-brand-100 text-xs"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-200">Mocks are live</p>
+            <p class="text-xs text-slate-500 mt-0.5">Base URL: mock.apimode.io/u/acme</p>
+            <p class="text-xs text-slate-600 mt-1">15 min ago</p>
+          </div>
+        </div>
+        <div class="px-4 py-3 flex gap-3 hover:bg-surface-700/50 cursor-pointer">
+          <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fa-solid fa-triangle-exclamation text-yellow-400 text-xs"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-200">Schema deprecation warning</p>
+            <p class="text-xs text-slate-500 mt-0.5">User Service API • 3 deprecated fields</p>
+            <p class="text-xs text-slate-600 mt-1">1 hour ago</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fixed inset-0 -z-10" onclick="closeModal('notif-modal')"></div>
+  </div>
+
+  <!-- Success Toast -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 z-[100] fade-in">
+    <div class="flex items-center gap-3 bg-surface-800 border border-surface-600 rounded-xl px-4 py-3 shadow-2xl">
+      <div id="toast-icon" class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-check text-green-400 text-sm"></i>
+      </div>
+      <div>
+        <p id="toast-title" class="text-sm font-medium text-slate-200">Upload successful</p>
+        <p id="toast-msg" class="text-xs text-slate-500">Contract parsed • 12 endpoints detected</p>
+      </div>
+      <button onclick="document.getElementById('toast').classList.add('hidden')" class="ml-2 text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark text-sm"></i></button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

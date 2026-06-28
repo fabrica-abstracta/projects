@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aurum — Reservas en Línea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  :root {
+    --bg: #0F0F0E;
+    --surface: #1A1916;
+    --surface2: #242220;
+    --border: #2E2C29;
+    --gold: #C9A96E;
+    --gold-light: #E2C896;
+    --cream: #E8DCC8;
+    --muted: #6B6760;
+    --text: #F0EAE0;
+    --danger: #C0614A;
+    --success: #5A8C6E;
+    --info: #4A7FA5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; font-size: 15px; line-height: 1.6; }
+  h1,h2,h3 { font-family: 'Fraunces', serif; }
+  h4,h5,h6,label,.label { font-family: 'Syne', sans-serif; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* VIEWS */
+  .view { display: none; min-height: 100vh; }
+  .view.active { display: block; }
+
+  /* ===================== LANDING ===================== */
+  #landing { background: var(--bg); }
+
+  .lp-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 3rem;
+    background: linear-gradient(to bottom, rgba(15,15,14,0.95), transparent);
+    border-bottom: 1px solid rgba(201,169,110,0.1);
+  }
+  .lp-logo { font-family: 'Fraunces', serif; font-size: 1.5rem; color: var(--gold); letter-spacing: 0.12em; }
+  .lp-logo span { color: var(--cream); }
+  .lp-nav-links { display: flex; gap: 2rem; align-items: center; }
+  .lp-nav-links a { font-family: 'Syne', sans-serif; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .lp-nav-links a:hover { color: var(--gold); }
+
+  .lp-hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 3rem 5rem;
+    position: relative; overflow: hidden;
+  }
+  .lp-hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(201,169,110,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 70%, rgba(201,169,110,0.04) 0%, transparent 60%);
+  }
+  .lp-hero-lines {
+    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .lp-hero-lines svg { position: absolute; right: 0; top: 0; width: 55%; height: 100%; opacity: 0.06; }
+  .lp-hero-content { position: relative; z-index: 1; max-width: 720px; }
+  .lp-hero-eyebrow {
+    font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .lp-hero-eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--gold); }
+  .lp-hero h1 {
+    font-size: clamp(3rem, 6vw, 5.5rem); font-weight: 300; line-height: 1.05;
+    color: var(--cream); margin-bottom: 1.5rem; letter-spacing: -0.01em;
+  }
+  .lp-hero h1 em { font-style: italic; color: var(--gold); }
+  .lp-hero p {
+    font-family: 'Outfit', sans-serif; font-size: 1.05rem; color: var(--muted);
+    max-width: 480px; margin-bottom: 3rem; font-weight: 300;
+  }
+  .lp-hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+
+  .btn-gold {
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.9rem 2rem;
+    background: var(--gold); color: #0F0F0E; border: none; cursor: pointer;
+    transition: all 0.25s; display: inline-flex; align-items: center; gap: 0.5rem;
+    font-weight: 700;
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-outline {
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.9rem 2rem;
+    background: transparent; color: var(--cream); border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+  .lp-stats {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    border-top: 1px solid var(--border); margin-top: 5rem; padding-top: 3rem; gap: 1px;
+    position: relative; z-index: 1;
+  }
+  .lp-stat { padding: 0 2rem 0 0; }
+  .lp-stat-n { font-family: 'Fraunces', serif; font-size: 2.5rem; color: var(--gold); font-weight: 300; }
+  .lp-stat-l { font-family: 'Syne', sans-serif; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.25rem; }
+
+  /* Features section */
+  .lp-features {
+    padding: 7rem 3rem; background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .lp-section-label {
+    font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
+  }
+  .lp-features-grid {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 1px;
+    border: 1px solid var(--border); margin-top: 3rem;
+  }
+  .lp-feat {
+    padding: 2.5rem 2rem; border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .lp-feat:last-child { border-right: none; }
+  .lp-feat:hover { background: rgba(201,169,110,0.04); }
+  .lp-feat-icon { color: var(--gold); margin-bottom: 1.25rem; }
+  .lp-feat h4 { font-size: 0.95rem; color: var(--cream); margin-bottom: 0.5rem; }
+  .lp-feat p { font-size: 0.85rem; color: var(--muted); font-weight: 300; line-height: 1.7; }
+
+  /* CTA section */
+  .lp-cta {
+    padding: 7rem 3rem;
+    background: linear-gradient(135deg, #1A1916 0%, #0F0F0E 100%);
+    border-top: 1px solid var(--border);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .lp-cta::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lp-cta h2 { font-size: clamp(2rem,4vw,3.5rem); color: var(--cream); font-weight: 300; margin-bottom: 1rem; }
+  .lp-cta h2 em { color: var(--gold); font-style: italic; }
+  .lp-cta p { color: var(--muted); max-width: 500px; margin: 0 auto 2.5rem; font-weight: 300; }
+  .lp-cta-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  /* Footer */
+  .lp-footer { background: #0A0A09; border-top: 1px solid var(--border); padding: 4rem 3rem 0; }
+  .lp-footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 3rem; padding-bottom: 3rem; }
+  .lp-footer-brand .lp-logo { font-size: 1.25rem; margin-bottom: 1rem; display: block; }
+  .lp-footer-brand p { font-size: 0.85rem; color: var(--muted); font-weight: 300; line-height: 1.8; max-width: 260px; }
+  .lp-footer-col h6 { font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem; }
+  .lp-footer-col ul { list-style: none; }
+  .lp-footer-col ul li { margin-bottom: 0.6rem; }
+  .lp-footer-col ul li a { font-size: 0.85rem; color: var(--muted); text-decoration: none; transition: color 0.2s; cursor: pointer; }
+  .lp-footer-col ul li a:hover { color: var(--cream); }
+  .lp-footer-bottom {
+    border-top: 1px solid var(--border); padding: 1.5rem 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lp-footer-bottom span { font-size: 0.78rem; color: var(--muted); font-family: 'Syne', sans-serif; }
+
+  /* ===================== ADMIN LAYOUT ===================== */
+  #admin { display: none; flex-direction: row; min-height: 100vh; }
+  #admin.active { display: flex; }
+
+  .admin-sidebar {
+    width: 240px; min-height: 100vh; flex-shrink: 0;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 1.75rem 1.5rem; border-bottom: 1px solid var(--border);
+    font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--gold);
+    letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .sidebar-logo small { font-size: 0.65rem; color: var(--muted); font-family: 'Syne', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 1rem 0; }
+  .sidebar-section-label {
+    font-family: 'Syne', sans-serif; font-size: 0.62rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted); padding: 0.75rem 1.5rem 0.4rem;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.7rem 1.5rem; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-size: 0.82rem;
+    color: var(--muted); transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar-item:hover { color: var(--cream); background: rgba(255,255,255,0.03); }
+  .sidebar-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,169,110,0.06); }
+  .sidebar-item .si-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-badge {
+    margin-left: auto; background: var(--gold); color: #0F0F0E;
+    font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+  }
+  .sidebar-footer {
+    padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .sidebar-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), #8B6B3D);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-size: 0.8rem; color: #0F0F0E;
+    flex-shrink: 0;
+  }
+  .sidebar-user-name { font-family: 'Syne', sans-serif; font-size: 0.78rem; color: var(--cream); }
+  .sidebar-user-role { font-size: 0.7rem; color: var(--muted); }
+
+  .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .admin-topbar {
+    padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); position: sticky; top: 0; z-index: 50;
+  }
+  .admin-topbar-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--cream); }
+  .admin-topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+  .admin-content { flex: 1; padding: 2rem; background: var(--bg); }
+
+  /* Admin panels */
+  .admin-panel { display: none; }
+  .admin-panel.active { display: block; }
+
+  /* Stat cards */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1.5rem; position: relative; overflow: hidden;
+  }
+  .stat-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--gold); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .stat-card:hover::after { opacity: 1; }
+  .stat-label { font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 2rem; color: var(--cream); font-weight: 300; }
+  .stat-delta { font-size: 0.75rem; color: var(--success); margin-top: 0.25rem; display: flex; align-items: center; gap: 0.25rem; }
+  .stat-delta.neg { color: var(--danger); }
+
+  /* Tables */
+  .table-container { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+  .table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 0.75rem; }
+  .table-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; color: var(--cream); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-family: 'Syne', sans-serif; font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); padding: 0.9rem 1.25rem;
+    text-align: left; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid rgba(46,44,41,0.5); transition: background 0.12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(201,169,110,0.03); }
+  tbody td { padding: 0.9rem 1.25rem; font-size: 0.85rem; color: var(--cream); vertical-align: middle; }
+  .td-muted { color: var(--muted) !important; font-size: 0.8rem !important; }
+
+  .table-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-count { font-size: 0.78rem; color: var(--muted); }
+  .pagination { display: flex; gap: 0.25rem; }
+  .page-btn {
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 0.75rem; cursor: pointer;
+    border: 1px solid var(--border); color: var(--muted); background: transparent;
+    transition: all 0.15s;
+  }
+  .page-btn:hover, .page-btn.active { background: var(--gold); color: #0F0F0E; border-color: var(--gold); }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: 'Syne', sans-serif; font-size: 0.65rem; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 0.2rem 0.6rem; font-weight: 700;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .badge-success { background: rgba(90,140,110,0.12); color: #6EBF8B; }
+  .badge-success .badge-dot { background: #6EBF8B; }
+  .badge-warning { background: rgba(201,169,110,0.12); color: var(--gold); }
+  .badge-warning .badge-dot { background: var(--gold); }
+  .badge-danger { background: rgba(192,97,74,0.12); color: #E07A62; }
+  .badge-danger .badge-dot { background: #E07A62; }
+  .badge-info { background: rgba(74,127,165,0.12); color: #7AAECC; }
+  .badge-info .badge-dot { background: #7AAECC; }
+  .badge-neutral { background: rgba(107,103,96,0.15); color: var(--muted); }
+  .badge-neutral .badge-dot { background: var(--muted); }
+
+  /* Inputs */
+  .field-group { margin-bottom: 1.25rem; }
+  .field-label { font-family: 'Syne', sans-serif; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.4rem; }
+  .field-input, .field-select, .field-textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 0.65rem 0.9rem;
+    font-family: 'Outfit', sans-serif; font-size: 0.88rem;
+    transition: border-color 0.2s; outline: none;
+  }
+  .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--gold); }
+  .field-select option { background: var(--surface); }
+  .field-textarea { resize: vertical; min-height: 80px; }
+
+  /* Buttons */
+  .btn-sm {
+    font-family: 'Syne', sans-serif; font-size: 0.72rem; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 0.5rem 1rem; cursor: pointer;
+    transition: all 0.15s; border: none; display: inline-flex; align-items: center; gap: 0.4rem;
+    font-weight: 600;
+  }
+  .btn-primary { background: var(--gold); color: #0F0F0E; }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-secondary { background: var(--surface2); color: var(--cream); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger-sm { background: rgba(192,97,74,0.15); color: #E07A62; }
+  .btn-danger-sm:hover { background: rgba(192,97,74,0.25); }
+  .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.45rem; cursor: pointer; transition: all 0.15s; }
+  .btn-icon:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    width: 100%; max-width: 560px; max-height: 90vh;
+    overflow-y: auto; position: relative; animation: modalIn 0.2s ease;
+  }
+  .modal-lg { max-width: 800px; }
+  @keyframes modalIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+  .modal-head {
+    padding: 1.5rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .modal-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--cream); }
+  .modal-body { padding: 1.5rem; }
+  .modal-foot { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+  /* Form grid */
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* Room card grid */
+  .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 1.25rem; }
+  .room-card {
+    background: var(--surface); border: 1px solid var(--border);
+    overflow: hidden; transition: all 0.2s; cursor: pointer;
+  }
+  .room-card:hover { border-color: rgba(201,169,110,0.3); transform: translateY(-2px); }
+  .room-card-img {
+    height: 120px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .room-card-body { padding: 1rem; }
+  .room-card-num { font-family: 'Fraunces', serif; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
+  .room-card-type { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--cream); margin-bottom: 0.5rem; }
+  .room-card-price { font-family: 'Fraunces', serif; font-size: 1.25rem; color: var(--gold); }
+  .room-card-price small { font-size: 0.7rem; color: var(--muted); font-family: 'Outfit', sans-serif; }
+  .room-card-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .room-amenities { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .amenity-tag { font-size: 0.65rem; background: var(--surface2); color: var(--muted); padding: 0.15rem 0.5rem; font-family: 'Syne', sans-serif; }
+
+  /* Category cards */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 1.25rem; }
+  .cat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1.5rem; transition: all 0.2s;
+  }
+  .cat-card:hover { border-color: rgba(201,169,110,0.3); }
+  .cat-card-icon { margin-bottom: 1rem; }
+  .cat-card-name { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--cream); margin-bottom: 0.3rem; }
+  .cat-card-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; font-weight: 300; }
+  .cat-card-meta { display: flex; gap: 1.5rem; }
+  .cat-meta-item { font-family: 'Syne', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .cat-meta-item span { display: block; color: var(--muted); font-size: 0.65rem; }
+  .cat-meta-item strong { color: var(--cream); }
+
+  /* Timeline check-in */
+  .checkin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 1rem; }
+  .checkin-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1.25rem; transition: border-color 0.2s;
+  }
+  .checkin-card.priority { border-left: 3px solid var(--gold); }
+  .checkin-guest { font-family: 'Fraunces', serif; font-size: 1rem; color: var(--cream); margin-bottom: 0.25rem; }
+  .checkin-detail { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.1rem; }
+  .checkin-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .tab {
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.75rem 1.25rem; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--cream); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* Search bar */
+  .search-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 0.45rem 0.75rem; min-width: 200px;
+  }
+  .search-bar input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 0.85rem; width: 100%; }
+  .search-bar input::placeholder { color: var(--muted); }
+
+  /* Color swatch for rooms */
+  .room-vis-suite { background: linear-gradient(135deg, #2E2420 0%, #1A0F0A 100%); }
+  .room-vis-deluxe { background: linear-gradient(135deg, #1A2030 0%, #0A1220 100%); }
+  .room-vis-standard { background: linear-gradient(135deg, #1E2818 0%, #0E1A0A 100%); }
+  .room-vis-junior { background: linear-gradient(135deg, #28201A 0%, #181010 100%); }
+
+  /* ===================== PUBLIC SITE ===================== */
+  #public { background: var(--bg); }
+  #public.active { display: block; }
+
+  .pub-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,14,0.95); border-bottom: 1px solid rgba(201,169,110,0.1);
+    backdrop-filter: blur(12px);
+    padding: 1.25rem 3rem; display: flex; align-items: center; justify-content: space-between;
+  }
+  .pub-hero {
+    min-height: 85vh; display: flex; align-items: center;
+    background: linear-gradient(135deg, #0A0908 0%, #16130F 50%, #0F0F0E 100%);
+    padding: 4rem 3rem; position: relative; overflow: hidden;
+  }
+  .pub-hero-deco {
+    position: absolute; right: 5%; top: 10%;
+    width: 420px; height: 420px; border: 1px solid rgba(201,169,110,0.1);
+    border-radius: 50%; pointer-events: none;
+  }
+  .pub-hero-deco::before {
+    content: ''; position: absolute; inset: 30px;
+    border: 1px solid rgba(201,169,110,0.07); border-radius: 50%;
+  }
+  .pub-hero-deco::after {
+    content: ''; position: absolute; inset: 80px;
+    border: 1px solid rgba(201,169,110,0.04); border-radius: 50%;
+  }
+  .pub-hero-content { max-width: 600px; z-index: 1; }
+  .pub-hero h1 { font-size: clamp(2.5rem,5vw,4.5rem); font-weight: 300; line-height: 1.08; color: var(--cream); margin-bottom: 1rem; }
+  .pub-hero h1 em { font-style: italic; color: var(--gold); }
+  .pub-hero p { color: var(--muted); font-weight: 300; max-width: 420px; margin-bottom: 2rem; }
+
+  /* Search widget */
+  .search-widget {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1.5rem; margin-top: 2rem; display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto; gap: 0; max-width: 700px;
+  }
+  .sw-field { padding: 0.85rem 1.25rem; border-right: 1px solid var(--border); }
+  .sw-field:last-child { border-right: none; }
+  .sw-label { font-family: 'Syne', sans-serif; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem; }
+  .sw-value { font-size: 0.9rem; color: var(--cream); }
+  .sw-input { background: transparent; border: none; outline: none; color: var(--cream); font-family: 'Outfit', sans-serif; font-size: 0.9rem; width: 100%; }
+  .sw-input::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+
+  /* Room catalog */
+  .pub-rooms { padding: 5rem 3rem; }
+  .pub-room-card {
+    display: grid; grid-template-columns: 300px 1fr;
+    border: 1px solid var(--border); overflow: hidden;
+    transition: border-color 0.2s; margin-bottom: 1.5rem;
+    background: var(--surface);
+  }
+  .pub-room-card:hover { border-color: rgba(201,169,110,0.3); }
+  .pub-room-img {
+    height: 220px; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .pub-room-info { padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; }
+  .pub-room-name { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 300; color: var(--cream); margin-bottom: 0.5rem; }
+  .pub-room-cat { font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+  .pub-room-desc { font-size: 0.88rem; color: var(--muted); font-weight: 300; line-height: 1.8; margin-bottom: 1.5rem; }
+  .pub-room-features { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .pub-feat { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
+  .pub-feat i { color: var(--gold); }
+  .pub-room-footer { display: flex; align-items: center; justify-content: space-between; }
+  .pub-price { font-family: 'Fraunces', serif; }
+  .pub-price-amt { font-size: 1.8rem; color: var(--gold); }
+  .pub-price-period { font-size: 0.75rem; color: var(--muted); font-family: 'Outfit', sans-serif; }
+
+  /* Booking wizard modal */
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
+  .wizard-progress { display: flex; gap: 0; margin-bottom: 2rem; }
+  .wiz-step-dot {
+    flex: 1; padding: 0.6rem; text-align: center;
+    font-family: 'Syne', sans-serif; font-size: 0.68rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border);
+    transition: all 0.2s;
+  }
+  .wiz-step-dot.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .wiz-step-dot.done { color: var(--success); border-bottom-color: var(--success); }
+
+  /* Summary card */
+  .summary-card { background: var(--bg); border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1.5rem; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(46,44,41,0.4); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row-key { font-size: 0.8rem; color: var(--muted); }
+  .summary-row-val { font-size: 0.85rem; color: var(--cream); }
+  .summary-total { font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--gold); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold); padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    min-width: 280px; animation: toastIn 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  @keyframes toastIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+  .toast-msg { font-size: 0.85rem; color: var(--cream); }
+  .toast-icon { color: var(--gold); }
+
+  /* Nav back button */
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: 'Syne', sans-serif; font-size: 0.75rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); cursor: pointer;
+    transition: color 0.15s; text-decoration: none;
+  }
+  .nav-back:hover { color: var(--gold); }
+
+  /* Responsive tweaks */
+  @media (max-width: 1024px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .lp-features-grid { grid-template-columns: repeat(2,1fr); }
+    .lp-footer-grid { grid-template-columns: 1fr 1fr; }
+    .pub-room-card { grid-template-columns: 1fr; }
+    .pub-room-img { height: 180px; }
+    .search-widget { grid-template-columns: 1fr 1fr; }
+    .sw-field:nth-child(4) { border-right: none; grid-column: span 2; }
+  }
+  @media (max-width: 768px) {
+    .lp-nav { padding: 1.25rem 1.5rem; }
+    .lp-hero { padding: 6rem 1.5rem 3rem; }
+    .lp-stats { grid-template-columns: 1fr; gap: 1.5rem; }
+    .lp-features { padding: 4rem 1.5rem; }
+    .lp-features-grid { grid-template-columns: 1fr; }
+    .lp-feat { border-right: none; border-bottom: 1px solid var(--border); }
+    .admin-sidebar { width: 200px; }
+    .admin-content { padding: 1.25rem; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .pub-hero { padding: 3rem 1.5rem; }
+    .pub-rooms { padding: 3rem 1.5rem; }
+    .lp-footer { padding: 3rem 1.5rem 0; }
+    .lp-footer-grid { grid-template-columns: 1fr; }
+    .search-widget { grid-template-columns: 1fr; }
+    .sw-field { border-right: none; border-bottom: 1px solid var(--border); }
+    .sw-field:nth-child(4) { grid-column: span 1; }
+    .lp-cta { padding: 4rem 1.5rem; }
+  }
+
+  /* Utility */
+  .mt-1 { margin-top: 0.5rem; }
+  .mt-2 { margin-top: 1rem; }
+  .mt-3 { margin-top: 1.5rem; }
+  .mt-4 { margin-top: 2rem; }
+  .mb-2 { margin-bottom: 1rem; }
+  .mb-3 { margin-bottom: 1.5rem; }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-3 { gap: 0.75rem; }
+  .justify-between { justify-content: space-between; }
+  .text-gold { color: var(--gold); }
+  .text-muted { color: var(--muted); font-size: 0.82rem; }
+  .font-syne { font-family: 'Syne', sans-serif; }
+  .w-full { width: 100%; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+</style>
+</head>
+<body>
+
+<!-- ========================= LANDING PAGE ========================= -->
+<div id="landing" class="view active">
+  <nav class="lp-nav">
+    <div class="lp-logo">AURUM<span> Hotels</span></div>
+    <div class="lp-nav-links">
+      <a>Plataforma</a>
+      <a>Funciones</a>
+      <a>Precios</a>
+      <a>Soporte</a>
+      <button class="btn-gold btn-sm" onclick="showAdmin()">
+        <i data-lucide="layout-dashboard" style="width:14px;height:14px"></i>
+        Acceder al sistema
+      </button>
+    </div>
+  </nav>
+
+  <section class="lp-hero">
+    <div class="lp-hero-bg"></div>
+    <div class="lp-hero-lines">
+      <svg viewBox="0 0 800 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="0" x2="800" y2="900" stroke="#C9A96E" stroke-width="0.5"/>
+        <line x1="150" y1="0" x2="800" y2="700" stroke="#C9A96E" stroke-width="0.5"/>
+        <line x1="300" y1="0" x2="800" y2="600" stroke="#C9A96E" stroke-width="0.5"/>
+        <line x1="0" y1="150" x2="800" y2="800" stroke="#C9A96E" stroke-width="0.5"/>
+        <circle cx="600" cy="350" r="200" stroke="#C9A96E" stroke-width="0.5"/>
+        <circle cx="600" cy="350" r="300" stroke="#C9A96E" stroke-width="0.3"/>
+      </svg>
+    </div>
+    <div class="lp-hero-content">
+      <div class="lp-hero-eyebrow">Sistema hotelero integral</div>
+      <h1>Gestiona tu hotel<br/><em>sin fricciones</em></h1>
+      <p>Reservas en línea, control de habitaciones, check-in y check-out unificados en una plataforma diseñada para hoteles que crecen.</p>
+      <div class="lp-hero-actions">
+        <button class="btn-gold" onclick="showAdmin()">
+          <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
+          Ver plataforma admin
+        </button>
+        <button class="btn-outline" onclick="showPublic()">
+          <i data-lucide="globe" style="width:15px;height:15px"></i>
+          Ver web de reservas
+        </button>
+      </div>
+    </div>
+    <div class="lp-stats" style="max-width:600px">
+      <div class="lp-stat">
+        <div class="lp-stat-n">98%</div>
+        <div class="lp-stat-l">Ocupación promedio</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-n">4.2s</div>
+        <div class="lp-stat-l">Check-in exprés</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-n">+340</div>
+        <div class="lp-stat-l">Hoteles activos</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-features">
+    <div style="max-width:1100px;margin:0 auto">
+      <div class="lp-section-label">Módulos del sistema</div>
+      <h2 style="font-size:clamp(1.75rem,3vw,2.5rem);font-weight:300;color:var(--cream)">Todo lo que necesita<br/>tu operación hotelera</h2>
+      <div class="lp-features-grid">
+        <div class="lp-feat">
+          <div class="lp-feat-icon"><i data-lucide="bed-double" style="width:28px;height:28px"></i></div>
+          <h4>Habitaciones</h4>
+          <p>Gestión completa de tu inventario por categorías, tarifas, disponibilidad y características por unidad.</p>
+        </div>
+        <div class="lp-feat">
+          <div class="lp-feat-icon"><i data-lucide="calendar-check" style="width:28px;height:28px"></i></div>
+          <h4>Reservas en línea</h4>
+          <p>Motor de reservas conectado al inventario en tiempo real con confirmaciones automáticas.</p>
+        </div>
+        <div class="lp-feat">
+          <div class="lp-feat-icon"><i data-lucide="log-in" style="width:28px;height:28px"></i></div>
+          <h4>Check-in / Check-out</h4>
+          <p>Flujo ágil de llegadas y salidas con asignación de habitación, depósitos y estado de cuenta.</p>
+        </div>
+        <div class="lp-feat">
+          <div class="lp-feat-icon"><i data-lucide="layers" style="width:28px;height:28px"></i></div>
+          <h4>Categorías</h4>
+          <p>Organiza tu oferta por tipo de habitación, define políticas, tarifas base y restricciones por categoría.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-cta">
+    <div style="position:relative;z-index:1">
+      <div class="lp-section-label" style="margin-bottom:1rem">Empieza ahora</div>
+      <h2>Tu hotel, <em>digitalizado</em></h2>
+      <p>Migra tu operación a Aurum y empieza a gestionar desde el primer día. Sin configuraciones complejas.</p>
+      <div class="lp-cta-actions">
+        <button class="btn-gold" onclick="showAdmin()">
+          <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
+          Plataforma de gestión
+        </button>
+        <button class="btn-outline" onclick="showPublic()">
+          <i data-lucide="globe" style="width:15px;height:15px"></i>
+          Web de reservas
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <div style="max-width:1200px;margin:0 auto">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-brand">
+          <span class="lp-logo">AURUM <span style="font-family:'Outfit',sans-serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Hotel Suite</span></span>
+          <p>Sistema integral de gestión hotelera diseñado para hoteles boutique y cadenas en crecimiento.</p>
+          <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+            <button class="btn-icon"><i data-lucide="twitter" style="width:14px;height:14px"></i></button>
+            <button class="btn-icon"><i data-lucide="linkedin" style="width:14px;height:14px"></i></button>
+            <button class="btn-icon"><i data-lucide="instagram" style="width:14px;height:14px"></i></button>
+          </div>
+        </div>
+        <div class="lp-footer-col">
+          <h6>Plataforma</h6>
+          <ul>
+            <li><a>Habitaciones</a></li>
+            <li><a>Categorías</a></li>
+            <li><a>Reservas</a></li>
+            <li><a>Check-in / Out</a></li>
+            <li><a>Reportes</a></li>
+          </ul>
+        </div>
+        <div class="lp-footer-col">
+          <h6>Empresa</h6>
+          <ul>
+            <li><a>Sobre Aurum</a></li>
+            <li><a>Precios</a></li>
+            <li><a>Casos de uso</a></li>
+            <li><a>Blog</a></li>
+            <li><a>Carreras</a></li>
+          </ul>
+        </div>
+        <div class="lp-footer-col">
+          <h6>Soporte</h6>
+          <ul>
+            <li><a>Documentación</a></li>
+            <li><a>API Reference</a></li>
+            <li><a>Centro de ayuda</a></li>
+            <li><a>contacto@aurum.hotel</a></li>
+            <li><a>+51 999 000 111</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="lp-footer-bottom">
+        <span>© 2025 Aurum Hotel Suite. Todos los derechos reservados.</span>
+        <span style="display:flex;gap:1.5rem">
+          <a style="color:var(--muted);font-size:0.78rem;text-decoration:none;cursor:pointer">Privacidad</a>
+          <a style="color:var(--muted);font-size:0.78rem;text-decoration:none;cursor:pointer">Términos</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+
+<!-- ========================= ADMIN PLATFORM ========================= -->
+<div id="admin" class="view">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <i data-lucide="hotel" style="width:18px;height:18px;color:var(--gold)"></i>
+      <div>
+        AURUM
+        <small>Hotel Suite</small>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Principal</div>
+      <div class="sidebar-item active" onclick="showPanel('dashboard',this)">
+        <i data-lucide="layout-dashboard" class="si-icon"></i> Dashboard
+      </div>
+      <div class="sidebar-section-label">Mantenedores</div>
+      <div class="sidebar-item" onclick="showPanel('categorias',this)">
+        <i data-lucide="layers" class="si-icon"></i> Categorías
+      </div>
+      <div class="sidebar-item" onclick="showPanel('habitaciones',this)">
+        <i data-lucide="bed-double" class="si-icon"></i> Habitaciones
+      </div>
+      <div class="sidebar-item" onclick="showPanel('tarifas',this)">
+        <i data-lucide="tag" class="si-icon"></i> Tarifas
+      </div>
+      <div class="sidebar-section-label">Operación</div>
+      <div class="sidebar-item" onclick="showPanel('reservas',this)">
+        <i data-lucide="calendar" class="si-icon"></i> Reservas
+        <span class="sidebar-badge">12</span>
+      </div>
+      <div class="sidebar-item" onclick="showPanel('checkin',this)">
+        <i data-lucide="log-in" class="si-icon"></i> Check-in
+        <span class="sidebar-badge">4</span>
+      </div>
+      <div class="sidebar-item" onclick="showPanel('checkout',this)">
+        <i data-lucide="log-out" class="si-icon"></i> Check-out
+      </div>
+      <div class="sidebar-item" onclick="showPanel('ocupacion',this)">
+        <i data-lucide="map" class="si-icon"></i> Mapa ocupación
+      </div>
+      <div class="sidebar-section-label">Configuración</div>
+      <div class="sidebar-item" onclick="showPanel('hotel',this)">
+        <i data-lucide="settings" class="si-icon"></i> Mi hotel
+      </div>
+      <div class="sidebar-item" onclick="showPanel('usuarios',this)">
+        <i data-lucide="users" class="si-icon"></i> Usuarios
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-avatar">JR</div>
+      <div>
+        <div class="sidebar-user-name">José Reátegui</div>
+        <div class="sidebar-user-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="nav-back" onclick="showLanding()">
+          <i data-lucide="arrow-left" style="width:14px;height:14px"></i> Inicio
+        </button>
+        <span style="color:var(--border)">|</span>
+        <div class="admin-topbar-title" id="panelTitle">Dashboard</div>
+      </div>
+      <div class="admin-topbar-actions">
+        <div class="search-bar" style="min-width:180px">
+          <i data-lucide="search" style="width:14px;height:14px;color:var(--muted)"></i>
+          <input type="text" placeholder="Buscar..."/>
+        </div>
+        <button class="btn-icon"><i data-lucide="bell" style="width:16px;height:16px"></i></button>
+        <button class="btn-gold btn-sm" onclick="showPublic()">
+          <i data-lucide="globe" style="width:13px;height:13px"></i>
+          Web pública
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="admin-panel active">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label"><i data-lucide="bed-double" style="width:13px;height:13px"></i> Habitaciones</div>
+            <div class="stat-value">48</div>
+            <div class="stat-delta"><i data-lucide="trending-up" style="width:11px;height:11px"></i> 2 nuevas este mes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i data-lucide="calendar-check" style="width:13px;height:13px"></i> Reservas hoy</div>
+            <div class="stat-value">12</div>
+            <div class="stat-delta"><i data-lucide="trending-up" style="width:11px;height:11px"></i> +18% vs ayer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i data-lucide="percent" style="width:13px;height:13px"></i> Ocupación</div>
+            <div class="stat-value">87%</div>
+            <div class="stat-delta"><i data-lucide="trending-up" style="width:11px;height:11px"></i> Alta temporada</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i data-lucide="banknote" style="width:13px;height:13px"></i> Ingresos hoy</div>
+            <div class="stat-value">S/4,820</div>
+            <div class="stat-delta neg"><i data-lucide="trending-down" style="width:11px;height:11px"></i> -3% vs ayer</div>
+          </div>
+        </div>
+
+        <!-- Recent reservations -->
+        <div class="table-container mb-3">
+          <div class="table-header">
+            <div class="table-title">Reservas recientes</div>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalReserva')">
+                <i data-lucide="plus" style="width:12px;height:12px"></i> Nueva reserva
+              </button>
+              <button class="btn-sm btn-secondary" onclick="showPanel('reservas',null)">Ver todas</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Folio</th><th>Huésped</th><th>Habitación</th><th>Check-in</th><th>Check-out</th><th>Noches</th><th>Total</th><th>Estado</th><th></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0041</td>
+                <td>María Fernández Torres</td>
+                <td class="td-muted">201 — Suite Deluxe</td>
+                <td>23 May 2025</td><td>26 May 2025</td><td>3</td>
+                <td class="text-gold">S/ 1,350</td>
+                <td><span class="badge badge-success"><span class="badge-dot"></span>Confirmada</span></td>
+                <td><button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:13px;height:13px"></i></button></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0040</td>
+                <td>Carlos Mendoza Ríos</td>
+                <td class="td-muted">105 — Estándar Twin</td>
+                <td>23 May 2025</td><td>24 May 2025</td><td>1</td>
+                <td class="text-gold">S/ 280</td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Check-in hoy</span></td>
+                <td><button class="btn-icon" onclick="openModal('modalCheckinProc')"><i data-lucide="log-in" style="width:13px;height:13px"></i></button></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0039</td>
+                <td>Daniela Paredes Ugaz</td>
+                <td class="td-muted">310 — Junior Suite</td>
+                <td>22 May 2025</td><td>25 May 2025</td><td>3</td>
+                <td class="text-gold">S/ 1,050</td>
+                <td><span class="badge badge-warning"><span class="badge-dot"></span>En casa</span></td>
+                <td><button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:13px;height:13px"></i></button></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0038</td>
+                <td>Roberto Alvarado Soto</td>
+                <td class="td-muted">402 — Suite Premium</td>
+                <td>20 May 2025</td><td>23 May 2025</td><td>3</td>
+                <td class="text-gold">S/ 2,100</td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Check-out hoy</span></td>
+                <td><button class="btn-icon" onclick="openModal('modalCheckoutProc')"><i data-lucide="log-out" style="width:13px;height:13px"></i></button></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0037</td>
+                <td>Lucía Sánchez Vargas</td>
+                <td class="td-muted">108 — Estándar King</td>
+                <td>19 May 2025</td><td>22 May 2025</td><td>3</td>
+                <td class="text-gold">S/ 750</td>
+                <td><span class="badge badge-neutral"><span class="badge-dot"></span>Finalizada</span></td>
+                <td><button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:13px;height:13px"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span class="table-count">Mostrando 5 de 41 reservas</span>
+            <div class="pagination">
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">···</button>
+              <button class="page-btn">9</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick stats row -->
+        <div class="grid-3" style="gap:1rem">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:1.25rem">
+            <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem">Check-ins pendientes hoy</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.75rem;color:var(--cream)">4</div>
+            <button class="btn-sm btn-secondary mt-2" onclick="showPanel('checkin',null)">
+              <i data-lucide="arrow-right" style="width:12px;height:12px"></i> Ir a check-in
+            </button>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:1.25rem">
+            <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem">Check-outs pendientes hoy</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.75rem;color:var(--cream)">3</div>
+            <button class="btn-sm btn-secondary mt-2" onclick="showPanel('checkout',null)">
+              <i data-lucide="arrow-right" style="width:12px;height:12px"></i> Ir a check-out
+            </button>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:1.25rem">
+            <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem">Habitaciones disponibles</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.75rem;color:var(--cream)">6 <small style="font-size:1rem;color:var(--muted)">/ 48</small></div>
+            <button class="btn-sm btn-secondary mt-2" onclick="showPanel('ocupacion',null)">
+              <i data-lucide="arrow-right" style="width:12px;height:12px"></i> Ver mapa
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORIAS -->
+      <div id="panel-categorias" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Categorías de habitación</h2>
+            <p class="text-muted mt-1">Define los tipos de habitación, capacidad y tarifa base.</p>
+          </div>
+          <button class="btn-sm btn-primary" onclick="openModal('modalCategoria')">
+            <i data-lucide="plus" style="width:13px;height:13px"></i> Nueva categoría
+          </button>
+        </div>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <div class="cat-card-icon"><i data-lucide="star" style="width:24px;height:24px;color:#C9A96E"></i></div>
+            <div class="cat-card-name">Suite Premium</div>
+            <div class="cat-card-desc">La experiencia más exclusiva del hotel. Vista panorámica, jacuzzi y sala privada.</div>
+            <div class="cat-card-meta">
+              <div class="cat-meta-item"><span>Capacidad</span><strong>2 pax</strong></div>
+              <div class="cat-meta-item"><span>Tarifa base</span><strong>S/ 700/noche</strong></div>
+              <div class="cat-meta-item"><span>Habitaciones</span><strong>4 unidades</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalCategoria')"><i data-lucide="pencil" style="width:11px;height:11px"></i> Editar</button>
+              <button class="btn-sm btn-danger-sm"><i data-lucide="trash-2" style="width:11px;height:11px"></i></button>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-card-icon"><i data-lucide="gem" style="width:24px;height:24px;color:#7AAECC"></i></div>
+            <div class="cat-card-name">Suite Deluxe</div>
+            <div class="cat-card-desc">Amplia habitación con sala de estar, bañera independiente y minibar.</div>
+            <div class="cat-card-meta">
+              <div class="cat-meta-item"><span>Capacidad</span><strong>2 pax</strong></div>
+              <div class="cat-meta-item"><span>Tarifa base</span><strong>S/ 450/noche</strong></div>
+              <div class="cat-meta-item"><span>Habitaciones</span><strong>8 unidades</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalCategoria')"><i data-lucide="pencil" style="width:11px;height:11px"></i> Editar</button>
+              <button class="btn-sm btn-danger-sm"><i data-lucide="trash-2" style="width:11px;height:11px"></i></button>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-card-icon"><i data-lucide="sparkles" style="width:24px;height:24px;color:#6EBF8B"></i></div>
+            <div class="cat-card-name">Junior Suite</div>
+            <div class="cat-card-desc">Espacio bien equipado con zona de trabajo, cafetera y vista al jardín.</div>
+            <div class="cat-card-meta">
+              <div class="cat-meta-item"><span>Capacidad</span><strong>2 pax</strong></div>
+              <div class="cat-meta-item"><span>Tarifa base</span><strong>S/ 350/noche</strong></div>
+              <div class="cat-meta-item"><span>Habitaciones</span><strong>12 unidades</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalCategoria')"><i data-lucide="pencil" style="width:11px;height:11px"></i> Editar</button>
+              <button class="btn-sm btn-danger-sm"><i data-lucide="trash-2" style="width:11px;height:11px"></i></button>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-card-icon"><i data-lucide="home" style="width:24px;height:24px;color:var(--muted)"></i></div>
+            <div class="cat-card-name">Estándar King</div>
+            <div class="cat-card-desc">Cama king size, baño completo, climatización individual y escritorio.</div>
+            <div class="cat-card-meta">
+              <div class="cat-meta-item"><span>Capacidad</span><strong>2 pax</strong></div>
+              <div class="cat-meta-item"><span>Tarifa base</span><strong>S/ 250/noche</strong></div>
+              <div class="cat-meta-item"><span>Habitaciones</span><strong>14 unidades</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalCategoria')"><i data-lucide="pencil" style="width:11px;height:11px"></i> Editar</button>
+              <button class="btn-sm btn-danger-sm"><i data-lucide="trash-2" style="width:11px;height:11px"></i></button>
+            </div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-card-icon"><i data-lucide="users" style="width:24px;height:24px;color:var(--muted)"></i></div>
+            <div class="cat-card-name">Estándar Twin</div>
+            <div class="cat-card-desc">Dos camas individuales, ideal para viajeros de negocios o compañeros de viaje.</div>
+            <div class="cat-card-meta">
+              <div class="cat-meta-item"><span>Capacidad</span><strong>2 pax</strong></div>
+              <div class="cat-meta-item"><span>Tarifa base</span><strong>S/ 220/noche</strong></div>
+              <div class="cat-meta-item"><span>Habitaciones</span><strong>10 unidades</strong></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+              <button class="btn-sm btn-secondary" onclick="openModal('modalCategoria')"><i data-lucide="pencil" style="width:11px;height:11px"></i> Editar</button>
+              <button class="btn-sm btn-danger-sm"><i data-lucide="trash-2" style="width:11px;height:11px"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HABITACIONES -->
+      <div id="panel-habitaciones" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Habitaciones</h2>
+            <p class="text-muted mt-1">48 habitaciones en 5 categorías — piso 1 al 4</p>
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+            <select class="field-select" style="width:auto;padding:0.5rem 0.75rem;font-size:0.8rem">
+              <option>Todas las categorías</option>
+              <option>Suite Premium</option>
+              <option>Suite Deluxe</option>
+              <option>Junior Suite</option>
+              <option>Estándar King</option>
+              <option>Estándar Twin</option>
+            </select>
+            <select class="field-select" style="width:auto;padding:0.5rem 0.75rem;font-size:0.8rem">
+              <option>Todos los estados</option>
+              <option>Disponible</option>
+              <option>Ocupada</option>
+              <option>Mantenimiento</option>
+              <option>Limpieza</option>
+            </select>
+            <button class="btn-sm btn-primary" onclick="openModal('modalHabitacion')">
+              <i data-lucide="plus" style="width:13px;height:13px"></i> Nueva habitación
+            </button>
+          </div>
+        </div>
+        <div class="room-grid">
+          <!-- Suite Premium rooms -->
+          <div class="room-card">
+            <div class="room-card-img room-vis-suite">
+              <i data-lucide="star" style="width:32px;height:32px;color:rgba(201,169,110,0.5)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-success"><span class="badge-dot"></span>Libre</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 4 · 401</div>
+              <div class="room-card-type">Suite Premium</div>
+              <div class="room-card-price">S/ 700 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">Jacuzzi</span><span class="amenity-tag">Vista mar</span><span class="amenity-tag">Sala</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 65 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="room-card">
+            <div class="room-card-img room-vis-suite">
+              <i data-lucide="star" style="width:32px;height:32px;color:rgba(201,169,110,0.5)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-warning"><span class="badge-dot"></span>Ocupada</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 4 · 402</div>
+              <div class="room-card-type">Suite Premium</div>
+              <div class="room-card-price">S/ 700 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">Jacuzzi</span><span class="amenity-tag">Vista jardín</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 65 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- Suite Deluxe -->
+          <div class="room-card">
+            <div class="room-card-img room-vis-deluxe">
+              <i data-lucide="gem" style="width:28px;height:28px;color:rgba(122,174,204,0.5)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-success"><span class="badge-dot"></span>Libre</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 2 · 201</div>
+              <div class="room-card-type">Suite Deluxe</div>
+              <div class="room-card-price">S/ 450 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">Bañera</span><span class="amenity-tag">Minibar</span><span class="amenity-tag">Sala</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 48 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- Junior Suite -->
+          <div class="room-card">
+            <div class="room-card-img room-vis-junior">
+              <i data-lucide="sparkles" style="width:28px;height:28px;color:rgba(110,191,139,0.5)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-danger"><span class="badge-dot"></span>Mantenimiento</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 3 · 310</div>
+              <div class="room-card-type">Junior Suite</div>
+              <div class="room-card-price">S/ 350 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">Escritorio</span><span class="amenity-tag">Cafetera</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 38 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- Estándar King -->
+          <div class="room-card">
+            <div class="room-card-img room-vis-standard">
+              <i data-lucide="home" style="width:28px;height:28px;color:rgba(107,103,96,0.4)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-info"><span class="badge-dot"></span>Limpieza</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 1 · 105</div>
+              <div class="room-card-type">Estándar King</div>
+              <div class="room-card-price">S/ 250 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">King bed</span><span class="amenity-tag">AC</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 28 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="room-card">
+            <div class="room-card-img room-vis-standard">
+              <i data-lucide="home" style="width:28px;height:28px;color:rgba(107,103,96,0.4)"></i>
+              <span style="position:absolute;top:8px;right:8px"><span class="badge badge-success"><span class="badge-dot"></span>Libre</span></span>
+            </div>
+            <div class="room-card-body">
+              <div class="room-card-num">Piso 1 · 108</div>
+              <div class="room-card-type">Estándar King</div>
+              <div class="room-card-price">S/ 250 <small>/noche</small></div>
+              <div class="room-amenities">
+                <span class="amenity-tag">King bed</span><span class="amenity-tag">AC</span>
+              </div>
+            </div>
+            <div class="room-card-footer">
+              <span style="font-size:0.72rem;color:var(--muted)">2 pax · 28 m²</span>
+              <div style="display:flex;gap:0.4rem">
+                <button class="btn-icon" onclick="openModal('modalHabitacion')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                <button class="btn-icon"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- more rooms indicator -->
+          <div style="background:var(--surface);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.5rem;padding:2rem;cursor:pointer;min-height:200px;" onclick="openModal('modalHabitacion')">
+            <i data-lucide="plus-circle" style="width:24px;height:24px;color:var(--muted)"></i>
+            <span style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--muted);text-align:center">+42 habitaciones más<br/>Agregar nueva</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESERVAS -->
+      <div id="panel-reservas" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Reservas</h2>
+            <p class="text-muted mt-1">41 reservas activas · Temporada alta</p>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <select class="field-select" style="width:auto;padding:0.5rem 0.75rem;font-size:0.8rem">
+              <option>Todos los estados</option>
+              <option>Confirmada</option>
+              <option>Pendiente</option>
+              <option>En casa</option>
+              <option>Cancelada</option>
+            </select>
+            <div class="search-bar" style="min-width:160px">
+              <i data-lucide="search" style="width:13px;height:13px;color:var(--muted)"></i>
+              <input type="text" placeholder="Buscar huésped..."/>
+            </div>
+            <button class="btn-sm btn-primary" onclick="openModal('modalReserva')">
+              <i data-lucide="plus" style="width:13px;height:13px"></i> Nueva reserva
+            </button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead><tr>
+              <th>Folio</th><th>Huésped</th><th>Documento</th><th>Habitación</th><th>Check-in</th><th>Check-out</th><th>Adultos</th><th>Total</th><th>Canal</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0041</td>
+                <td>María Fernández Torres</td>
+                <td class="td-muted">DNI 45821003</td>
+                <td class="td-muted">201 — Suite Deluxe</td>
+                <td>23/05/2025</td><td>26/05/2025</td><td>2</td>
+                <td class="text-gold">S/ 1,350</td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Web</span></td>
+                <td><span class="badge badge-success"><span class="badge-dot"></span>Confirmada</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+                  <button class="btn-icon" onclick="openModal('modalReserva')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                  <button class="btn-icon btn-danger-sm"><i data-lucide="x" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0040</td>
+                <td>Carlos Mendoza Ríos</td>
+                <td class="td-muted">DNI 32140875</td>
+                <td class="td-muted">105 — Est. Twin</td>
+                <td>23/05/2025</td><td>24/05/2025</td><td>1</td>
+                <td class="text-gold">S/ 280</td>
+                <td><span class="badge badge-neutral"><span class="badge-dot"></span>Front desk</span></td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Check-in hoy</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalCheckinProc')"><i data-lucide="log-in" style="width:12px;height:12px"></i></button>
+                  <button class="btn-icon" onclick="openModal('modalReserva')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0039</td>
+                <td>Daniela Paredes Ugaz</td>
+                <td class="td-muted">CE 001234567</td>
+                <td class="td-muted">310 — Junior Suite</td>
+                <td>22/05/2025</td><td>25/05/2025</td><td>2</td>
+                <td class="text-gold">S/ 1,050</td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Web</span></td>
+                <td><span class="badge badge-warning"><span class="badge-dot"></span>En casa</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+                  <button class="btn-icon" onclick="openModal('modalCheckoutProc')"><i data-lucide="log-out" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0038</td>
+                <td>Roberto Alvarado Soto</td>
+                <td class="td-muted">DNI 12887532</td>
+                <td class="td-muted">402 — Suite Premium</td>
+                <td>20/05/2025</td><td>23/05/2025</td><td>2</td>
+                <td class="text-gold">S/ 2,100</td>
+                <td><span class="badge badge-neutral"><span class="badge-dot"></span>Booking.com</span></td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Check-out hoy</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalCheckoutProc')"><i data-lucide="log-out" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0037</td>
+                <td>Lucía Sánchez Vargas</td>
+                <td class="td-muted">DNI 73421098</td>
+                <td class="td-muted">108 — Est. King</td>
+                <td>19/05/2025</td><td>22/05/2025</td><td>2</td>
+                <td class="text-gold">S/ 750</td>
+                <td><span class="badge badge-neutral"><span class="badge-dot"></span>Front desk</span></td>
+                <td><span class="badge badge-neutral"><span class="badge-dot"></span>Finalizada</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="text-gold font-syne" style="font-size:0.78rem">RES-0036</td>
+                <td>Andrés Villanueva Caso</td>
+                <td class="td-muted">DNI 58230910</td>
+                <td class="td-muted">204 — Suite Deluxe</td>
+                <td>25/05/2025</td><td>28/05/2025</td><td>2</td>
+                <td class="text-gold">S/ 1,350</td>
+                <td><span class="badge badge-info"><span class="badge-dot"></span>Web</span></td>
+                <td><span class="badge badge-warning"><span class="badge-dot"></span>Pendiente pago</span></td>
+                <td><div style="display:flex;gap:0.35rem">
+                  <button class="btn-icon" onclick="openModal('modalReservaDetalle')"><i data-lucide="eye" style="width:12px;height:12px"></i></button>
+                  <button class="btn-icon btn-danger-sm"><i data-lucide="x" style="width:12px;height:12px"></i></button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span class="table-count">Mostrando 6 de 41 reservas</span>
+            <div class="pagination">
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">···</button>
+              <button class="page-btn">7</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECK-IN -->
+      <div id="panel-checkin" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Check-in — Hoy 23 May 2025</h2>
+            <p class="text-muted mt-1">4 llegadas programadas · 1 ya procesada</p>
+          </div>
+          <button class="btn-sm btn-primary" onclick="openModal('modalCheckinProc')">
+            <i data-lucide="search" style="width:13px;height:13px"></i> Check-in exprés
+          </button>
+        </div>
+        <div class="checkin-cards">
+          <div class="checkin-card priority">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-info"><span class="badge-dot"></span>Esperando</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0040</span>
+            </div>
+            <div class="checkin-guest">Carlos Mendoza Ríos</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 105 — Estándar Twin · Piso 1</div>
+            <div class="checkin-detail"><i data-lucide="calendar" style="width:13px;height:13px"></i> Hoy → 24 May · 1 noche</div>
+            <div class="checkin-detail"><i data-lucide="user" style="width:13px;height:13px"></i> 1 adulto · DNI 32140875</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 280 · Pendiente pago</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckinProc')">
+                <i data-lucide="log-in" style="width:12px;height:12px"></i> Procesar check-in
+              </button>
+              <button class="btn-sm btn-secondary" onclick="openModal('modalReservaDetalle')">
+                <i data-lucide="eye" style="width:12px;height:12px"></i>
+              </button>
+            </div>
+          </div>
+          <div class="checkin-card priority">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-info"><span class="badge-dot"></span>Esperando</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0042</span>
+            </div>
+            <div class="checkin-guest">Pedro Huamán Coz</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 205 — Suite Deluxe · Piso 2</div>
+            <div class="checkin-detail"><i data-lucide="calendar" style="width:13px;height:13px"></i> Hoy → 25 May · 2 noches</div>
+            <div class="checkin-detail"><i data-lucide="user" style="width:13px;height:13px"></i> 2 adultos · DNI 67891234</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 900 · Pagado en línea</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckinProc')">
+                <i data-lucide="log-in" style="width:12px;height:12px"></i> Procesar check-in
+              </button>
+              <button class="btn-sm btn-secondary" onclick="openModal('modalReservaDetalle')">
+                <i data-lucide="eye" style="width:12px;height:12px"></i>
+              </button>
+            </div>
+          </div>
+          <div class="checkin-card priority">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-warning"><span class="badge-dot"></span>Sin habitación asignada</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0043</span>
+            </div>
+            <div class="checkin-guest">Ana Rojas Delgado</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> Junior Suite · Sin asignar</div>
+            <div class="checkin-detail"><i data-lucide="calendar" style="width:13px;height:13px"></i> Hoy → 27 May · 4 noches</div>
+            <div class="checkin-detail"><i data-lucide="user" style="width:13px;height:13px"></i> 2 adultos · CE 002345678</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 1,400 · Pago en recepción</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckinProc')">
+                <i data-lucide="log-in" style="width:12px;height:12px"></i> Asignar y hacer check-in
+              </button>
+            </div>
+          </div>
+          <div class="checkin-card" style="border-color:var(--success);opacity:0.7">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-success"><span class="badge-dot"></span>Completado</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0039</span>
+            </div>
+            <div class="checkin-guest">Daniela Paredes Ugaz</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 310 — Junior Suite · Piso 3</div>
+            <div class="checkin-detail"><i data-lucide="clock" style="width:13px;height:13px"></i> Check-in realizado a las 14:23</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 1,050 · Pagado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECK-OUT -->
+      <div id="panel-checkout" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Check-out — Hoy 23 May 2025</h2>
+            <p class="text-muted mt-1">3 salidas programadas · Hora límite 12:00 PM</p>
+          </div>
+          <button class="btn-sm btn-primary" onclick="openModal('modalCheckoutProc')">
+            <i data-lucide="search" style="width:13px;height:13px"></i> Check-out exprés
+          </button>
+        </div>
+        <div class="checkin-cards">
+          <div class="checkin-card priority">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-danger"><span class="badge-dot"></span>Vence en 1h</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0038</span>
+            </div>
+            <div class="checkin-guest">Roberto Alvarado Soto</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 402 — Suite Premium · Piso 4</div>
+            <div class="checkin-detail"><i data-lucide="calendar" style="width:13px;height:13px"></i> 20–23 May · 3 noches</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 2,100 total · Cargos extra: S/ 340</div>
+            <div class="checkin-detail text-gold"><i data-lucide="receipt" style="width:13px;height:13px"></i> Total a cobrar: S/ 2,440</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckoutProc')">
+                <i data-lucide="log-out" style="width:12px;height:12px"></i> Procesar check-out
+              </button>
+              <button class="btn-sm btn-secondary" onclick="openModal('modalReservaDetalle')">
+                <i data-lucide="file-text" style="width:12px;height:12px"></i> Ver cuenta
+              </button>
+            </div>
+          </div>
+          <div class="checkin-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-warning"><span class="badge-dot"></span>Pendiente</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0035</span>
+            </div>
+            <div class="checkin-guest">Jorge Ramírez Torres</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 303 — Junior Suite · Piso 3</div>
+            <div class="checkin-detail"><i data-lucide="calendar" style="width:13px;height:13px"></i> 18–23 May · 5 noches</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 1,750 total · Sin cargos extra</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckoutProc')">
+                <i data-lucide="log-out" style="width:12px;height:12px"></i> Procesar check-out
+              </button>
+            </div>
+          </div>
+          <div class="checkin-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+              <span class="badge badge-neutral"><span class="badge-dot"></span>Late checkout solicitado</span>
+              <span style="font-family:'Syne',sans-serif;font-size:0.7rem;color:var(--gold)">RES-0033</span>
+            </div>
+            <div class="checkin-guest">Sandra Limón Quispe</div>
+            <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 107 — Estándar King · Piso 1</div>
+            <div class="checkin-detail"><i data-lucide="clock" style="width:13px;height:13px"></i> Salida hasta las 3:00 PM (aprobado)</div>
+            <div class="checkin-detail"><i data-lucide="banknote" style="width:13px;height:13px"></i> S/ 500 + cargo late S/ 60</div>
+            <div class="checkin-actions">
+              <button class="btn-sm btn-primary" onclick="openModal('modalCheckoutProc')">
+                <i data-lucide="log-out" style="width:12px;height:12px"></i> Procesar check-out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAPA OCUPACIÓN -->
+      <div id="panel-ocupacion" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Mapa de ocupación</h2>
+            <p class="text-muted mt-1">Vista en tiempo real por piso · 42/48 habitaciones ocupadas</p>
+          </div>
+          <div style="display:flex;gap:1rem;align-items:center;font-family:'Syne',sans-serif;font-size:0.72rem;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;background:rgba(90,140,110,0.6);display:inline-block"></span>Libre</span>
+            <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;background:rgba(201,169,110,0.6);display:inline-block"></span>Ocupada</span>
+            <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;background:rgba(74,127,165,0.5);display:inline-block"></span>Limpieza</span>
+            <span style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;background:rgba(192,97,74,0.5);display:inline-block"></span>Mantenimiento</span>
+          </div>
+        </div>
+        <!-- Floor 4 -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-family:'Syne',sans-serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">Piso 4 — Suite Premium</div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px;cursor:pointer" onclick="openModal('modalReservaDetalle')"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">401</div><div style="font-size:0.7rem;color:var(--muted)">R.Alvarado</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>Checkout hoy</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px;cursor:pointer"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">402</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(90,140,110,0.1);border:1px solid rgba(90,140,110,0.3);padding:0.75rem 1rem;min-width:90px;cursor:pointer" onclick="openModal('modalHabitacion')"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#6EBF8B">403</div><div style="font-size:0.7rem;color:var(--muted)">Libre</div><div><span class="badge badge-success" style="font-size:0.58rem"><span class="badge-dot"></span>Disponible</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px;cursor:pointer"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">404</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+          </div>
+        </div>
+        <!-- Floor 3 -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-family:'Syne',sans-serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">Piso 3 — Junior Suite</div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">301</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">302</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px" onclick="openModal('modalReservaDetalle')"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">303</div><div style="font-size:0.7rem;color:var(--muted)">J.Ramírez</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>Checkout hoy</span></div></div>
+            <div style="background:rgba(192,97,74,0.1);border:1px solid rgba(192,97,74,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#E07A62">310</div><div style="font-size:0.7rem;color:var(--muted)">Mant.</div><div><span class="badge badge-danger" style="font-size:0.58rem"><span class="badge-dot"></span>Bloqueada</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">311</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+          </div>
+        </div>
+        <!-- Floor 2 -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-family:'Syne',sans-serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">Piso 2 — Suite Deluxe</div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <div style="background:rgba(90,140,110,0.1);border:1px solid rgba(90,140,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#6EBF8B">201</div><div style="font-size:0.7rem;color:var(--muted)">Libre</div><div><span class="badge badge-success" style="font-size:0.58rem"><span class="badge-dot"></span>Disponible</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">202</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(74,127,165,0.1);border:1px solid rgba(74,127,165,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#7AAECC">205</div><div style="font-size:0.7rem;color:var(--muted)">Limpieza</div><div><span class="badge badge-info" style="font-size:0.58rem"><span class="badge-dot"></span>En proceso</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">206</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+          </div>
+        </div>
+        <!-- Floor 1 -->
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;border-bottom:1px solid var(--border);padding-bottom:0.5rem">Piso 1 — Estándar King / Twin</div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">101</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">102</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(74,127,165,0.1);border:1px solid rgba(74,127,165,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#7AAECC">105</div><div style="font-size:0.7rem;color:var(--muted)">Limpieza</div><div><span class="badge badge-info" style="font-size:0.58rem"><span class="badge-dot"></span>Checkin hoy</span></div></div>
+            <div style="background:rgba(90,140,110,0.1);border:1px solid rgba(90,140,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#6EBF8B">107</div><div style="font-size:0.7rem;color:var(--muted)">Libre</div><div><span class="badge badge-success" style="font-size:0.58rem"><span class="badge-dot"></span>Disponible</span></div></div>
+            <div style="background:rgba(201,169,110,0.15);border:1px solid rgba(201,169,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:var(--gold)">108</div><div style="font-size:0.7rem;color:var(--muted)">Ocupada</div><div><span class="badge badge-warning" style="font-size:0.58rem"><span class="badge-dot"></span>En casa</span></div></div>
+            <div style="background:rgba(90,140,110,0.1);border:1px solid rgba(90,140,110,0.3);padding:0.75rem 1rem;min-width:90px"><div style="font-family:'Syne',sans-serif;font-size:0.75rem;color:#6EBF8B">110</div><div style="font-size:0.7rem;color:var(--muted)">Libre</div><div><span class="badge badge-success" style="font-size:0.58rem"><span class="badge-dot"></span>Disponible</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MI HOTEL -->
+      <div id="panel-hotel" class="admin-panel">
+        <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream);margin-bottom:1.5rem">Configuración del hotel</h2>
+        <div class="grid-2" style="gap:1.5rem;align-items:start">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:1.5rem">
+            <div style="font-family:'Syne',sans-serif;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.25rem">Información general</div>
+            <div class="field-group"><label class="field-label">Nombre del hotel</label><input class="field-input" value="Hotel Aurum Boutique"/></div>
+            <div class="form-grid-2">
+              <div class="field-group"><label class="field-label">RUC</label><input class="field-input" value="20601234567"/></div>
+              <div class="field-group"><label class="field-label">Estrellas</label><select class="field-select"><option selected>4 estrellas</option><option>3 estrellas</option><option>5 estrellas</option></select></div>
+            </div>
+            <div class="field-group"><label class="field-label">Dirección</label><input class="field-input" value="Av. La Marina 450, Miraflores, Lima"/></div>
+            <div class="form-grid-2">
+              <div class="field-group"><label class="field-label">Teléfono</label><input class="field-input" value="+51 1 6123456"/></div>
+              <div class="field-group"><label class="field-label">Email reservas</label><input class="field-input" value="reservas@aurum.hotel"/></div>
+            </div>
+            <div class="field-group"><label class="field-label">Descripción pública</label><textarea class="field-textarea">Hotel boutique de 4 estrellas ubicado en el corazón de Miraflores con vistas al Pacífico. Diseño contemporáneo, servicio personalizado y gastronomía local.</textarea></div>
+            <button class="btn-sm btn-primary mt-2"><i data-lucide="save" style="width:12px;height:12px"></i> Guardar cambios</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div style="background:var(--surface);border:1px solid var(--border);padding:1.5rem">
+              <div style="font-family:'Syne',sans-serif;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.25rem">Políticas de operación</div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">Hora check-in</label><input class="field-input" type="time" value="15:00"/></div>
+                <div class="field-group"><label class="field-label">Hora check-out</label><input class="field-input" type="time" value="12:00"/></div>
+              </div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">Depósito (%)</label><input class="field-input" value="30"/></div>
+                <div class="field-group"><label class="field-label">Moneda</label><select class="field-select"><option>PEN (S/)</option><option>USD ($)</option></select></div>
+              </div>
+              <div class="field-group"><label class="field-label">Política de cancelación</label><select class="field-select"><option>Cancelación gratuita hasta 48h antes</option><option>No reembolsable</option><option>Flexible</option></select></div>
+              <button class="btn-sm btn-primary mt-2"><i data-lucide="save" style="width:12px;height:12px"></i> Guardar</button>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);padding:1.5rem">
+              <div style="font-family:'Syne',sans-serif;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">Estado del sistema</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:0.82rem;color:var(--cream)">Web de reservas pública</span>
+                  <span class="badge badge-success"><span class="badge-dot"></span>Activa</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:0.82rem;color:var(--cream)">Motor de pago online</span>
+                  <span class="badge badge-warning"><span class="badge-dot"></span>Pendiente API</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:0.82rem;color:var(--cream)">Correos automáticos</span>
+                  <span class="badge badge-warning"><span class="badge-dot"></span>Pendiente API</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:0.82rem;color:var(--cream)">Canal Booking.com</span>
+                  <span class="badge badge-neutral"><span class="badge-dot"></span>No conectado</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div id="panel-usuarios" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Usuarios del sistema</h2>
+          <button class="btn-sm btn-primary" onclick="openModal('modalUsuario')">
+            <i data-lucide="user-plus" style="width:13px;height:13px"></i> Nuevo usuario
+          </button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>José Reátegui Panduro</td><td class="td-muted">jose@aurum.hotel</td><td><span class="badge badge-warning"><span class="badge-dot"></span>Administrador</span></td><td class="td-muted">Hace 5 min</td><td><span class="badge badge-success"><span class="badge-dot"></span>Activo</span></td><td><button class="btn-icon" onclick="openModal('modalUsuario')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Ana Sofía Torres</td><td class="td-muted">ana@aurum.hotel</td><td><span class="badge badge-info"><span class="badge-dot"></span>Recepcionista</span></td><td class="td-muted">Hace 2h</td><td><span class="badge badge-success"><span class="badge-dot"></span>Activo</span></td><td><button class="btn-icon" onclick="openModal('modalUsuario')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Miguel Castro Díaz</td><td class="td-muted">miguel@aurum.hotel</td><td><span class="badge badge-info"><span class="badge-dot"></span>Recepcionista</span></td><td class="td-muted">Ayer 22:10</td><td><span class="badge badge-success"><span class="badge-dot"></span>Activo</span></td><td><button class="btn-icon" onclick="openModal('modalUsuario')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Rosa Mendívil Anco</td><td class="td-muted">rosa@aurum.hotel</td><td><span class="badge badge-neutral"><span class="badge-dot"></span>Housekeeping</span></td><td class="td-muted">Hace 4h</td><td><span class="badge badge-success"><span class="badge-dot"></span>Activo</span></td><td><button class="btn-icon" onclick="openModal('modalUsuario')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span class="table-count">4 usuarios registrados</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARIFAS -->
+      <div id="panel-tarifas" class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:300;color:var(--cream)">Tarifas y temporadas</h2>
+            <p class="text-muted mt-1">Gestiona precios por temporada, eventos especiales y promociones.</p>
+          </div>
+          <button class="btn-sm btn-primary" onclick="openModal('modalTarifa')">
+            <i data-lucide="plus" style="width:13px;height:13px"></i> Nueva tarifa
+          </button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Nombre</th><th>Categoría</th><th>Desde</th><th>Hasta</th><th>Precio/noche</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Temporada Alta 2025</td><td class="td-muted">Todas</td><td>15 May 2025</td><td>15 Jul 2025</td><td class="text-gold">+20%</td><td><span class="badge badge-success"><span class="badge-dot"></span>Vigente</span></td><td><button class="btn-icon" onclick="openModal('modalTarifa')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Suite Premium Estándar</td><td class="td-muted">Suite Premium</td><td>01 Ene 2025</td><td>31 Dic 2025</td><td class="text-gold">S/ 700</td><td><span class="badge badge-success"><span class="badge-dot"></span>Base</span></td><td><button class="btn-icon" onclick="openModal('modalTarifa')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Fiestas Patrias</td><td class="td-muted">Todas</td><td>26 Jul 2025</td><td>28 Jul 2025</td><td class="text-gold">+35%</td><td><span class="badge badge-neutral"><span class="badge-dot"></span>Programada</span></td><td><button class="btn-icon" onclick="openModal('modalTarifa')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+              <tr><td>Promo Corporativa</td><td class="td-muted">Estándar King / Twin</td><td>01 Jun 2025</td><td>30 Jun 2025</td><td class="text-gold">-15%</td><td><span class="badge badge-neutral"><span class="badge-dot"></span>Programada</span></td><td><button class="btn-icon" onclick="openModal('modalTarifa')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button></td></tr>
+            </tbody>
+          </table>
+          <div class="table-footer"><span class="table-count">4 tarifas configuradas</span></div>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </main>
+</div><!-- /admin -->
+
+
+<!-- ========================= PUBLIC BOOKING SITE ========================= -->
+<div id="public" class="view">
+  <!-- Nav -->
+  <nav class="pub-nav">
+    <div class="lp-logo">AURUM<span> Hotels</span></div>
+    <div style="display:flex;align-items:center;gap:1.5rem">
+      <a style="font-family:'Syne',sans-serif;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;cursor:pointer">Habitaciones</a>
+      <a style="font-family:'Syne',sans-serif;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;cursor:pointer">Servicios</a>
+      <a style="font-family:'Syne',sans-serif;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;cursor:pointer">Contacto</a>
+      <button class="nav-back" onclick="showLanding()">
+        <i data-lucide="arrow-left" style="width:13px;height:13px"></i> Volver al inicio
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pub-hero">
+    <div class="pub-hero-deco"></div>
+    <div class="pub-hero-content">
+      <div class="lp-hero-eyebrow">Miraflores, Lima · Perú</div>
+      <h1>Experiencias<br/>que <em>permanecen</em></h1>
+      <p>Hotel boutique de 4 estrellas a pasos del malecón. Desayuno incluido, servicio personalizado, check-in flexible.</p>
+      <!-- Search widget -->
+      <div class="search-widget">
+        <div class="sw-field">
+          <div class="sw-label">Llegada</div>
+          <input type="date" class="sw-input" value="2025-05-25"/>
+        </div>
+        <div class="sw-field">
+          <div class="sw-label">Salida</div>
+          <input type="date" class="sw-input" value="2025-05-28"/>
+        </div>
+        <div class="sw-field">
+          <div class="sw-label">Huéspedes</div>
+          <select class="sw-input" style="color:var(--cream)">
+            <option>1 adulto</option>
+            <option selected>2 adultos</option>
+            <option>2 adultos + 1 niño</option>
+            <option>3 adultos</option>
+          </select>
+        </div>
+        <div class="sw-field" style="display:flex;align-items:center">
+          <button class="btn-gold btn-sm w-full" style="justify-content:center" onclick="openModal('modalBooking')">
+            <i data-lucide="search" style="width:14px;height:14px"></i>
+            Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rooms catalog -->
+  <section class="pub-rooms">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="lp-section-label">Disponibilidad</div>
+          <h2 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:300;color:var(--cream)">Nuestras habitaciones</h2>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="tab active" style="border:1px solid var(--border);padding:0.4rem 1rem">Todas</button>
+          <button class="tab" style="border:1px solid var(--border);padding:0.4rem 1rem">Suites</button>
+          <button class="tab" style="border:1px solid var(--border);padding:0.4rem 1rem">Estándar</button>
+        </div>
+      </div>
+
+      <!-- Room 1: Suite Premium -->
+      <div class="pub-room-card">
+        <div class="pub-room-img room-vis-suite">
+          <i data-lucide="star" style="width:48px;height:48px;color:rgba(201,169,110,0.4)"></i>
+          <span style="position:absolute;top:12px;left:12px"><span class="badge badge-success"><span class="badge-dot"></span>Disponible</span></span>
+        </div>
+        <div class="pub-room-info">
+          <div>
+            <div class="pub-room-cat">Suite Premium</div>
+            <div class="pub-room-name">Suite Panorámica</div>
+            <div class="pub-room-desc">Nuestra suite insignia con vista al Océano Pacífico, jacuzzi privado, sala de estar independiente y servicio de mayordomo incluido.</div>
+            <div class="pub-room-features">
+              <div class="pub-feat"><i data-lucide="users" style="width:14px;height:14px;color:var(--gold)"></i> 2 personas</div>
+              <div class="pub-feat"><i data-lucide="maximize-2" style="width:14px;height:14px;color:var(--gold)"></i> 65 m²</div>
+              <div class="pub-feat"><i data-lucide="wifi" style="width:14px;height:14px;color:var(--gold)"></i> WiFi</div>
+              <div class="pub-feat"><i data-lucide="coffee" style="width:14px;height:14px;color:var(--gold)"></i> Desayuno</div>
+              <div class="pub-feat"><i data-lucide="sparkles" style="width:14px;height:14px;color:var(--gold)"></i> Jacuzzi</div>
+            </div>
+          </div>
+          <div class="pub-room-footer">
+            <div class="pub-price">
+              <div class="pub-price-amt">S/ 700</div>
+              <div class="pub-price-period">por noche · incl. impuestos</div>
+            </div>
+            <button class="btn-gold" onclick="openModal('modalBooking')">
+              Reservar ahora <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 2: Suite Deluxe -->
+      <div class="pub-room-card">
+        <div class="pub-room-img room-vis-deluxe">
+          <i data-lucide="gem" style="width:42px;height:42px;color:rgba(122,174,204,0.4)"></i>
+          <span style="position:absolute;top:12px;left:12px"><span class="badge badge-success"><span class="badge-dot"></span>Disponible</span></span>
+        </div>
+        <div class="pub-room-info">
+          <div>
+            <div class="pub-room-cat">Suite Deluxe</div>
+            <div class="pub-room-name">Suite Garden View</div>
+            <div class="pub-room-desc">Suite elegante con bañera independiente, minibar completo y sala de estar. Vista al jardín interior del hotel.</div>
+            <div class="pub-room-features">
+              <div class="pub-feat"><i data-lucide="users" style="width:14px;height:14px;color:var(--gold)"></i> 2 personas</div>
+              <div class="pub-feat"><i data-lucide="maximize-2" style="width:14px;height:14px;color:var(--gold)"></i> 48 m²</div>
+              <div class="pub-feat"><i data-lucide="wifi" style="width:14px;height:14px;color:var(--gold)"></i> WiFi</div>
+              <div class="pub-feat"><i data-lucide="coffee" style="width:14px;height:14px;color:var(--gold)"></i> Desayuno</div>
+              <div class="pub-feat"><i data-lucide="wine" style="width:14px;height:14px;color:var(--gold)"></i> Minibar</div>
+            </div>
+          </div>
+          <div class="pub-room-footer">
+            <div class="pub-price">
+              <div class="pub-price-amt">S/ 450</div>
+              <div class="pub-price-period">por noche · incl. impuestos</div>
+            </div>
+            <button class="btn-gold" onclick="openModal('modalBooking')">
+              Reservar ahora <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 3: Junior Suite -->
+      <div class="pub-room-card">
+        <div class="pub-room-img room-vis-junior">
+          <i data-lucide="sparkles" style="width:38px;height:38px;color:rgba(110,191,139,0.4)"></i>
+          <span style="position:absolute;top:12px;left:12px"><span class="badge badge-success"><span class="badge-dot"></span>Disponible</span></span>
+        </div>
+        <div class="pub-room-info">
+          <div>
+            <div class="pub-room-cat">Junior Suite</div>
+            <div class="pub-room-name">Junior Suite City</div>
+            <div class="pub-room-desc">Habitación amplia con zona de trabajo equipada, cafetera Nespresso, baño con ducha de lluvia y vista a la ciudad.</div>
+            <div class="pub-room-features">
+              <div class="pub-feat"><i data-lucide="users" style="width:14px;height:14px;color:var(--gold)"></i> 2 personas</div>
+              <div class="pub-feat"><i data-lucide="maximize-2" style="width:14px;height:14px;color:var(--gold)"></i> 38 m²</div>
+              <div class="pub-feat"><i data-lucide="wifi" style="width:14px;height:14px;color:var(--gold)"></i> WiFi</div>
+              <div class="pub-feat"><i data-lucide="coffee" style="width:14px;height:14px;color:var(--gold)"></i> Desayuno</div>
+            </div>
+          </div>
+          <div class="pub-room-footer">
+            <div class="pub-price">
+              <div class="pub-price-amt">S/ 350</div>
+              <div class="pub-price-period">por noche · incl. impuestos</div>
+            </div>
+            <button class="btn-gold" onclick="openModal('modalBooking')">
+              Reservar ahora <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 4: Estándar King -->
+      <div class="pub-room-card">
+        <div class="pub-room-img room-vis-standard">
+          <i data-lucide="home" style="width:36px;height:36px;color:rgba(107,103,96,0.4)"></i>
+          <span style="position:absolute;top:12px;left:12px"><span class="badge badge-warning"><span class="badge-dot"></span>Últimas 2 disponibles</span></span>
+        </div>
+        <div class="pub-room-info">
+          <div>
+            <div class="pub-room-cat">Estándar King</div>
+            <div class="pub-room-name">Habitación King</div>
+            <div class="pub-room-desc">Cama king size, baño completo con amenities premium, smart TV 55" y escritorio de trabajo. Perfecta para estancias de negocios.</div>
+            <div class="pub-room-features">
+              <div class="pub-feat"><i data-lucide="users" style="width:14px;height:14px;color:var(--gold)"></i> 2 personas</div>
+              <div class="pub-feat"><i data-lucide="maximize-2" style="width:14px;height:14px;color:var(--gold)"></i> 28 m²</div>
+              <div class="pub-feat"><i data-lucide="wifi" style="width:14px;height:14px;color:var(--gold)"></i> WiFi</div>
+              <div class="pub-feat"><i data-lucide="tv" style="width:14px;height:14px;color:var(--gold)"></i> Smart TV 55"</div>
+            </div>
+          </div>
+          <div class="pub-room-footer">
+            <div class="pub-price">
+              <div class="pub-price-amt">S/ 250</div>
+              <div class="pub-price-period">por noche · incl. impuestos</div>
+            </div>
+            <button class="btn-gold" onclick="openModal('modalBooking')">
+              Reservar ahora <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="lp-footer">
+    <div style="max-width:1200px;margin:0 auto">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-brand">
+          <span class="lp-logo">AURUM <span style="font-family:'Outfit',sans-serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Boutique Hotel</span></span>
+          <p>Av. La Marina 450, Miraflores, Lima 15074<br/>+51 1 612-3456 · reservas@aurum.hotel</p>
+          <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+            <button class="btn-icon"><i data-lucide="instagram" style="width:14px;height:14px"></i></button>
+            <button class="btn-icon"><i data-lucide="facebook" style="width:14px;height:14px"></i></button>
+          </div>
+        </div>
+        <div class="lp-footer-col">
+          <h6>El hotel</h6>
+          <ul><li><a>Habitaciones</a></li><li><a>Restaurante</a></li><li><a>Spa y bienestar</a></li><li><a>Eventos</a></li></ul>
+        </div>
+        <div class="lp-footer-col">
+          <h6>Reservas</h6>
+          <ul><li><a>Disponibilidad</a></li><li><a>Tarifas</a></li><li><a>Política de cancelación</a></li><li><a>Grupos</a></li></ul>
+        </div>
+        <div class="lp-footer-col">
+          <h6>Miraflores</h6>
+          <ul><li><a>Cómo llegar</a></li><li><a>Atracciones cercanas</a></li><li><a>Gastronomía local</a></li></ul>
+        </div>
+      </div>
+      <div class="lp-footer-bottom">
+        <span>© 2025 Aurum Boutique Hotel. Todos los derechos reservados.</span>
+        <button class="btn-outline btn-sm" onclick="showAdmin()">
+          <i data-lucide="settings" style="width:12px;height:12px"></i> Acceso personal del hotel
+        </button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+
+<!-- ========================= MODALS ========================= -->
+
+<!-- Modal: Nueva/Editar Categoría -->
+<div class="modal-overlay" id="modalCategoria">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nueva categoría</div>
+      <button class="btn-icon" onclick="closeModal('modalCategoria')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group"><label class="field-label">Nombre de la categoría</label><input class="field-input" placeholder="Ej: Suite Junior"/></div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Capacidad máxima</label><select class="field-select"><option>1 persona</option><option selected>2 personas</option><option>3 personas</option><option>4 personas</option></select></div>
+        <div class="field-group"><label class="field-label">Tarifa base (S/ / noche)</label><input class="field-input" placeholder="350" type="number"/></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Área (m²)</label><input class="field-input" placeholder="35" type="number"/></div>
+        <div class="field-group"><label class="field-label">Nro. de camas</label><select class="field-select"><option>1 cama King</option><option>1 cama Queen</option><option>2 camas Twin</option></select></div>
+      </div>
+      <div class="field-group"><label class="field-label">Descripción</label><textarea class="field-textarea" placeholder="Descripción visible en la web pública..."></textarea></div>
+      <div class="field-group"><label class="field-label">Amenidades incluidas</label>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox" checked/> WiFi</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox" checked/> Desayuno</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox"/> Jacuzzi</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox"/> Minibar</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox"/> Sala privada</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox" checked/> Smart TV</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox"/> Vista al mar</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;color:var(--muted)"><input type="checkbox"/> Terraza</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalCategoria')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalCategoria');showToast('Categoría guardada correctamente')"><i data-lucide="save" style="width:12px;height:12px"></i> Guardar categoría</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva/Editar Habitación -->
+<div class="modal-overlay" id="modalHabitacion">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Habitación</div>
+      <button class="btn-icon" onclick="closeModal('modalHabitacion')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Número de habitación</label><input class="field-input" placeholder="Ej: 401"/></div>
+        <div class="field-group"><label class="field-label">Piso</label><select class="field-select"><option>Piso 1</option><option>Piso 2</option><option>Piso 3</option><option selected>Piso 4</option></select></div>
+      </div>
+      <div class="field-group"><label class="field-label">Categoría</label>
+        <select class="field-select">
+          <option>Suite Premium</option><option>Suite Deluxe</option>
+          <option>Junior Suite</option><option>Estándar King</option><option>Estándar Twin</option>
+        </select>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Estado actual</label>
+          <select class="field-select">
+            <option>Disponible</option><option>Ocupada</option>
+            <option>Mantenimiento</option><option>Limpieza</option>
+          </select>
+        </div>
+        <div class="field-group"><label class="field-label">Tarifa específica (dejar vacío = usar base)</label><input class="field-input" placeholder="S/ opcional" type="number"/></div>
+      </div>
+      <div class="field-group"><label class="field-label">Vista</label>
+        <select class="field-select">
+          <option>Vista al mar</option><option>Vista al jardín</option>
+          <option>Vista a la ciudad</option><option>Vista interior</option>
+        </select>
+      </div>
+      <div class="field-group"><label class="field-label">Notas internas</label><textarea class="field-textarea" placeholder="Ej: Climatización ruidosa — pendiente revisión..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalHabitacion')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalHabitacion');showToast('Habitación guardada')"><i data-lucide="save" style="width:12px;height:12px"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva Reserva -->
+<div class="modal-overlay" id="modalReserva">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title">Nueva reserva</div>
+      <button class="btn-icon" onclick="closeModal('modalReserva')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">Datos del huésped</div>
+          <div class="form-grid-2">
+            <div class="field-group"><label class="field-label">Nombres</label><input class="field-input" placeholder="María"/></div>
+            <div class="field-group"><label class="field-label">Apellidos</label><input class="field-input" placeholder="Fernández Torres"/></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-group"><label class="field-label">Tipo doc.</label><select class="field-select"><option>DNI</option><option>CE</option><option>Pasaporte</option></select></div>
+            <div class="field-group"><label class="field-label">Nro. documento</label><input class="field-input" placeholder="45821003"/></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-group"><label class="field-label">Teléfono</label><input class="field-input" placeholder="+51 999 000 111"/></div>
+            <div class="field-group"><label class="field-label">Email</label><input class="field-input" placeholder="maria@email.com"/></div>
+          </div>
+          <div class="field-group"><label class="field-label">Procedencia</label><input class="field-input" placeholder="Lima, Perú"/></div>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">Detalle de la reserva</div>
+          <div class="field-group"><label class="field-label">Habitación</label>
+            <select class="field-select">
+              <option>201 — Suite Deluxe (S/ 450/noche)</option>
+              <option>401 — Suite Premium (S/ 700/noche)</option>
+              <option>310 — Junior Suite (S/ 350/noche)</option>
+              <option>105 — Est. Twin (S/ 220/noche)</option>
+              <option>108 — Est. King (S/ 250/noche)</option>
+            </select>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-group"><label class="field-label">Check-in</label><input class="field-input" type="date" value="2025-05-25"/></div>
+            <div class="field-group"><label class="field-label">Check-out</label><input class="field-input" type="date" value="2025-05-28"/></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field-group"><label class="field-label">Adultos</label><select class="field-select"><option>1</option><option selected>2</option></select></div>
+            <div class="field-group"><label class="field-label">Canal</label><select class="field-select"><option>Front desk</option><option>Web propia</option><option>Booking.com</option><option>Agencia</option></select></div>
+          </div>
+          <div class="field-group"><label class="field-label">Plan de alimentación</label>
+            <select class="field-select"><option>Solo habitación</option><option selected>Con desayuno</option><option>Media pensión</option><option>Pensión completa</option></select>
+          </div>
+          <div class="field-group"><label class="field-label">Notas de la reserva</label><textarea class="field-textarea" style="min-height:60px" placeholder="Solicitudes especiales, alergias, celebraciones..."></textarea></div>
+          <div style="background:var(--bg);border:1px solid var(--border);padding:1rem;margin-top:0.5rem">
+            <div class="summary-row"><span class="summary-row-key">3 noches × S/ 450</span><span class="summary-row-val">S/ 1,350</span></div>
+            <div class="summary-row"><span class="summary-row-key">Desayuno (2 pax × 3 días × S/35)</span><span class="summary-row-val">S/ 210</span></div>
+            <div class="summary-row" style="border-bottom:none"><span class="summary-row-key" style="font-family:'Syne',sans-serif;font-weight:700">Total estimado</span><span class="summary-total">S/ 1,560</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalReserva')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalReserva');showToast('Reserva RES-0045 creada correctamente')">
+        <i data-lucide="calendar-check" style="width:12px;height:12px"></i> Crear reserva
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle de Reserva -->
+<div class="modal-overlay" id="modalReservaDetalle">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Reserva RES-0041</div>
+        <span class="badge badge-success" style="margin-top:4px"><span class="badge-dot"></span>Confirmada</span>
+      </div>
+      <button class="btn-icon" onclick="closeModal('modalReservaDetalle')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem">Huésped</div>
+          <div style="font-family:'Fraunces',serif;font-size:1.1rem;color:var(--cream);margin-bottom:0.5rem">María Fernández Torres</div>
+          <div class="checkin-detail"><i data-lucide="id-card" style="width:13px;height:13px"></i> DNI 45821003</div>
+          <div class="checkin-detail"><i data-lucide="phone" style="width:13px;height:13px"></i> +51 999 000 111</div>
+          <div class="checkin-detail"><i data-lucide="mail" style="width:13px;height:13px"></i> maria@email.com</div>
+          <div class="checkin-detail"><i data-lucide="map-pin" style="width:13px;height:13px"></i> Lima, Perú</div>
+          <hr class="divider"/>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem">Habitación</div>
+          <div class="checkin-detail"><i data-lucide="bed-double" style="width:13px;height:13px"></i> 201 — Suite Deluxe · Piso 2</div>
+          <div class="checkin-detail"><i data-lucide="users" style="width:13px;height:13px"></i> 2 adultos</div>
+          <div class="checkin-detail"><i data-lucide="coffee" style="width:13px;height:13px"></i> Con desayuno incluido</div>
+          <div class="checkin-detail"><i data-lucide="globe" style="width:13px;height:13px"></i> Canal: Web propia</div>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem">Estadía</div>
+          <div class="checkin-detail"><i data-lucide="log-in" style="width:13px;height:13px"></i> Check-in: Vie 23 May 2025 · 15:00</div>
+          <div class="checkin-detail"><i data-lucide="log-out" style="width:13px;height:13px"></i> Check-out: Lun 26 May 2025 · 12:00</div>
+          <div class="checkin-detail"><i data-lucide="moon" style="width:13px;height:13px"></i> 3 noches</div>
+          <hr class="divider"/>
+          <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem">Estado de cuenta</div>
+          <div class="summary-card">
+            <div class="summary-row"><span class="summary-row-key">3 noches Suite Deluxe</span><span class="summary-row-val">S/ 1,350</span></div>
+            <div class="summary-row"><span class="summary-row-key">Desayuno buffet (2 pax × 3)</span><span class="summary-row-val">S/ 210</span></div>
+            <div class="summary-row"><span class="summary-row-key">Impuestos (18% IGV)</span><span class="summary-row-val">S/ 279.60</span></div>
+            <div class="summary-row"><span class="summary-row-key">Abono recibido</span><span class="summary-row-val" style="color:#6EBF8B">− S/ 405</span></div>
+            <div class="summary-row" style="border-bottom:none"><span class="summary-row-key" style="font-family:'Syne',sans-serif;font-weight:700;color:var(--cream)">Saldo pendiente</span><span class="summary-total">S/ 1,434.60</span></div>
+          </div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem">
+            <i data-lucide="info" style="width:12px;height:12px;display:inline"></i> Reserva creada el 18 May 2025 · Confirmada automáticamente
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-danger-sm"><i data-lucide="x-circle" style="width:12px;height:12px"></i> Cancelar reserva</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalReservaDetalle');openModal('modalReserva')"><i data-lucide="pencil" style="width:12px;height:12px"></i> Editar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalReservaDetalle');openModal('modalCheckinProc')"><i data-lucide="log-in" style="width:12px;height:12px"></i> Hacer check-in</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Proceso Check-in -->
+<div class="modal-overlay" id="modalCheckinProc">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Proceso de Check-in</div>
+      <button class="btn-icon" onclick="closeModal('modalCheckinProc')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.2);padding:1rem;margin-bottom:1.25rem">
+        <div style="font-family:'Fraunces',serif;font-size:1rem;color:var(--cream)">Carlos Mendoza Ríos</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem">RES-0040 · 105 — Estándar Twin · 1 noche</div>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Habitación asignada</label>
+          <select class="field-select"><option selected>105 — Estándar Twin</option><option>108 — Estándar King (+S/30)</option></select>
+        </div>
+        <div class="field-group"><label class="field-label">Hora de llegada</label><input class="field-input" type="time" value="15:30"/></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Método de pago</label>
+          <select class="field-select"><option>Efectivo</option><option selected>Tarjeta crédito/débito</option><option>Transferencia</option></select>
+        </div>
+        <div class="field-group"><label class="field-label">Depósito / abono (S/)</label><input class="field-input" value="280" type="number"/></div>
+      </div>
+      <div class="field-group"><label class="field-label">Nro. de llaves entregadas</label>
+        <select class="field-select"><option selected>1 llave</option><option>2 llaves</option></select>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);padding:1rem">
+        <div class="summary-row"><span class="summary-row-key">1 noche Estándar Twin</span><span class="summary-row-val">S/ 220</span></div>
+        <div class="summary-row"><span class="summary-row-key">Desayuno no incluido</span><span class="summary-row-val">S/ 0</span></div>
+        <div class="summary-row" style="border-bottom:none"><span class="summary-row-key" style="font-family:'Syne',sans-serif;font-weight:700">Total</span><span class="summary-total">S/ 220</span></div>
+      </div>
+      <div class="field-group mt-2"><label class="field-label">Observaciones</label><textarea class="field-textarea" placeholder="Solicitudes del huésped al momento del check-in..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalCheckinProc')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalCheckinProc');showToast('Check-in procesado · Hab. 105 ocupada')">
+        <i data-lucide="log-in" style="width:12px;height:12px"></i> Confirmar check-in
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Proceso Check-out -->
+<div class="modal-overlay" id="modalCheckoutProc">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Proceso de Check-out</div>
+      <button class="btn-icon" onclick="closeModal('modalCheckoutProc')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(192,97,74,0.06);border:1px solid rgba(192,97,74,0.2);padding:1rem;margin-bottom:1.25rem">
+        <div style="font-family:'Fraunces',serif;font-size:1rem;color:var(--cream)">Roberto Alvarado Soto</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem">RES-0038 · 402 — Suite Premium · 20–23 May (3 noches)</div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem">Estado de cuenta final</div>
+      <div class="summary-card">
+        <div class="summary-row"><span class="summary-row-key">3 noches Suite Premium</span><span class="summary-row-val">S/ 2,100</span></div>
+        <div class="summary-row"><span class="summary-row-key">Room service (consumos)</span><span class="summary-row-val">S/ 240</span></div>
+        <div class="summary-row"><span class="summary-row-key">Minibar</span><span class="summary-row-val">S/ 100</span></div>
+        <div class="summary-row"><span class="summary-row-key">IGV (18%)</span><span class="summary-row-val">S/ 440.20</span></div>
+        <div class="summary-row"><span class="summary-row-key">Abono previo</span><span class="summary-row-val" style="color:#6EBF8B">− S/ 630</span></div>
+        <div class="summary-row" style="border-bottom:none"><span class="summary-row-key" style="font-family:'Syne',sans-serif;font-weight:700;color:var(--cream)">Total a cobrar</span><span class="summary-total">S/ 2,250.20</span></div>
+      </div>
+      <div class="form-grid-2 mt-2">
+        <div class="field-group"><label class="field-label">Método de pago saldo</label>
+          <select class="field-select"><option>Efectivo</option><option selected>Tarjeta crédito/débito</option><option>Transferencia</option></select>
+        </div>
+        <div class="field-group"><label class="field-label">Hora de salida</label><input class="field-input" type="time" value="11:45"/></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Llaves devueltas</label>
+          <select class="field-select"><option selected>Sí — 2 llaves</option><option>Falta 1 llave</option></select>
+        </div>
+        <div class="field-group"><label class="field-label">Estado de la habitación</label>
+          <select class="field-select"><option>Enviar a limpieza</option><option>Limpieza profunda</option><option>Mantenimiento</option></select>
+        </div>
+      </div>
+      <div class="field-group"><label class="field-label">Comentario / encuesta</label><textarea class="field-textarea" placeholder="Observaciones del huésped, daños, incidentes..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalCheckoutProc')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalCheckoutProc');showToast('Check-out completado · Hab. 402 en limpieza')">
+        <i data-lucide="log-out" style="width:12px;height:12px"></i> Confirmar check-out
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Booking público (wizard) -->
+<div class="modal-overlay" id="modalBooking">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title">Reserva en línea</div>
+      <button class="btn-icon" onclick="closeModal('modalBooking')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="wizard-progress">
+        <div class="wiz-step-dot done" id="wdot1">1 · Fechas</div>
+        <div class="wiz-step-dot active" id="wdot2">2 · Tus datos</div>
+        <div class="wiz-step-dot" id="wdot3">3 · Pago</div>
+        <div class="wiz-step-dot" id="wdot4">4 · Confirmación</div>
+      </div>
+      <!-- Step 1 -->
+      <div class="wizard-step" id="wstep1">
+        <div style="background:var(--bg);border:1px solid var(--border);padding:1rem;margin-bottom:1.25rem">
+          <div style="font-family:'Fraunces',serif;font-size:1rem;color:var(--cream)">Suite Panorámica</div>
+          <div style="display:flex;gap:1.5rem;margin-top:0.5rem;font-size:0.82rem;color:var(--muted)">
+            <span>25 May 2025 → 28 May 2025</span>
+            <span>3 noches · 2 adultos</span>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Check-in</label><input class="field-input" type="date" value="2025-05-25"/></div>
+          <div class="field-group"><label class="field-label">Check-out</label><input class="field-input" type="date" value="2025-05-28"/></div>
+        </div>
+        <div class="field-group"><label class="field-label">Huéspedes</label><select class="field-select"><option>1 adulto</option><option selected>2 adultos</option></select></div>
+        <div class="field-group"><label class="field-label">Plan de alimentación</label>
+          <select class="field-select"><option>Solo habitación (S/ 700/noche)</option><option selected>Con desayuno (S/ 735/noche)</option></select>
+        </div>
+      </div>
+      <!-- Step 2 (shown) -->
+      <div class="wizard-step active" id="wstep2">
+        <div style="background:var(--bg);border:1px solid rgba(201,169,110,0.2);padding:1rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'Fraunces',serif;font-size:0.95rem;color:var(--cream)">Suite Panorámica · 3 noches</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">25–28 May 2025 · 2 adultos · Con desayuno</div>
+          </div>
+          <div class="summary-total">S/ 2,205</div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Nombres</label><input class="field-input" placeholder="María"/></div>
+          <div class="field-group"><label class="field-label">Apellidos</label><input class="field-input" placeholder="Fernández Torres"/></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Email</label><input class="field-input" placeholder="maria@email.com" type="email"/></div>
+          <div class="field-group"><label class="field-label">Teléfono</label><input class="field-input" placeholder="+51 999 000 111"/></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Tipo documento</label><select class="field-select"><option>DNI</option><option>Pasaporte</option><option>CE</option></select></div>
+          <div class="field-group"><label class="field-label">Nro. documento</label><input class="field-input" placeholder="45821003"/></div>
+        </div>
+        <div class="field-group"><label class="field-label">Solicitudes especiales (opcional)</label><textarea class="field-textarea" placeholder="Cama adicional, alergias, ocasión especial..."></textarea></div>
+      </div>
+      <!-- Step 3 -->
+      <div class="wizard-step" id="wstep3">
+        <div class="summary-card" style="margin-bottom:1.25rem">
+          <div class="summary-row"><span class="summary-row-key">3 noches × S/ 700</span><span class="summary-row-val">S/ 2,100</span></div>
+          <div class="summary-row"><span class="summary-row-key">Desayuno (2 pax × 3 × S/ 35)</span><span class="summary-row-val">S/ 210</span></div>
+          <div class="summary-row"><span class="summary-row-key">IGV 18%</span><span class="summary-row-val">S/ 417</span></div>
+          <div class="summary-row" style="border-bottom:none"><span class="summary-row-key" style="font-weight:700">Total</span><span class="summary-total">S/ 2,727</span></div>
+        </div>
+        <div class="field-group"><label class="field-label">Método de pago</label>
+          <select class="field-select"><option>Tarjeta de crédito / débito</option><option>Transferencia bancaria</option><option>Pago en el hotel (depósito 30%)</option></select>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Número de tarjeta</label><input class="field-input" placeholder="4242 4242 4242 4242"/></div>
+          <div class="field-group"><label class="field-label">Nombre en la tarjeta</label><input class="field-input" placeholder="MARIA FERNANDEZ"/></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label">Vencimiento</label><input class="field-input" placeholder="12/28"/></div>
+          <div class="field-group"><label class="field-label">CVV</label><input class="field-input" placeholder="123" type="password"/></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:0.4rem;margin-top:0.5rem">
+          <i data-lucide="shield-check" style="width:13px;height:13px;color:var(--success)"></i>
+          Pago seguro cifrado con SSL · No almacenamos datos de tarjeta
+        </div>
+      </div>
+      <!-- Step 4 -->
+      <div class="wizard-step" id="wstep4">
+        <div style="text-align:center;padding:2rem 0">
+          <div style="width:56px;height:56px;background:rgba(90,140,110,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+            <i data-lucide="check-circle-2" style="width:28px;height:28px;color:#6EBF8B"></i>
+          </div>
+          <h3 style="font-weight:300;color:var(--cream);margin-bottom:0.5rem">¡Reserva confirmada!</h3>
+          <p style="color:var(--muted);font-size:0.88rem;max-width:360px;margin:0 auto">Tu folio es <strong style="color:var(--gold)">RES-0045</strong>. Recibirás la confirmación en tu email junto con los detalles de tu llegada.</p>
+          <div style="margin-top:1.5rem;padding:1rem;background:var(--bg);border:1px solid var(--border);max-width:320px;margin:1.5rem auto 0;text-align:left">
+            <div class="summary-row" style="padding:0.3rem 0"><span class="summary-row-key">Habitación</span><span class="summary-row-val">Suite Panorámica · 401</span></div>
+            <div class="summary-row" style="padding:0.3rem 0"><span class="summary-row-key">Check-in</span><span class="summary-row-val">25 May 2025</span></div>
+            <div class="summary-row" style="padding:0.3rem 0"><span class="summary-row-key">Check-out</span><span class="summary-row-val">28 May 2025</span></div>
+            <div class="summary-row" style="padding:0.3rem 0;border-bottom:none"><span class="summary-row-key">Total pagado</span><span class="summary-total">S/ 2,727</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" id="wizardFoot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalBooking')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="wizardNext()">
+        Continuar <i data-lucide="arrow-right" style="width:12px;height:12px"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tarifa -->
+<div class="modal-overlay" id="modalTarifa">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nueva tarifa / temporada</div>
+      <button class="btn-icon" onclick="closeModal('modalTarifa')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group"><label class="field-label">Nombre de la tarifa</label><input class="field-input" placeholder="Ej: Temporada Alta 2025"/></div>
+      <div class="field-group"><label class="field-label">Aplica a</label>
+        <select class="field-select"><option>Todas las categorías</option><option>Suite Premium</option><option>Suite Deluxe</option><option>Junior Suite</option><option>Estándar</option></select>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Desde</label><input class="field-input" type="date" value="2025-06-01"/></div>
+        <div class="field-group"><label class="field-label">Hasta</label><input class="field-input" type="date" value="2025-06-30"/></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Tipo de ajuste</label>
+          <select class="field-select"><option>Porcentaje sobre tarifa base</option><option>Precio fijo por noche</option></select>
+        </div>
+        <div class="field-group"><label class="field-label">Valor (%)</label><input class="field-input" placeholder="+20" type="number"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalTarifa')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalTarifa');showToast('Tarifa guardada')"><i data-lucide="save" style="width:12px;height:12px"></i> Guardar tarifa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Usuario -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nuevo usuario</div>
+      <button class="btn-icon" onclick="closeModal('modalUsuario')"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Nombres</label><input class="field-input" placeholder="Ana Sofía"/></div>
+        <div class="field-group"><label class="field-label">Apellidos</label><input class="field-input" placeholder="Torres Vega"/></div>
+      </div>
+      <div class="field-group"><label class="field-label">Email</label><input class="field-input" placeholder="ana@aurum.hotel" type="email"/></div>
+      <div class="field-group"><label class="field-label">Rol</label>
+        <select class="field-select"><option>Administrador</option><option selected>Recepcionista</option><option>Housekeeping</option><option>Solo lectura</option></select>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group"><label class="field-label">Contraseña inicial</label><input class="field-input" type="password" placeholder="••••••••"/></div>
+        <div class="field-group"><label class="field-label">Confirmar contraseña</label><input class="field-input" type="password" placeholder="••••••••"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-secondary" onclick="closeModal('modalUsuario')">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="closeModal('modalUsuario');showToast('Usuario creado y credenciales enviadas')"><i data-lucide="user-plus" style="width:12px;height:12px"></i> Crear usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none">
+  <div class="toast-icon"><i data-lucide="check-circle-2" style="width:18px;height:18px"></i></div>
+  <div class="toast-msg" id="toastMsg">Acción completada</div>
+</div>
+
+
+<script>
+  // ---- View navigation ----
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+  function showLanding() { showView('landing'); }
+  function showAdmin() {
+    showView('admin');
+    document.getElementById('admin').style.display = 'flex';
+  }
+  function showPublic() { showView('public'); }
+
+  // ---- Admin panels ----
+  function showPanel(id, el) {
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    if(el) el.classList.add('active');
+    const titles = {
+      dashboard:'Dashboard', categorias:'Categorías', habitaciones:'Habitaciones',
+      tarifas:'Tarifas', reservas:'Reservas', checkin:'Check-in',
+      checkout:'Check-out', ocupacion:'Mapa de Ocupación', hotel:'Mi Hotel', usuarios:'Usuarios'
+    };
+    document.getElementById('panelTitle').textContent = titles[id] || '';
+  }
+
+  // ---- Modals ----
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+  });
+
+  // ---- Wizard ----
+  let wizardStep = 2;
+  function wizardNext() {
+    if(wizardStep === 4) { closeModal('modalBooking'); wizardStep = 2; resetWizard(); return; }
+    document.getElementById('wstep'+wizardStep).classList.remove('active');
+    document.getElementById('wdot'+wizardStep).classList.remove('active');
+    document.getElementById('wdot'+wizardStep).classList.add('done');
+    wizardStep++;
+    document.getElementById('wstep'+wizardStep).classList.add('active');
+    document.getElementById('wdot'+wizardStep).classList.add('active');
+    const foot = document.getElementById('wizardFoot');
+    const btn = foot.querySelector('.btn-primary');
+    if(wizardStep === 3) btn.innerHTML = '<i data-lucide="credit-card" style="width:12px;height:12px"></i> Pagar S/ 2,727';
+    else if(wizardStep === 4) { btn.textContent = 'Cerrar'; foot.querySelector('.btn-secondary').style.display='none'; }
+    else btn.innerHTML = 'Continuar <i data-lucide="arrow-right" style="width:12px;height:12px"></i>';
+    lucide.createIcons();
+  }
+  function resetWizard() {
+    for(let i=1;i<=4;i++){
+      document.getElementById('wstep'+i).classList.remove('active');
+      document.getElementById('wdot'+i).classList.remove('active','done');
+    }
+    document.getElementById('wstep2').classList.add('active');
+    document.getElementById('wdot1').classList.add('done');
+    document.getElementById('wdot2').classList.add('active');
+    const foot = document.getElementById('wizardFoot');
+    foot.querySelector('.btn-primary').innerHTML = 'Continuar <i data-lucide="arrow-right" style="width:12px;height:12px"></i>';
+    foot.querySelector('.btn-secondary').style.display='';
+    wizardStep = 2;
+    lucide.createIcons();
+  }
+
+  // ---- Toast ----
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    document.getElementById('toastMsg').textContent = msg;
+    const t = document.getElementById('toast');
+    t.style.display = 'flex';
+    lucide.createIcons();
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3200);
+  }
+
+  // ---- Init ----
+  lucide.createIcons();
+</script>
+</body>
+</html>

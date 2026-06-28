@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BusTravel Pro – Sistema de Gestión de Pasajes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1e40af;
+    --primary-light: #3b82f6;
+    --accent: #f59e0b;
+    --bg: #f1f5f9;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #94a3b8;
+    --sidebar-active: #3b82f6;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* SIDEBAR */
+  #sidebar { width: 260px; min-height: 100vh; background: var(--sidebar-bg); transition: width 0.3s ease; flex-shrink: 0; overflow: hidden; }
+  #sidebar.collapsed { width: 64px; }
+  #sidebar .logo-text { transition: opacity 0.2s; white-space: nowrap; }
+  #sidebar.collapsed .logo-text { opacity: 0; width: 0; overflow: hidden; }
+  #sidebar .nav-label { transition: opacity 0.2s; white-space: nowrap; }
+  #sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; display: none; }
+  #sidebar.collapsed .nav-section-title { opacity: 0; }
+  
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; border-radius: 8px; margin: 2px 8px; color: var(--sidebar-text); transition: all 0.2s; font-size: 14px; font-weight: 500; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--sidebar-active); color: #fff; }
+  .nav-item svg { flex-shrink: 0; width: 18px; height: 18px; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .stat-card { padding: 20px; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f1f5f9; color: #475569; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-orange { background: #ffedd5; color: #9a3412; }
+
+  /* SEAT MAP */
+  .seat { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; user-select: none; }
+  .seat.available { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+  .seat.available:hover { background: #3b82f6; color: #fff; transform: scale(1.1); }
+  .seat.occupied { background: #fee2e2; color: #991b1b; border-color: #fca5a5; cursor: not-allowed; }
+  .seat.selected { background: #10b981; color: #fff; border-color: #059669; transform: scale(1.1); }
+  .seat.reserved { background: #fef3c7; color: #92400e; border-color: #fcd34d; cursor: not-allowed; }
+  .seat.vip { border-color: #c084fc; }
+  .seat.vip.available { background: #f3e8ff; color: #7c3aed; }
+  .seat.vip.available:hover { background: #7c3aed; color: #fff; }
+  .seat.vip.selected { background: #7c3aed; color: #fff; }
+  .seat.cama { border-color: #f59e0b; width: 44px; height: 36px; }
+  .seat.cama.available { background: #fef3c7; color: #92400e; }
+  .seat.cama.available:hover { background: #f59e0b; color: #fff; }
+  .seat.driver { background: #0f172a; color: #fff; cursor: default; border-radius: 50%; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-box { background: #fff; border-radius: 16px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+
+  /* STEPS */
+  .step-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-dot.done { background: var(--success); color: #fff; }
+  .step-dot.active { background: var(--primary); color: #fff; }
+  .step-dot.pending { background: #e2e8f0; color: #94a3b8; }
+
+  /* TICKET */
+  .ticket-container { background: linear-gradient(135deg, #1e40af 0%, #0f172a 100%); border-radius: 16px; color: #fff; position: relative; overflow: hidden; }
+  .ticket-container::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+  .ticket-divider { border-left: 2px dashed rgba(255,255,255,0.3); }
+  .qr-box { width: 80px; height: 80px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .qr-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; width: 60px; height: 60px; }
+  .qr-cell { border-radius: 1px; }
+
+  /* CHART BARS */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+  .bar { flex: 1; background: #3b82f6; border-radius: 4px 4px 0 0; transition: height 0.5s ease; position: relative; min-width: 24px; }
+  .bar:hover { background: #1e40af; }
+  .bar-label { font-size: 10px; color: #64748b; text-align: center; margin-top: 4px; }
+
+  /* PUBLIC PORTAL */
+  .portal-hero { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%); }
+  .portal-search-box { background: rgba(255,255,255,0.97); border-radius: 16px; backdrop-filter: blur(10px); }
+  .journey-card { border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s; cursor: pointer; }
+  .journey-card:hover { border-color: var(--primary-light); box-shadow: 0 4px 20px rgba(59,130,246,0.15); transform: translateY(-2px); }
+
+  /* FORM */
+  .form-input { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 14px; font-family: 'Sora', sans-serif; transition: border-color 0.2s; outline: none; background: #fff; color: var(--text); }
+  .form-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Sora', sans-serif; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1e3a8a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,64,175,0.3); }
+  .btn-secondary { background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { background: #e2e8f0; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #059669; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: #d97706; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { background: #f8fafc; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  .data-table tr:hover td { background: #f8fafc; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    #sidebar { position: fixed; z-index: 200; height: 100vh; }
+    #sidebar:not(.collapsed) { box-shadow: 0 0 40px rgba(0,0,0,0.4); }
+    #mobile-overlay { display: block; }
+    .seat { width: 30px; height: 30px; font-size: 10px; }
+    .modal-box { border-radius: 12px; }
+  }
+
+  /* ANIMATIONS */
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .slide-in { animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* CALENDAR */
+  .cal-day { min-height: 100px; border: 1px solid var(--border); padding: 6px; border-radius: 6px; transition: background 0.2s; }
+  .cal-day:hover { background: #f8fafc; }
+  .cal-day.today { background: #eff6ff; border-color: var(--primary-light); }
+  .cal-event { background: #dbeafe; color: #1e40af; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-event.full { background: #fee2e2; color: #991b1b; }
+  .cal-event.active { background: #d1fae5; color: #065f46; }
+
+  /* Ocupation bar */
+  .occ-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .occ-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- MOBILE OVERLAY -->
+<div id="mobile-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-150" onclick="toggleSidebar()"></div>
+
+<!-- ============================== SIDEBAR ============================== -->
+<aside id="sidebar" class="flex flex-col">
+  <!-- Logo -->
+  <div class="flex items-center gap-3 p-4 border-b border-slate-700/50" style="min-height:64px">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--accent)">
+      <i data-lucide="bus" class="w-5 h-5 text-white"></i>
+    </div>
+    <div class="logo-text">
+      <div class="text-white font-bold text-base leading-tight">BusTravel</div>
+      <div class="text-xs font-semibold" style="color:var(--accent)">PRO</div>
+    </div>
+    <button onclick="toggleSidebar()" class="ml-auto text-slate-400 hover:text-white transition-colors flex-shrink-0">
+      <i data-lucide="panel-left-close" class="w-4 h-4" id="sidebar-icon"></i>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-3 space-y-0.5">
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500">Principal</div>
+    <div class="nav-item active" onclick="navigate('dashboard')" data-page="dashboard">
+      <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="navigate('ventas')" data-page="ventas">
+      <i data-lucide="ticket" class="w-4 h-4"></i><span class="nav-label">Venta de Pasajes</span>
+    </div>
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">Operaciones</div>
+    <div class="nav-item" onclick="navigate('calendario')" data-page="calendario">
+      <i data-lucide="calendar-days" class="w-4 h-4"></i><span class="nav-label">Calendario</span>
+    </div>
+    <div class="nav-item" onclick="navigate('viajes')" data-page="viajes">
+      <i data-lucide="map-pin" class="w-4 h-4"></i><span class="nav-label">Viajes</span>
+    </div>
+    <div class="nav-item" onclick="navigate('rutas')" data-page="rutas">
+      <i data-lucide="route" class="w-4 h-4"></i><span class="nav-label">Rutas y Destinos</span>
+    </div>
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">Flota</div>
+    <div class="nav-item" onclick="navigate('buses')" data-page="buses">
+      <i data-lucide="bus" class="w-4 h-4"></i><span class="nav-label">Buses y Flota</span>
+    </div>
+    <div class="nav-item" onclick="navigate('propietarios')" data-page="propietarios">
+      <i data-lucide="building-2" class="w-4 h-4"></i><span class="nav-label">Propietarios</span>
+    </div>
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">Clientes</div>
+    <div class="nav-item" onclick="navigate('pasajeros')" data-page="pasajeros">
+      <i data-lucide="users" class="w-4 h-4"></i><span class="nav-label">Pasajeros</span>
+    </div>
+    <div class="nav-item" onclick="navigate('tickets')" data-page="tickets">
+      <i data-lucide="receipt" class="w-4 h-4"></i><span class="nav-label">Tickets Vendidos</span>
+    </div>
+    <div class="nav-item" onclick="navigate('pagos')" data-page="pagos">
+      <i data-lucide="credit-card" class="w-4 h-4"></i><span class="nav-label">Pagos</span>
+    </div>
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">Análisis</div>
+    <div class="nav-item" onclick="navigate('reportes')" data-page="reportes">
+      <i data-lucide="bar-chart-2" class="w-4 h-4"></i><span class="nav-label">Reportes</span>
+    </div>
+    <div class="nav-section-title px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-500 mt-2">Más</div>
+    <div class="nav-item" onclick="showPublicPortal()" data-page="portal">
+      <i data-lucide="globe" class="w-4 h-4"></i><span class="nav-label">Portal Público</span>
+    </div>
+    <div class="nav-item" onclick="navigate('config')" data-page="config">
+      <i data-lucide="settings" class="w-4 h-4"></i><span class="nav-label">Configuración</span>
+    </div>
+  </nav>
+
+  <!-- User info -->
+  <div class="p-3 border-t border-slate-700/50 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--primary)">AD</div>
+    <div class="logo-text min-w-0">
+      <div class="text-white text-xs font-semibold truncate">Admin General</div>
+      <div class="text-slate-500 text-xs">Lima Central</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================== MAIN ============================== -->
+<div class="flex-1 flex flex-col overflow-hidden" id="main-wrapper">
+  <!-- TOP BAR -->
+  <header class="flex items-center gap-4 px-4 md:px-6 py-3 bg-white border-b border-slate-200 flex-shrink-0" style="min-height:64px">
+    <button onclick="toggleSidebar()" class="text-slate-500 hover:text-slate-800 md:hidden">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+    <div id="page-title" class="font-bold text-lg text-slate-800">Dashboard</div>
+    <div class="ml-auto flex items-center gap-2 md:gap-3">
+      <button onclick="showPublicPortal()" class="btn btn-accent btn-sm hidden md:flex">
+        <i data-lucide="globe" class="w-4 h-4"></i> Portal Público
+      </button>
+      <div class="relative">
+        <button class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 relative">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-6" id="page-content">
+    <!-- Pages are rendered here by JS -->
+  </main>
+</div>
+
+<!-- ============================== PUBLIC PORTAL OVERLAY ============================== -->
+<div id="portal-overlay" class="hidden fixed inset-0 z-300 overflow-y-auto" style="z-index:500">
+  <div class="portal-hero text-white py-6 px-4">
+    <div class="max-w-6xl mx-auto">
+      <!-- Portal Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.2)">
+            <i data-lucide="bus" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="font-bold text-xl">BusTravel Pro</div>
+            <div class="text-xs opacity-70">Tu viaje, tu comodidad</div>
+          </div>
+        </div>
+        <button onclick="hidePublicPortal()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold" style="background:rgba(255,255,255,0.15)">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al panel
+        </button>
+      </div>
+
+      <!-- Hero Text -->
+      <div class="text-center mb-8" id="portal-hero-content">
+        <h1 class="text-3xl md:text-4xl font-bold mb-3">Viaja seguro y cómodo</h1>
+        <p class="text-blue-200 text-lg">Encuentra tu bus, elige tu asiento y viaja con tranquilidad</p>
+      </div>
+
+      <!-- Search Box -->
+      <div class="portal-search-box p-4 md:p-6 max-w-4xl mx-auto" id="portal-search-section">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="col-span-2 md:col-span-1">
+            <label class="form-label text-slate-500">Origen</label>
+            <select id="p-origin" class="form-input">
+              <option value="">Seleccionar ciudad</option>
+              <option>Lima</option><option>Cusco</option><option>Arequipa</option>
+              <option>Trujillo</option><option>Puno</option><option>Tacna</option>
+            </select>
+          </div>
+          <div class="col-span-2 md:col-span-1">
+            <label class="form-label text-slate-500">Destino</label>
+            <select id="p-dest" class="form-input">
+              <option value="">Seleccionar ciudad</option>
+              <option>Lima</option><option>Cusco</option><option>Arequipa</option>
+              <option>Trujillo</option><option>Puno</option><option>Tacna</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label text-slate-500">Fecha</label>
+            <input type="date" id="p-date" class="form-input">
+          </div>
+          <div>
+            <label class="form-label text-slate-500">Pasajeros</label>
+            <select id="p-pax" class="form-input">
+              <option>1</option><option>2</option><option>3</option><option>4</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="searchPublicJourneys()" class="w-full btn btn-primary py-3 text-base">
+          <i data-lucide="search" class="w-5 h-5"></i> Buscar Viajes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portal Body -->
+  <div class="bg-slate-50 min-h-screen" id="portal-body">
+    <div class="max-w-6xl mx-auto px-4 py-8" id="portal-content">
+      <!-- Step indicators and results rendered here -->
+    </div>
+  </div>
+</div>
+
+<!-- ============================== MODALS CONTAINER ============================== -->
+<div id="modals-container"></div>
+
+<!-- ============================== TOAST ============================== -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-500 space-y-2" style="z-index:600"></div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const today = new Date().toISOString().split('T')[0];
+const todayStr = new Date().toLocaleDateString('es-PE', {day:'2-digit',month:'long',year:'numeric'});
+
+// Load or init state
+let state = JSON.parse(localStorage.getItem('bustravelState') || 'null') || {
+  currentRole: 'admin',
+  currentPage: 'dashboard',
+
+  propietarios: [
+    {id:'p1', nombre:'Transportes Andinos SAC', ruc:'20123456789', tel:'01-4451234', email:'info@tandinos.pe', direccion:'Av. Javier Prado 1234, Lima', buses:2, comision:15, estado:'Activo'},
+    {id:'p2', nombre:'Bus Express Perú', ruc:'20987654321', tel:'01-3321122', email:'ventas@bexpress.pe', direccion:'Jr. Cusco 567, Lima', buses:1, comision:12, estado:'Activo'},
+    {id:'p3', nombre:'Viajes del Sur', ruc:'20456123789', tel:'054-221344', email:'sur@viajesdelsur.pe', direccion:'Av. La Marina 890, Arequipa', buses:1, comision:10, estado:'Activo'},
+  ],
+  buses: [
+    {id:'b1', codigo:'VIP-101', placa:'ABC-123', propietario:'p1', marca:'Scania', modelo:'K410', año:2021, capacidad:40, tipo:'VIP', pisos:2, distribucion:'2+2', estado:'Disponible', servicios:['WiFi','AC','Baño','TV','USB'], imagen:''},
+    {id:'b2', codigo:'EJE-202', placa:'XYZ-789', propietario:'p1', marca:'Mercedes', modelo:'O500', año:2020, capacidad:48, tipo:'Ejecutivo', pisos:1, distribucion:'2+2', estado:'En ruta', servicios:['WiFi','AC','Baño','USB'], imagen:''},
+    {id:'b3', codigo:'CAM-303', placa:'LMN-456', propietario:'p2', marca:'Volvo', modelo:'B420R', año:2022, capacidad:32, tipo:'Cama', pisos:2, distribucion:'2+1', estado:'Disponible', servicios:['WiFi','AC','Baño','TV','USB'], imagen:''},
+    {id:'b4', codigo:'ECO-404', placa:'PQR-012', propietario:'p3', marca:'Marcopolo', modelo:'Paradiso', año:2019, capacidad:50, tipo:'Económico', pisos:1, distribucion:'2+2', estado:'Mantenimiento', servicios:['AC'], imagen:''},
+  ],
+  rutas: [
+    {id:'r1', origen:'Lima', destino:'Cusco', distancia:1105, duracion:'20h', precio:85, estado:'Activo', paradas:['Nazca','Abancay']},
+    {id:'r2', origen:'Lima', destino:'Arequipa', distancia:1010, duracion:'16h', precio:70, estado:'Activo', paradas:['Ica','Nazca']},
+    {id:'r3', origen:'Cusco', destino:'Puno', distancia:389, duracion:'6h', precio:35, estado:'Activo', paradas:['Sicuani']},
+    {id:'r4', origen:'Arequipa', destino:'Tacna', distancia:325, duracion:'5h', precio:30, estado:'Activo', paradas:[]},
+    {id:'r5', origen:'Lima', destino:'Trujillo', distancia:560, duracion:'9h', precio:45, estado:'Activo', paradas:['Chimbote']},
+    {id:'r6', origen:'Lima', destino:'Puno', distancia:1300, duracion:'24h', precio:95, estado:'Activo', paradas:['Arequipa']},
+  ],
+  viajes: [
+    {id:'v1', rutaId:'r1', busId:'b1', fecha:today, horaSalida:'08:00', horaLlegada:'04:00+1', conductor:'Juan Quispe', precioBase:85, precioVip:120, precioCama:150, estado:'En venta', obs:''},
+    {id:'v2', rutaId:'r2', busId:'b2', fecha:today, horaSalida:'14:30', horaLlegada:'06:30+1', conductor:'Pedro Mamani', precioBase:70, precioVip:100, precioCama:130, estado:'En venta', obs:''},
+    {id:'v3', rutaId:'r3', busId:'b3', fecha:getNextDate(1), horaSalida:'09:00', horaLlegada:'15:00', conductor:'Carlos Flores', precioBase:35, precioVip:50, precioCama:70, estado:'Programado', obs:''},
+    {id:'v4', rutaId:'r5', busId:'b1', fecha:getNextDate(1), horaSalida:'22:00', horaLlegada:'07:00+1', conductor:'Juan Quispe', precioBase:45, precioVip:65, precioCama:85, estado:'Programado', obs:''},
+    {id:'v5', rutaId:'r4', busId:'b3', fecha:getNextDate(2), horaSalida:'10:00', horaLlegada:'15:00', conductor:'Carlos Flores', precioBase:30, precioVip:45, precioCama:60, estado:'Programado', obs:''},
+  ],
+  conductores: [
+    {id:'c1', nombre:'Juan Quispe', licencia:'A2-12345', tel:'987654321'},
+    {id:'c2', nombre:'Pedro Mamani', licencia:'A3-67890', tel:'976543210'},
+    {id:'c3', nombre:'Carlos Flores', licencia:'A2-11223', tel:'965432109'},
+  ],
+  pasajeros: [
+    {id:'pa1', nombre:'María García López', dni:'45678901', tel:'987111222', email:'maria@gmail.com', nacionalidad:'Peruana'},
+    {id:'pa2', nombre:'Carlos Rodríguez Vega', dni:'32145678', tel:'976222333', email:'carlos@gmail.com', nacionalidad:'Peruana'},
+    {id:'pa3', nombre:'Ana Martínez Silva', dni:'56789012', tel:'965333444', email:'ana@gmail.com', nacionalidad:'Colombiana'},
+    {id:'pa4', nombre:'Luis Torres Huanca', dni:'12345678', tel:'954444555', email:'luis@gmail.com', nacionalidad:'Peruana'},
+  ],
+  tickets: [
+    {id:'tk001', viajeId:'v1', pasajeroId:'pa1', asiento:'12A', tipoAsiento:'Normal', precio:85, tipoPasajero:'Adulto', metodoPago:'Efectivo', estadoPago:'Pagado', estado:'Pagado', canal:'Recepción', fecha:today, equipaje:false, notas:''},
+    {id:'tk002', viajeId:'v1', pasajeroId:'pa2', asiento:'15B', tipoAsiento:'VIP', precio:120, tipoPasajero:'Adulto', metodoPago:'Tarjeta', estadoPago:'Pagado', estado:'Pagado', canal:'Portal', fecha:today, equipaje:true, notas:''},
+    {id:'tk003', viajeId:'v2', pasajeroId:'pa3', asiento:'08A', tipoAsiento:'Normal', precio:70, tipoPasajero:'Adulto Mayor', metodoPago:'Yape', estadoPago:'Pagado', estado:'Pagado', canal:'Recepción', fecha:today, equipaje:false, notas:''},
+    {id:'tk004', viajeId:'v1', pasajeroId:'pa4', asiento:'20B', tipoAsiento:'Normal', precio:85, tipoPasajero:'Estudiante', metodoPago:'Efectivo', estadoPago:'Pendiente', estado:'Reservado', canal:'Portal', fecha:today, equipaje:false, notas:''},
+  ],
+  pagos: [
+    {id:'pg001', ticketId:'tk001', monto:85, metodo:'Efectivo', estado:'Pagado', fecha:today, canal:'Recepción'},
+    {id:'pg002', ticketId:'tk002', monto:120, metodo:'Tarjeta', estado:'Pagado', fecha:today, canal:'Portal'},
+    {id:'pg003', ticketId:'tk003', monto:70, metodo:'Yape', estado:'Pagado', fecha:today, canal:'Recepción'},
+  ],
+  asientosOcupados: {
+    'v1': ['12A','15B','20B','05A','07B','10A','18A','22B','28A','30B'],
+    'v2': ['08A','12B','16A','20B','24A','28B','32A','36B'],
+    'v3': ['05A','10B','15A'],
+    'v4': [],
+    'v5': [],
+  },
+  config: {
+    empresa:'BusTravel Pro', moneda:'PEN', pais:'Perú', zona:'America/Lima',
+    colorPrimary:'#1e40af', heroText:'Viaja seguro y cómodo',
+    telefonoSoporte:'01-555-1234', urlPublica:'https://bustravel.pe'
+  }
+};
+
+function getNextDate(days) {
+  const d = new Date(); d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
+}
+
+function saveState() { localStorage.setItem('bustravelState', JSON.stringify(state)); }
+
+// Helpers
+function getRuta(id) { return state.rutas.find(r=>r.id===id)||{}; }
+function getBus(id) { return state.buses.find(b=>b.id===id)||{}; }
+function getViaje(id) { return state.viajes.find(v=>v.id===id)||{}; }
+function getPasajero(id) { return state.pasajeros.find(p=>p.id===id)||{}; }
+function getPropietario(id) { return state.propietarios.find(p=>p.id===id)||{}; }
+function genId(prefix) { return prefix + Date.now().toString(36).toUpperCase(); }
+function formatMoney(n) { return 'S/ '+Number(n).toFixed(2); }
+function getTicketsForViaje(vid) { return state.tickets.filter(t=>t.viajeId===vid); }
+function getOcupacion(vid) {
+  const viaje = getViaje(vid); const bus = getBus(viaje.busId);
+  const oc = (state.asientosOcupados[vid]||[]).length;
+  return {ocupados:oc, total:bus.capacidad||40, disponibles:(bus.capacidad||40)-oc};
+}
+
+// ============================================================
+// SIDEBAR + NAVIGATION
+// ============================================================
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('mobile-overlay');
+  sb.classList.toggle('collapsed');
+  const icon = document.getElementById('sidebar-icon');
+  if(icon) { icon.setAttribute('data-lucide', sb.classList.contains('collapsed') ? 'panel-left-open' : 'panel-left-close'); }
+  if(window.innerWidth < 768) { ov.classList.toggle('hidden', sb.classList.contains('collapsed')); }
+  lucide.createIcons();
+}
+
+function navigate(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  const titles = {dashboard:'Dashboard',ventas:'Venta de Pasajes',calendario:'Calendario de Viajes',viajes:'Viajes Programados',rutas:'Rutas y Destinos',buses:'Buses y Flota',propietarios:'Propietarios',pasajeros:'Pasajeros',tickets:'Tickets Vendidos',pagos:'Pagos',reportes:'Reportes',config:'Configuración'};
+  document.getElementById('page-title').textContent = titles[page]||page;
+  renderPage(page);
+  if(window.innerWidth < 768) { document.getElementById('sidebar').classList.add('collapsed'); document.getElementById('mobile-overlay').classList.add('hidden'); }
+}
+
+function changeRole(role) { state.currentRole = role; navigate(state.currentPage); }
+
+// ============================================================
+// PAGE ROUTER
+// ============================================================
+function renderPage(page) {
+  const el = document.getElementById('page-content');
+  el.innerHTML = '';
+  el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in');
+  const renderers = {
+    dashboard: renderDashboard, ventas: renderVentas, calendario: renderCalendario,
+    viajes: renderViajes, rutas: renderRutas, buses: renderBuses,
+    propietarios: renderPropietarios, pasajeros: renderPasajeros,
+    tickets: renderTickets, pagos: renderPagos, reportes: renderReportes, config: renderConfig
+  };
+  if(renderers[page]) renderers[page](el);
+  lucide.createIcons();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(el) {
+  const hoyTickets = state.tickets.filter(t=>t.fecha===today);
+  const hoyIngresos = hoyTickets.filter(t=>t.estadoPago==='Pagado').reduce((s,t)=>s+t.precio,0);
+  const viajesHoy = state.viajes.filter(v=>v.fecha===today);
+  let totalOcupados=0, totalDisp=0;
+  state.viajes.filter(v=>v.fecha===today).forEach(v=>{ const o=getOcupacion(v.id); totalOcupados+=o.ocupados; totalDisp+=o.disponibles; });
+
+  el.innerHTML = `
+  <div class="space-y-6">
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      ${statCard('Ventas Hoy','S/ '+hoyIngresos.toFixed(2),'trending-up','#dbeafe','#1e40af')}
+      ${statCard('Tickets Vendidos',hoyTickets.length,'ticket','#d1fae5','#059669')}
+      ${statCard('Viajes Hoy',viajesHoy.length,'map-pin','#fef3c7','#d97706')}
+      ${statCard('Asientos Libres',totalDisp,'armchair','#f3e8ff','#7c3aed')}
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      ${statCard('Asientos Ocupados',totalOcupados,'users','#fee2e2','#dc2626')}
+      ${statCard('Ingr. del Mes','S/ '+(hoyIngresos*22).toFixed(0),'bar-chart-2','#e0f2fe','#0284c7')}
+      ${statCard('Buses Activos',state.buses.filter(b=>b.estado!=='Inactivo').length,'bus','#fce7f3','#db2777')}
+      ${statCard('Propietarios',state.propietarios.length,'building-2','#ecfdf5','#059669')}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Próximos viajes -->
+      <div class="lg:col-span-2 card">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+          <h3 class="font-bold text-slate-800">Próximos Viajes</h3>
+          <button onclick="navigate('viajes')" class="btn btn-secondary btn-sm">Ver todos</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Ruta</th><th>Fecha</th><th>Hora</th><th>Bus</th><th>Ocupación</th><th>Estado</th>
+            </tr></thead>
+            <tbody>
+              ${state.viajes.slice(0,5).map(v=>{
+                const r=getRuta(v.rutaId), b=getBus(v.busId), o=getOcupacion(v.id);
+                const pct=Math.round(o.ocupados/o.total*100)||0;
+                return `<tr>
+                  <td><div class="font-semibold text-sm">${r.origen||'-'} → ${r.destino||'-'}</div></td>
+                  <td class="text-sm">${v.fecha}</td>
+                  <td class="mono text-sm">${v.horaSalida}</td>
+                  <td class="text-sm">${b.codigo||'-'}</td>
+                  <td><div class="flex items-center gap-2"><div class="occ-bar flex-1" style="min-width:60px"><div class="occ-fill" style="width:${pct}%;background:${pct>80?'#ef4444':pct>50?'#f59e0b':'#10b981'}"></div></div><span class="text-xs mono">${o.ocupados}/${o.total}</span></div></td>
+                  <td>${viajeEstadoBadge(v.estado)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rutas más vendidas -->
+      <div class="card p-4">
+        <h3 class="font-bold text-slate-800 mb-4">Rutas Más Vendidas</h3>
+        <div class="space-y-3">
+          ${[...state.rutas].slice(0,5).map((r,i)=>{
+            const cnt = state.tickets.filter(t=>{ const v=getViaje(t.viajeId); return v.rutaId===r.id; }).length;
+            const pct = Math.max(10,Math.round(cnt/Math.max(state.tickets.length,1)*100));
+            const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+            return `<div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-semibold">${r.origen} → ${r.destino}</span>
+                <span class="text-slate-500">${cnt} tickets</span>
+              </div>
+              <div class="occ-bar"><div class="occ-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <h3 class="font-bold text-slate-800 mt-6 mb-3">Ventas (últimos 7 días)</h3>
+        <div class="bar-chart">
+          ${['L','M','X','J','V','S','D'].map((d,i)=>{
+            const h = [40,65,55,80,90,120,70][i];
+            return `<div class="flex flex-col items-center flex-1">
+              <div class="bar w-full" style="height:${h}%"></div>
+              <div class="bar-label">${d}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="card p-4">
+      <h3 class="font-bold text-slate-800 mb-3">⚠️ Alertas del Sistema</h3>
+      <div class="space-y-2">
+        ${state.buses.filter(b=>b.estado==='Mantenimiento').map(b=>`
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-yellow-600 flex-shrink-0"></i>
+            <span class="text-sm">Bus <strong>${b.codigo}</strong> (${b.placa}) está en mantenimiento</span>
+          </div>`).join('')}
+        ${state.tickets.filter(t=>t.estadoPago==='Pendiente').length > 0 ? `
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+            <i data-lucide="clock" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+            <span class="text-sm"><strong>${state.tickets.filter(t=>t.estadoPago==='Pendiente').length}</strong> tickets con pago pendiente</span>
+          </div>` : ''}
+        <div class="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+          <i data-lucide="check-circle" class="w-4 h-4 text-green-600 flex-shrink-0"></i>
+          <span class="text-sm">Sistema operando con normalidad</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function statCard(label,value,icon,bgColor,iconColor) {
+  return `<div class="card stat-card">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">${label}</div>
+        <div class="text-2xl font-bold text-slate-800">${value}</div>
+      </div>
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:${bgColor}">
+        <i data-lucide="${icon}" class="w-5 h-5" style="color:${iconColor}"></i>
+      </div>
+    </div>
+  </div>`;
+}
+
+function viajeEstadoBadge(estado) {
+  const map = {'Programado':'badge-blue','En venta':'badge-green','Lleno':'badge-red','En ruta':'badge-purple','Finalizado':'badge-gray','Cancelado':'badge-red'};
+  return `<span class="badge ${map[estado]||'badge-gray'}">${estado}</span>`;
+}
+
+// ============================================================
+// VENTA DE PASAJES (Core Flow)
+// ============================================================
+let ventaState = { step:1, viaje:null, asientos:[], pasajero:{}, pago:{} };
+
+function renderVentas(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <!-- Step Indicator -->
+    <div class="card p-4">
+      <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        ${['Buscar Viaje','Seleccionar Asiento','Datos Pasajero','Pago','Ticket'].map((s,i)=>{
+          const n=i+1;
+          const st = ventaState.step>n?'done':ventaState.step===n?'active':'pending';
+          return `<div class="flex items-center gap-2 flex-shrink-0">
+            <div class="step-dot ${st}">${st==='done'?'<i data-lucide="check" class="w-3 h-3"></i>':n}</div>
+            <span class="text-xs font-semibold ${st==='active'?'text-blue-600':st==='done'?'text-green-600':'text-slate-400'} hidden sm:block">${s}</span>
+            ${i<4?'<div class="w-6 h-px bg-slate-200 hidden sm:block"></div>':''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div id="venta-step-content"></div>
+  </div>`;
+  renderVentaStep();
+}
+
+function renderVentaStep() {
+  const el = document.getElementById('venta-step-content');
+  if(!el) return;
+  const steps = [renderVentaStep1, renderVentaStep2, renderVentaStep3, renderVentaStep4, renderVentaStep5];
+  if(steps[ventaState.step-1]) { el.innerHTML=''; steps[ventaState.step-1](el); lucide.createIcons(); }
+}
+
+function renderVentaStep1(el) {
+  el.innerHTML = `
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card p-4 lg:col-span-1">
+      <h3 class="font-bold text-slate-800 mb-4">Buscar Viaje</h3>
+      <div class="space-y-3">
+        <div><label class="form-label">Origen</label>
+          <select id="v-origin" class="form-input">
+            <option value="">Seleccionar</option>
+            ${[...new Set(state.rutas.map(r=>r.origen))].map(c=>`<option>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="form-label">Destino</label>
+          <select id="v-dest" class="form-input">
+            <option value="">Seleccionar</option>
+            ${[...new Set(state.rutas.map(r=>r.destino))].map(c=>`<option>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="form-label">Fecha</label>
+          <input type="date" id="v-date" class="form-input" value="${today}">
+        </div>
+        <button onclick="buscarViajesVenta()" class="btn btn-primary w-full">
+          <i data-lucide="search" class="w-4 h-4"></i> Buscar Viajes
+        </button>
+      </div>
+    </div>
+    <div class="lg:col-span-2" id="viajes-results">
+      <div class="card p-8 text-center text-slate-400">
+        <i data-lucide="search" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
+        <p class="font-medium">Selecciona origen, destino y fecha para buscar viajes</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buscarViajesVenta() {
+  const o = document.getElementById('v-origin').value;
+  const d = document.getElementById('v-dest').value;
+  const f = document.getElementById('v-date').value;
+  if(!o||!d) { showToast('Selecciona origen y destino','warning'); return; }
+  const rutas = state.rutas.filter(r=>r.origen===o&&r.destino===d);
+  const viajesFiltrados = state.viajes.filter(v=>{
+    const r=getRuta(v.rutaId);
+    return r.origen===o && r.destino===d && (!f||v.fecha===f) && v.estado!=='Cancelado';
+  });
+  const el = document.getElementById('viajes-results');
+  if(!viajesFiltrados.length) {
+    el.innerHTML=`<div class="card p-8 text-center text-slate-400"><i data-lucide="frown" class="w-12 h-12 mx-auto mb-3 opacity-30"></i><p class="font-medium">No hay viajes disponibles para esa ruta y fecha</p></div>`;
+    lucide.createIcons(); return;
+  }
+  el.innerHTML=`<div class="space-y-3">${viajesFiltrados.map(v=>{
+    const r=getRuta(v.rutaId), b=getBus(v.busId), o2=getOcupacion(v.id);
+    return `<div class="card p-4 journey-card cursor-pointer" onclick="seleccionarViajeVenta('${v.id}')">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div class="text-lg font-bold text-slate-800">${r.origen} → ${r.destino}</div>
+          <div class="flex items-center gap-4 mt-1 text-sm text-slate-500">
+            <span><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>${v.horaSalida} - ${v.horaLlegada}</span>
+            <span><i data-lucide="timer" class="w-3 h-3 inline mr-1"></i>${r.duracion}</span>
+            <span><i data-lucide="bus" class="w-3 h-3 inline mr-1"></i>${b.codigo} (${b.tipo})</span>
+          </div>
+          <div class="flex flex-wrap gap-1 mt-2">
+            ${(b.servicios||[]).map(s=>`<span class="badge badge-blue text-xs">${s}</span>`).join('')}
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-2xl font-bold text-blue-700">S/ ${v.precioBase}</div>
+          <div class="text-xs text-slate-500 mb-2">${o2.disponibles} asientos libres</div>
+          <button class="btn btn-primary btn-sm">Seleccionar →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+  lucide.createIcons();
+}
+
+function seleccionarViajeVenta(vid) {
+  ventaState.viaje = getViaje(vid);
+  ventaState.asientos = [];
+  ventaState.step = 2;
+  renderVentaStep();
+}
+
+function renderVentaStep2(el) {
+  const v = ventaState.viaje;
+  const r = getRuta(v.rutaId);
+  const b = getBus(v.busId);
+  const ocupados = state.asientosOcupados[v.id] || [];
+  const selectedSeats = ventaState.asientos;
+
+  el.innerHTML = `
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 card p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800">${r.origen} → ${r.destino}</h3>
+          <p class="text-sm text-slate-500">${v.fecha} · ${v.horaSalida} · ${b.codigo}</p>
+        </div>
+        <button onclick="ventaState.step=1;renderVentaStep()" class="btn btn-secondary btn-sm">← Volver</button>
+      </div>
+      <!-- Seat Map -->
+      <div id="seat-map-container"></div>
+      <!-- Legend -->
+      <div class="flex flex-wrap gap-3 mt-4 text-xs">
+        <div class="flex items-center gap-1"><div class="w-6 h-6 rounded seat available" style="cursor:default;transform:none"></div><span>Disponible</span></div>
+        <div class="flex items-center gap-1"><div class="w-6 h-6 rounded seat occupied" style="cursor:default"></div><span>Ocupado</span></div>
+        <div class="flex items-center gap-1"><div class="w-6 h-6 rounded seat selected" style="cursor:default;transform:none"></div><span>Seleccionado</span></div>
+        <div class="flex items-center gap-1"><div class="w-6 h-6 rounded seat vip available" style="cursor:default;transform:none"></div><span>VIP</span></div>
+      </div>
+    </div>
+    <!-- Summary -->
+    <div class="card p-4 space-y-4">
+      <h3 class="font-bold text-slate-800">Resumen de Compra</h3>
+      <div class="text-sm space-y-2">
+        <div class="flex justify-between"><span class="text-slate-500">Ruta</span><span class="font-semibold">${r.origen} → ${r.destino}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Fecha</span><span class="font-semibold">${v.fecha}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Salida</span><span class="font-semibold">${v.horaSalida}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Bus</span><span class="font-semibold">${b.codigo}</span></div>
+      </div>
+      <div id="seats-summary" class="border-t border-slate-100 pt-3">
+        <p class="text-sm text-slate-400">Selecciona un asiento</p>
+      </div>
+      <button onclick="confirmarAsientosVenta()" class="btn btn-primary w-full" id="btn-confirm-seats" disabled>
+        Continuar → Datos Pasajero
+      </button>
+    </div>
+  </div>`;
+  
+  renderSeatMap('seat-map-container', v.id, b, ocupados, selectedSeats, 'venta');
+}
+
+function renderSeatMap(containerId, viajeId, bus, ocupados, selectedSeats, mode) {
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const total = bus.capacidad || 40;
+  const rows = Math.ceil(total/4);
+  
+  // Generate seat layout
+  let html = `<div class="bg-slate-50 rounded-xl p-4 overflow-x-auto">
+    <div class="min-w-[280px] max-w-[400px] mx-auto">
+      <!-- Bus front -->
+      <div class="flex justify-between items-center mb-4 px-4">
+        <div class="text-xs text-slate-500 font-medium">FRENTE</div>
+        <div class="seat driver w-12 h-8 text-xs flex items-center justify-center rounded-lg">🚌</div>
+      </div>
+      <div class="space-y-2">`;
+  
+  for(let row=1; row<=rows; row++) {
+    const seatNums = [(row*4-3),(row*4-2),(row*4-1),(row*4)];
+    html += `<div class="flex items-center gap-2 justify-center">`;
+    
+    // Left pair
+    for(let i=0;i<2;i++) {
+      const num = seatNums[i];
+      if(num > total) { html += `<div class="w-9 h-9"></div>`; continue; }
+      const seatId = `${num}${String.fromCharCode(65+i)}`;
+      const isOcc = ocupados.includes(seatId);
+      const isSel = selectedSeats.includes(seatId);
+      const isVip = num > Math.floor(total*0.6); // top 40% are VIP
+      const cls = `seat ${isOcc?'occupied':isSel?'selected':'available'} ${isVip&&!isOcc?'vip':''}`;
+      html += `<div class="${cls}" onclick="${mode==='venta'?`toggleSeatVenta('${seatId}','${isVip}')`:mode==='portal'?`toggleSeatPortal('${seatId}','${isVip}')`:''}" title="${isOcc?'Ocupado':seatId}">${seatId}</div>`;
+    }
+    
+    // Aisle
+    html += `<div class="w-4 flex-shrink-0 text-center text-xs text-slate-300">${row}</div>`;
+    
+    // Right pair
+    for(let i=2;i<4;i++) {
+      const num = seatNums[i];
+      if(num > total) { html += `<div class="w-9 h-9"></div>`; continue; }
+      const seatId = `${num}${String.fromCharCode(65+i-2+2)}`; // C, D
+      const isOcc = ocupados.includes(seatId);
+      const isSel = selectedSeats.includes(seatId);
+      const isVip = num > Math.floor(total*0.6);
+      const cls = `seat ${isOcc?'occupied':isSel?'selected':'available'} ${isVip&&!isOcc?'vip':''}`;
+      html += `<div class="${cls}" onclick="${mode==='venta'?`toggleSeatVenta('${seatId}','${isVip}')`:mode==='portal'?`toggleSeatPortal('${seatId}','${isVip}')`:''}" title="${isOcc?'Ocupado':seatId}">${seatId}</div>`;
+    }
+    html += `</div>`;
+  }
+  
+  html += `</div><div class="text-center text-xs text-slate-400 mt-4">PARTE TRASERA</div></div></div>`;
+  container.innerHTML = html;
+  lucide.createIcons();
+}
+
+function toggleSeatVenta(seatId, isVip) {
+  const v = ventaState.viaje;
+  const ocupados = state.asientosOcupados[v.id]||[];
+  if(ocupados.includes(seatId)) return;
+  
+  const idx = ventaState.asientos.indexOf(seatId);
+  if(idx >= 0) ventaState.asientos.splice(idx,1);
+  else ventaState.asientos.push(seatId);
+  
+  // Re-render seat map
+  const b = getBus(v.busId);
+  renderSeatMap('seat-map-container', v.id, b, ocupados, ventaState.asientos, 'venta');
+  
+  // Update summary
+  const r = getRuta(v.rutaId);
+  const summaryEl = document.getElementById('seats-summary');
+  const btnEl = document.getElementById('btn-confirm-seats');
+  if(summaryEl && ventaState.asientos.length > 0) {
+    const total = ventaState.asientos.reduce((s,sid)=>{
+      const isVip2 = parseInt(sid) > Math.floor((b.capacidad||40)*0.6);
+      return s + (isVip2 ? v.precioVip : v.precioBase);
+    },0);
+    summaryEl.innerHTML = `<div class="space-y-2">
+      ${ventaState.asientos.map(s=>{
+        const iv = parseInt(s) > Math.floor((b.capacidad||40)*0.6);
+        const p = iv ? v.precioVip : v.precioBase;
+        return `<div class="flex justify-between text-sm"><span class="font-medium">Asiento ${s} <span class="badge ${iv?'badge-purple':'badge-blue'}">${iv?'VIP':'Normal'}</span></span><span class="font-bold">S/ ${p}</span></div>`;
+      }).join('')}
+      <div class="border-t border-slate-100 pt-2 flex justify-between font-bold"><span>Total</span><span class="text-blue-700">S/ ${total}</span></div>
+    </div>`;
+    if(btnEl) btnEl.disabled = false;
+  } else if(summaryEl) {
+    summaryEl.innerHTML = `<p class="text-sm text-slate-400">Selecciona un asiento</p>`;
+    if(btnEl) btnEl.disabled = true;
+  }
+}
+
+function confirmarAsientosVenta() {
+  if(!ventaState.asientos.length) { showToast('Selecciona al menos un asiento','warning'); return; }
+  ventaState.step = 3;
+  renderVentaStep();
+}
+
+function renderVentaStep3(el) {
+  el.innerHTML = `
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 card p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-slate-800">Datos del Pasajero</h3>
+        <button onclick="ventaState.step=2;renderVentaStep()" class="btn btn-secondary btn-sm">← Volver</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="form-label">Nombre completo *</label>
+          <input type="text" id="pa-nombre" class="form-input" placeholder="Nombre y apellidos" value="${ventaState.pasajero.nombre||''}">
+        </div>
+        <div>
+          <label class="form-label">DNI / Documento *</label>
+          <input type="text" id="pa-dni" class="form-input" placeholder="12345678" maxlength="12" value="${ventaState.pasajero.dni||''}">
+        </div>
+        <div>
+          <label class="form-label">Teléfono</label>
+          <input type="tel" id="pa-tel" class="form-input" placeholder="987654321" value="${ventaState.pasajero.tel||''}">
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input type="email" id="pa-email" class="form-input" placeholder="correo@ejemplo.com" value="${ventaState.pasajero.email||''}">
+        </div>
+        <div>
+          <label class="form-label">Nacionalidad</label>
+          <select id="pa-nac" class="form-input">
+            <option ${ventaState.pasajero.nac==='Peruana'?'selected':''}>Peruana</option>
+            <option ${ventaState.pasajero.nac==='Colombiana'?'selected':''}>Colombiana</option>
+            <option ${ventaState.pasajero.nac==='Chilena'?'selected':''}>Chilena</option>
+            <option ${ventaState.pasajero.nac==='Boliviana'?'selected':''}>Boliviana</option>
+            <option ${ventaState.pasajero.nac==='Ecuatoriana'?'selected':''}>Ecuatoriana</option>
+            <option ${ventaState.pasajero.nac==='Otra'?'selected':''}>Otra</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Tipo de Pasajero</label>
+          <select id="pa-tipo" class="form-input" onchange="calcularDescuento()">
+            <option>Adulto</option><option>Niño</option><option>Adulto Mayor</option><option>Estudiante</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3 md:col-span-2 p-3 bg-slate-50 rounded-lg">
+          <input type="checkbox" id="pa-equipaje" class="w-4 h-4 accent-blue-600">
+          <label for="pa-equipaje" class="text-sm font-medium cursor-pointer">Equipaje adicional (+S/ 10.00)</label>
+        </div>
+        <div class="md:col-span-2">
+          <label class="form-label">Notas (opcional)</label>
+          <textarea id="pa-notas" class="form-input" rows="2" placeholder="Alguna observación...">${ventaState.pasajero.notas||''}</textarea>
+        </div>
+      </div>
+      <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+        <strong>¿Pasajero ya registrado?</strong>
+        <select class="form-input mt-2 text-xs" onchange="autoFillPasajero(this.value)">
+          <option value="">-- Seleccionar pasajero existente --</option>
+          ${state.pasajeros.map(p=>`<option value="${p.id}">${p.nombre} · ${p.dni}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <!-- Side summary -->
+    <div class="card p-4 space-y-3">
+      <h3 class="font-bold text-slate-800">Resumen</h3>
+      ${ventaState.asientos.map(s=>`<div class="flex justify-between text-sm"><span>Asiento ${s}</span><span class="font-bold">S/ ${getAsientoPrice(s)}</span></div>`).join('')}
+      <div id="equipaje-line" class="hidden flex justify-between text-sm"><span>Equipaje</span><span>S/ 10.00</span></div>
+      <div class="border-t pt-2 flex justify-between font-bold"><span>Total</span><span class="text-blue-700" id="total-display">S/ ${getTotalVenta()}</span></div>
+      <button onclick="guardarDatosPasajero()" class="btn btn-primary w-full">Continuar → Pago</button>
+    </div>
+  </div>`;
+  document.getElementById('pa-equipaje').addEventListener('change',function(){
+    document.getElementById('total-display').textContent = 'S/ '+(getTotalVenta()+(this.checked?10:0)).toFixed(2);
+  });
+}
+
+function autoFillPasajero(pid) {
+  if(!pid) return;
+  const p = getPasajero(pid);
+  if(!p.id) return;
+  document.getElementById('pa-nombre').value = p.nombre||'';
+  document.getElementById('pa-dni').value = p.dni||'';
+  document.getElementById('pa-tel').value = p.tel||'';
+  document.getElementById('pa-email').value = p.email||'';
+}
+
+function getAsientoPrice(seatId) {
+  const v = ventaState.viaje;
+  const b = getBus(v.busId);
+  const isVip = parseInt(seatId) > Math.floor((b.capacidad||40)*0.6);
+  return isVip ? v.precioVip : v.precioBase;
+}
+
+function getTotalVenta() {
+  return ventaState.asientos.reduce((s,sid)=>s+getAsientoPrice(sid),0);
+}
+
+function guardarDatosPasajero() {
+  const nombre = document.getElementById('pa-nombre').value.trim();
+  const dni = document.getElementById('pa-dni').value.trim();
+  if(!nombre||!dni) { showToast('Nombre y DNI son obligatorios','warning'); return; }
+  ventaState.pasajero = {
+    nombre, dni, tel:document.getElementById('pa-tel').value,
+    email:document.getElementById('pa-email').value,
+    nac:document.getElementById('pa-nac').value,
+    tipo:document.getElementById('pa-tipo').value,
+    equipaje:document.getElementById('pa-equipaje').checked,
+    notas:document.getElementById('pa-notas').value
+  };
+  ventaState.step = 4;
+  renderVentaStep();
+}
+
+function renderVentaStep4(el) {
+  const total = getTotalVenta() + (ventaState.pasajero.equipaje?10:0);
+  el.innerHTML = `
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 card p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-slate-800">Registrar Pago</h3>
+        <button onclick="ventaState.step=3;renderVentaStep()" class="btn btn-secondary btn-sm">← Volver</button>
+      </div>
+      <div class="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+        <div class="text-sm text-slate-600 mb-1">Total a cobrar</div>
+        <div class="text-3xl font-bold text-blue-700">S/ ${total.toFixed(2)}</div>
+        <div class="text-xs text-slate-500 mt-1">${ventaState.asientos.length} asiento(s) · ${ventaState.pasajero.equipaje?'Con equipaje':'Sin equipaje'}</div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="form-label">Método de Pago</label>
+          <select id="pago-metodo" class="form-input">
+            <option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option>
+            <option>Yape / Plin</option><option>Pago Online</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Estado de Pago</label>
+          <select id="pago-estado" class="form-input">
+            <option>Pagado</option><option>Pendiente</option><option>Parcial</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Monto Recibido</label>
+          <input type="number" id="pago-monto" class="form-input" value="${total.toFixed(2)}" min="0" step="0.50">
+        </div>
+        <div>
+          <label class="form-label">Vuelto / Cambio</label>
+          <input type="number" id="pago-vuelto" class="form-input" value="0.00" readonly>
+        </div>
+      </div>
+      <button onclick="procesarVenta()" class="btn btn-success w-full text-base py-3">
+        <i data-lucide="check-circle" class="w-5 h-5"></i> Confirmar y Generar Ticket
+      </button>
+    </div>
+    <div class="card p-4 space-y-3">
+      <h3 class="font-bold text-slate-800">Resumen Final</h3>
+      <div class="text-sm space-y-2">
+        <div class="flex justify-between"><span class="text-slate-500">Pasajero</span><span class="font-semibold text-right">${ventaState.pasajero.nombre}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">DNI</span><span class="font-semibold">${ventaState.pasajero.dni}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Asiento(s)</span><span class="font-semibold">${ventaState.asientos.join(', ')}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Tipo</span><span class="font-semibold">${ventaState.pasajero.tipo}</span></div>
+      </div>
+      <div class="border-t pt-2 flex justify-between font-bold"><span>Total</span><span class="text-blue-700">S/ ${total.toFixed(2)}</span></div>
+    </div>
+  </div>`;
+  document.getElementById('pago-monto').addEventListener('input',function(){
+    const v = parseFloat(this.value)||0;
+    document.getElementById('pago-vuelto').value = Math.max(0,v-total).toFixed(2);
+  });
+}
+
+function procesarVenta() {
+  const metodo = document.getElementById('pago-metodo').value;
+  const estadoPago = document.getElementById('pago-estado').value;
+  const v = ventaState.viaje;
+  const r = getRuta(v.rutaId);
+  const tickets = [];
+
+  ventaState.asientos.forEach(seatId=>{
+    const tkId = genId('TK');
+    const precio = getAsientoPrice(seatId) + (ventaState.pasajero.equipaje?10:0);
+    const isVip = parseInt(seatId) > Math.floor((getBus(v.busId).capacidad||40)*0.6);
+    const ticket = {
+      id: tkId, viajeId: v.id,
+      pasajero: ventaState.pasajero,
+      asiento: seatId, tipoAsiento: isVip?'VIP':'Normal',
+      precio, tipoPasajero: ventaState.pasajero.tipo,
+      metodoPago: metodo, estadoPago, estado: estadoPago==='Pagado'?'Pagado':'Reservado',
+      canal: 'Recepción', fecha: today, equipaje: ventaState.pasajero.equipaje, notas: ventaState.pasajero.notas
+    };
+    state.tickets.push(ticket);
+    tickets.push(ticket);
+    if(!state.asientosOcupados[v.id]) state.asientosOcupados[v.id]=[];
+    state.asientosOcupados[v.id].push(seatId);
+    // Guardar pago
+    state.pagos.push({id:genId('PG'), ticketId:tkId, monto:precio, metodo, estado:estadoPago, fecha:today, canal:'Recepción'});
+  });
+
+  // Registrar pasajero si es nuevo
+  const existe = state.pasajeros.find(p=>p.dni===ventaState.pasajero.dni);
+  if(!existe) {
+    state.pasajeros.push({id:genId('PA'), nombre:ventaState.pasajero.nombre, dni:ventaState.pasajero.dni, tel:ventaState.pasajero.tel, email:ventaState.pasajero.email, nacionalidad:ventaState.pasajero.nac});
+  }
+  saveState();
+  ventaState.step = 5;
+  ventaState.pago = {metodo, estado:estadoPago};
+  ventaState.generatedTickets = tickets;
+  renderVentaStep();
+  showToast('✅ Venta realizada con éxito!','success');
+}
+
+function renderVentaStep5(el) {
+  const tickets = ventaState.generatedTickets || [];
+  const v = ventaState.viaje;
+  const r = getRuta(v.rutaId);
+  const b = getBus(v.busId);
+  
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="card p-6 text-center border-2 border-green-200 bg-green-50">
+      <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="check-circle" class="w-10 h-10 text-green-600"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-green-800">¡Venta Exitosa!</h2>
+      <p class="text-green-600 mt-1">${tickets.length} ticket(s) generado(s) correctamente</p>
+      <div class="mt-4 flex justify-center gap-3">
+        <button onclick="resetVentaFlow()" class="btn btn-primary">Nueva Venta</button>
+        <button onclick="navigate('tickets')" class="btn btn-secondary">Ver Tickets</button>
+      </div>
+    </div>
+    ${tickets.map(tk=>renderTicketCard(tk,v,r,b)).join('')}
+  </div>`;
+}
+
+function renderTicketCard(ticket, viaje, ruta, bus) {
+  const pasajero = ticket.pasajero || getPasajero(ticket.pasajeroId);
+  const v = viaje || getViaje(ticket.viajeId);
+  const r = ruta || getRuta(v.rutaId);
+  const b = bus || getBus(v.busId);
+  return `
+  <div class="ticket-container p-6 max-w-2xl mx-auto">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-widest text-blue-300">BusTravel Pro</div>
+        <div class="text-white font-bold text-xl mt-1">${r.origen} → ${r.destino}</div>
+        <div class="text-blue-200 text-sm">${v.fecha} · ${v.horaSalida}</div>
+      </div>
+      <div class="qr-box">
+        <div class="qr-grid">${generateQR()}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-4 border-t border-white/20 pt-4">
+      <div>
+        <div class="text-blue-300 text-xs mb-1">PASAJERO</div>
+        <div class="text-white font-semibold text-sm">${pasajero.nombre||'—'}</div>
+        <div class="text-blue-200 text-xs">${pasajero.dni||pasajero.doc||'—'}</div>
+      </div>
+      <div>
+        <div class="text-blue-300 text-xs mb-1">ASIENTO</div>
+        <div class="text-white font-bold text-2xl">${ticket.asiento}</div>
+        <div class="text-blue-200 text-xs">${ticket.tipoAsiento}</div>
+      </div>
+      <div>
+        <div class="text-blue-300 text-xs mb-1">PRECIO</div>
+        <div class="text-white font-bold text-2xl">S/ ${ticket.precio}</div>
+        <div class="text-blue-200 text-xs">${ticket.metodoPago}</div>
+      </div>
+    </div>
+    <div class="flex justify-between items-end mt-4 border-t border-white/20 pt-4">
+      <div class="text-xs text-blue-200">
+        <div>Bus: ${b.codigo} · Placa: ${b.placa}</div>
+        <div>Código: <span class="mono font-bold text-white">${ticket.id}</span></div>
+      </div>
+      <div><span class="badge badge-green">${ticket.estadoPago}</span></div>
+    </div>
+  </div>`;
+}
+
+function generateQR() {
+  const cells = [];
+  for(let i=0;i<49;i++) {
+    const dark = Math.random() > 0.5;
+    cells.push(`<div class="qr-cell" style="background:${dark?'#1e40af':'#fff'}"></div>`);
+  }
+  return cells.join('');
+}
+
+function resetVentaFlow() {
+  ventaState = { step:1, viaje:null, asientos:[], pasajero:{}, pago:{} };
+  renderVentaStep();
+}
+
+// ============================================================
+// CALENDARIO
+// ============================================================
+function renderCalendario(el) {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const firstDay = new Date(year,month,1).getDay();
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-xl font-bold">${monthNames[month]} ${year}</h2>
+      <div class="flex gap-2">
+        <button onclick="navigate('viajes')" class="btn btn-primary btn-sm"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo Viaje</button>
+      </div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="grid grid-cols-7 border-b">
+        ${['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d=>`<div class="text-center text-xs font-bold text-slate-500 py-3 border-r last:border-r-0">${d}</div>`).join('')}
+      </div>
+      <div class="grid grid-cols-7">
+        ${Array(firstDay).fill('').map(()=>`<div class="cal-day opacity-30 min-h-16 border-r border-b"></div>`).join('')}
+        ${Array(daysInMonth).fill('').map((_,i)=>{
+          const day = i+1;
+          const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const isToday = dateStr === today;
+          const dayViajes = state.viajes.filter(v=>v.fecha===dateStr);
+          return `<div class="cal-day border-r border-b ${isToday?'today':''}" style="min-height:80px">
+            <div class="text-xs font-bold ${isToday?'text-blue-700':'text-slate-700'} mb-1">${day}</div>
+            ${dayViajes.map(v=>{ const r=getRuta(v.rutaId); return `<div class="cal-event ${v.estado==='Lleno'?'full':v.estado==='En venta'?'active':''}" onclick="showViajeDetail('${v.id}')" title="${r.origen} → ${r.destino}">${v.horaSalida} ${r.origen?.substring(0,3)}-${r.destino?.substring(0,3)}</div>`; }).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <!-- Leyenda -->
+    <div class="flex gap-4 text-xs">
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded" style="background:#dbeafe"></div>Programado</div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded" style="background:#d1fae5"></div>En Venta</div>
+      <div class="flex items-center gap-1"><div class="w-3 h-3 rounded" style="background:#fee2e2"></div>Lleno</div>
+    </div>
+  </div>`;
+}
+
+function showViajeDetail(vid) {
+  const v = getViaje(vid);
+  const r = getRuta(v.rutaId);
+  const b = getBus(v.busId);
+  const o = getOcupacion(vid);
+  showModal(`
+    <div class="p-6">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-bold">${r.origen} → ${r.destino}</h3>
+          <p class="text-slate-500">${v.fecha} · ${v.horaSalida} - ${v.horaLlegada}</p>
+        </div>
+        ${viajeEstadoBadge(v.estado)}
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500 mb-1">Bus</div><div class="font-bold">${b.codigo}</div><div class="text-xs text-slate-500">${b.placa} · ${b.tipo}</div></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500 mb-1">Conductor</div><div class="font-bold">${v.conductor}</div></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500 mb-1">Ocupación</div><div class="font-bold">${o.ocupados}/${o.total}</div><div class="occ-bar mt-1"><div class="occ-fill" style="width:${Math.round(o.ocupados/o.total*100)}%;background:#3b82f6"></div></div></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500 mb-1">Precio Base</div><div class="font-bold">S/ ${v.precioBase}</div></div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="closeModal();ventaState={step:1,viaje:getViaje('${vid}'),asientos:[],pasajero:{},pago:{}};ventaState.step=2;navigate('ventas')" class="btn btn-primary btn-sm">Vender Pasaje</button>
+        <button onclick="closeModal()" class="btn btn-secondary btn-sm">Cerrar</button>
+      </div>
+    </div>`);
+}
+
+// ============================================================
+// VIAJES PROGRAMADOS
+// ============================================================
+function renderViajes(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex gap-2">
+        <input type="text" id="viaje-search" class="form-input" style="width:200px" placeholder="Buscar viaje..." oninput="filterViajes()">
+      </div>
+      <button onclick="showViajeForm()" class="btn btn-primary">
+        <i data-lucide="plus" class="w-4 h-4"></i> Nuevo Viaje
+      </button>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="data-table" id="viajes-table">
+          <thead><tr>
+            <th>Ruta</th><th>Fecha</th><th>Salida</th><th>Bus</th><th>Conductor</th><th>Precio</th><th>Ocupación</th><th>Estado</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="viajes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+  renderViajesTable();
+}
+
+function renderViajesTable(filter='') {
+  const tbody = document.getElementById('viajes-tbody');
+  if(!tbody) return;
+  const filtered = state.viajes.filter(v=>{
+    const r=getRuta(v.rutaId);
+    return !filter || `${r.origen} ${r.destino} ${v.fecha}`.toLowerCase().includes(filter.toLowerCase());
+  });
+  tbody.innerHTML = filtered.map(v=>{
+    const r=getRuta(v.rutaId), b=getBus(v.busId), o=getOcupacion(v.id);
+    const pct = Math.round(o.ocupados/o.total*100)||0;
+    return `<tr>
+      <td><div class="font-semibold">${r.origen||'?'} → ${r.destino||'?'}</div><div class="text-xs text-slate-500">${r.duracion||''}</div></td>
+      <td class="text-sm">${v.fecha}</td>
+      <td class="mono text-sm">${v.horaSalida}</td>
+      <td><div class="text-sm font-medium">${b.codigo||'?'}</div><div class="text-xs text-slate-500">${b.placa||''}</div></td>
+      <td class="text-sm">${v.conductor||'-'}</td>
+      <td class="font-semibold text-blue-700">S/ ${v.precioBase}</td>
+      <td><div class="flex items-center gap-2"><div class="occ-bar" style="width:60px"><div class="occ-fill" style="width:${pct}%;background:${pct>80?'#ef4444':pct>50?'#f59e0b':'#10b981'}"></div></div><span class="text-xs mono">${o.ocupados}/${o.total}</span></div></td>
+      <td>${viajeEstadoBadge(v.estado)}</td>
+      <td>
+        <div class="flex gap-1">
+          <button onclick="showViajeDetail('${v.id}')" class="btn btn-secondary btn-sm p-1.5" title="Ver"><i data-lucide="eye" class="w-3 h-3"></i></button>
+          <button onclick="showViajeForm('${v.id}')" class="btn btn-secondary btn-sm p-1.5" title="Editar"><i data-lucide="edit" class="w-3 h-3"></i></button>
+          <button onclick="deleteViaje('${v.id}')" class="btn btn-danger btn-sm p-1.5" title="Eliminar"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" class="text-center py-8 text-slate-400">No hay viajes registrados</td></tr>';
+  lucide.createIcons();
+}
+
+function filterViajes() { renderViajesTable(document.getElementById('viaje-search')?.value||''); }
+
+function showViajeForm(id='') {
+  const v = id ? getViaje(id) : {};
+  showModal(`
+    <div class="p-6">
+      <h3 class="text-lg font-bold mb-4">${id?'Editar Viaje':'Nuevo Viaje'}</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2"><label class="form-label">Ruta</label>
+          <select id="vf-ruta" class="form-input">
+            ${state.rutas.map(r=>`<option value="${r.id}" ${v.rutaId===r.id?'selected':''}>${r.origen} → ${r.destino}</option>`).join('')}
+          </select></div>
+        <div><label class="form-label">Fecha</label><input type="date" id="vf-fecha" class="form-input" value="${v.fecha||today}"></div>
+        <div><label class="form-label">Hora Salida</label><input type="time" id="vf-hora" class="form-input" value="${v.horaSalida||'08:00'}"></div>
+        <div><label class="form-label">Hora Llegada</label><input type="time" id="vf-llegada" class="form-input" value="${(v.horaLlegada||'').replace('+1','')||''}"></div>
+        <div><label class="form-label">Bus</label>
+          <select id="vf-bus" class="form-input">
+            ${state.buses.map(b=>`<option value="${b.id}" ${v.busId===b.id?'selected':''}>${b.codigo} (${b.placa})</option>`).join('')}
+          </select></div>
+        <div><label class="form-label">Conductor</label>
+          <select id="vf-conductor" class="form-input">
+            ${state.conductores.map(c=>`<option ${v.conductor===c.nombre?'selected':''}>${c.nombre}</option>`).join('')}
+          </select></div>
+        <div><label class="form-label">Precio Base</label><input type="number" id="vf-precio" class="form-input" value="${v.precioBase||50}" min="0"></div>
+        <div><label class="form-label">Precio VIP</label><input type="number" id="vf-precioVip" class="form-input" value="${v.precioVip||80}" min="0"></div>
+        <div><label class="form-label">Estado</label>
+          <select id="vf-estado" class="form-input">
+            ${['Programado','En venta','Lleno','En ruta','Finalizado','Cancelado'].map(s=>`<option ${v.estado===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="col-span-2"><label class="form-label">Observaciones</label><textarea id="vf-obs" class="form-input" rows="2">${v.obs||''}</textarea></div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="saveViaje('${id}')" class="btn btn-primary flex-1">Guardar</button>
+        <button onclick="closeModal()" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>`);
+}
+
+function saveViaje(id) {
+  const obj = {
+    rutaId:document.getElementById('vf-ruta').value,
+    fecha:document.getElementById('vf-fecha').value,
+    horaSalida:document.getElementById('vf-hora').value,
+    horaLlegada:document.getElementById('vf-llegada').value,
+    busId:document.getElementById('vf-bus').value,
+    conductor:document.getElementById('vf-conductor').value,
+    precioBase:parseFloat(document.getElementById('vf-precio').value)||0,
+    precioVip:parseFloat(document.getElementById('vf-precioVip').value)||0,
+    estado:document.getElementById('vf-estado').value,
+    obs:document.getElementById('vf-obs').value,
+  };
+  if(id) {
+    const idx = state.viajes.findIndex(v=>v.id===id);
+    if(idx>=0) state.viajes[idx]={...state.viajes[idx],...obj};
+  } else {
+    obj.id = genId('V'); obj.precioCama = obj.precioVip+30;
+    state.viajes.push(obj);
+    if(!state.asientosOcupados[obj.id]) state.asientosOcupados[obj.id]=[];
+  }
+  saveState(); closeModal(); renderViajesTable(); showToast('Viaje guardado','success');
+}
+
+function deleteViaje(id) {
+  if(!confirm('¿Eliminar este viaje?')) return;
+  state.viajes = state.viajes.filter(v=>v.id!==id);
+  saveState(); renderViajesTable(); showToast('Viaje eliminado','success');
+}
+
+// ============================================================
+// RUTAS
+// ============================================================
+function renderRutas(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex justify-between items-center">
+      <input type="text" class="form-input" style="width:220px" placeholder="Buscar ruta..." oninput="filterRutas(this.value)">
+      <button onclick="showRutaForm()" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nueva Ruta</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="rutas-grid"></div>
+  </div>`;
+  renderRutasGrid();
+}
+
+function renderRutasGrid(filter='') {
+  const el = document.getElementById('rutas-grid');
+  if(!el) return;
+  const filtered = state.rutas.filter(r=>!filter||`${r.origen} ${r.destino}`.toLowerCase().includes(filter.toLowerCase()));
+  el.innerHTML = filtered.map(r=>`
+    <div class="card p-4">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="text-lg font-bold text-slate-800">${r.origen}</div>
+          <div class="flex items-center gap-2 my-1"><div class="h-px bg-slate-200 flex-1 w-8"></div><i data-lucide="arrow-right" class="w-3 h-3 text-slate-400"></i><div class="h-px bg-slate-200 flex-1 w-8"></div></div>
+          <div class="text-lg font-bold text-slate-800">${r.destino}</div>
+        </div>
+        <span class="badge ${r.estado==='Activo'?'badge-green':'badge-red'}">${r.estado}</span>
+      </div>
+      <div class="text-sm text-slate-500 space-y-1 mb-3">
+        <div class="flex justify-between"><span>Distancia:</span><span class="font-medium">${r.distancia} km</span></div>
+        <div class="flex justify-between"><span>Duración:</span><span class="font-medium">${r.duracion}</span></div>
+        <div class="flex justify-between"><span>Precio base:</span><span class="font-bold text-blue-700">S/ ${r.precio}</span></div>
+        ${r.paradas.length?`<div class="flex justify-between"><span>Paradas:</span><span class="text-xs text-right">${r.paradas.join(', ')}</span></div>`:''}
+      </div>
+      <div class="flex gap-2">
+        <button onclick="showRutaForm('${r.id}')" class="btn btn-secondary btn-sm flex-1"><i data-lucide="edit" class="w-3 h-3"></i> Editar</button>
+        <button onclick="deleteRuta('${r.id}')" class="btn btn-danger btn-sm"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+      </div>
+    </div>`).join('')||'<div class="col-span-3 text-center text-slate-400 py-8">No hay rutas</div>';
+  lucide.createIcons();
+}
+
+function filterRutas(v) { renderRutasGrid(v); }
+
+function showRutaForm(id='') {
+  const r = id ? getRuta(id) : {};
+  showModal(`
+    <div class="p-6">
+      <h3 class="text-lg font-bold mb-4">${id?'Editar Ruta':'Nueva Ruta'}</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="form-label">Origen</label><input type="text" id="rf-origen" class="form-input" value="${r.origen||''}"></div>
+        <div><label class="form-label">Destino</label><input type="text" id="rf-destino" class="form-input" value="${r.destino||''}"></div>
+        <div><label class="form-label">Distancia (km)</label><input type="number" id="rf-dist" class="form-input" value="${r.distancia||0}"></div>
+        <div><label class="form-label">Duración</label><input type="text" id="rf-dur" class="form-input" value="${r.duracion||''}" placeholder="ej: 8h"></div>
+        <div><label class="form-label">Precio Base (S/)</label><input type="number" id="rf-precio" class="form-input" value="${r.precio||0}"></div>
+        <div><label class="form-label">Estado</label>
+          <select id="rf-estado" class="form-input"><option ${r.estado==='Activo'?'selected':''}>Activo</option><option ${r.estado==='Inactivo'?'selected':''}>Inactivo</option></select></div>
+        <div class="col-span-2"><label class="form-label">Paradas (separadas por coma)</label><input type="text" id="rf-paradas" class="form-input" value="${(r.paradas||[]).join(', ')}" placeholder="Ciudad1, Ciudad2"></div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="saveRuta('${id}')" class="btn btn-primary flex-1">Guardar</button>
+        <button onclick="closeModal()" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>`);
+}
+
+function saveRuta(id) {
+  const obj = {
+    origen:document.getElementById('rf-origen').value.trim(),
+    destino:document.getElementById('rf-destino').value.trim(),
+    distancia:parseInt(document.getElementById('rf-dist').value)||0,
+    duracion:document.getElementById('rf-dur').value.trim(),
+    precio:parseFloat(document.getElementById('rf-precio').value)||0,
+    estado:document.getElementById('rf-estado').value,
+    paradas:document.getElementById('rf-paradas').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  if(!obj.origen||!obj.destino){showToast('Origen y destino son obligatorios','warning');return;}
+  if(id){const idx=state.rutas.findIndex(r=>r.id===id);if(idx>=0)state.rutas[idx]={...state.rutas[idx],...obj};}
+  else{obj.id=genId('R');state.rutas.push(obj);}
+  saveState();closeModal();renderRutasGrid();showToast('Ruta guardada','success');
+}
+
+function deleteRuta(id) {
+  if(!confirm('¿Eliminar esta ruta?')) return;
+  state.rutas=state.rutas.filter(r=>r.id!==id);
+  saveState();renderRutasGrid();showToast('Ruta eliminada','success');
+}
+
+// ============================================================
+// BUSES
+// ============================================================
+function renderBuses(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex justify-between items-center">
+      <input type="text" class="form-input" style="width:220px" placeholder="Buscar bus..." oninput="filterBuses(this.value)">
+      <button onclick="showBusForm()" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Registrar Bus</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="buses-grid"></div>
+  </div>`;
+  renderBusesGrid();
+}
+
+function renderBusesGrid(filter='') {
+  const el = document.getElementById('buses-grid');
+  if(!el) return;
+  const filtered = state.buses.filter(b=>!filter||`${b.codigo} ${b.placa} ${b.marca}`.toLowerCase().includes(filter.toLowerCase()));
+  const estadoColor = {'Disponible':'badge-green','En ruta':'badge-blue','Mantenimiento':'badge-yellow','Inactivo':'badge-gray'};
+  el.innerHTML = filtered.map(b=>{
+    const prop = getPropietario(b.propietario);
+    return `<div class="card p-4">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="text-xl font-bold text-slate-800">${b.codigo}</div>
+          <div class="mono text-sm text-slate-500">${b.placa}</div>
+        </div>
+        <span class="badge ${estadoColor[b.estado]||'badge-gray'}">${b.estado}</span>
+      </div>
+      <div class="flex gap-2 mb-3">
+        <span class="badge badge-purple">${b.tipo}</span>
+        <span class="badge badge-gray">${b.pisos} piso(s)</span>
+        <span class="badge badge-blue">${b.capacidad} asientos</span>
+      </div>
+      <div class="text-sm text-slate-500 space-y-1 mb-3">
+        <div class="flex justify-between"><span>Marca/Modelo:</span><span class="font-medium">${b.marca} ${b.modelo} ${b.año}</span></div>
+        <div class="flex justify-between"><span>Propietario:</span><span class="font-medium text-xs text-right">${prop.nombre||'?'}</span></div>
+        <div class="flex justify-between"><span>Distribución:</span><span class="font-medium">${b.distribucion}</span></div>
+      </div>
+      <div class="flex flex-wrap gap-1 mb-3">
+        ${(b.servicios||[]).map(s=>`<span class="badge badge-blue text-xs">${s}</span>`).join('')}
+      </div>
+      <div class="flex gap-2">
+        <button onclick="showBusForm('${b.id}')" class="btn btn-secondary btn-sm flex-1">Editar</button>
+        <button onclick="deleteBus('${b.id}')" class="btn btn-danger btn-sm"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+      </div>
+    </div>`;
+  }).join('')||'<div class="col-span-3 text-center text-slate-400 py-8">No hay buses registrados</div>';
+  lucide.createIcons();
+}
+
+function filterBuses(v){renderBusesGrid(v);}
+
+function showBusForm(id='') {
+  const b = id ? getBus(id) : {};
+  const serviciosList = ['WiFi','AC','Baño','TV','USB','Reclinables'];
+  showModal(`
+    <div class="p-6">
+      <h3 class="text-lg font-bold mb-4">${id?'Editar Bus':'Registrar Bus'}</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="form-label">Código</label><input type="text" id="bf-codigo" class="form-input" value="${b.codigo||''}"></div>
+        <div><label class="form-label">Placa</label><input type="text" id="bf-placa" class="form-input" value="${b.placa||''}"></div>
+        <div><label class="form-label">Propietario</label>
+          <select id="bf-prop" class="form-input">${state.propietarios.map(p=>`<option value="${p.id}" ${b.propietario===p.id?'selected':''}>${p.nombre}</option>`).join('')}</select></div>
+        <div><label class="form-label">Tipo</label>
+          <select id="bf-tipo" class="form-input">${['Económico','Ejecutivo','VIP','Cama','Semi cama'].map(t=>`<option ${b.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div><label class="form-label">Marca</label><input type="text" id="bf-marca" class="form-input" value="${b.marca||''}"></div>
+        <div><label class="form-label">Modelo</label><input type="text" id="bf-modelo" class="form-input" value="${b.modelo||''}"></div>
+        <div><label class="form-label">Año</label><input type="number" id="bf-año" class="form-input" value="${b.año||2020}"></div>
+        <div><label class="form-label">Capacidad</label><input type="number" id="bf-cap" class="form-input" value="${b.capacidad||40}"></div>
+        <div><label class="form-label">Pisos</label><select id="bf-pisos" class="form-input"><option value="1" ${b.pisos===1?'selected':''}>1 piso</option><option value="2" ${b.pisos===2?'selected':''}>2 pisos</option></select></div>
+        <div><label class="form-label">Distribución</label><select id="bf-dist" class="form-input">${['2+2','2+1','1+1'].map(d=>`<option ${b.distribucion===d?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div><label class="form-label">Estado</label><select id="bf-estado" class="form-input">${['Disponible','En ruta','Mantenimiento','Inactivo'].map(s=>`<option ${b.estado===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="col-span-2"><label class="form-label">Servicios</label>
+          <div class="flex flex-wrap gap-2">${serviciosList.map(s=>`<label class="flex items-center gap-1 text-sm cursor-pointer"><input type="checkbox" value="${s}" class="bus-svc" ${(b.servicios||[]).includes(s)?'checked':''}>${s}</label>`).join('')}</div></div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="saveBus('${id}')" class="btn btn-primary flex-1">Guardar</button>
+        <button onclick="closeModal()" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>`);
+}
+
+function saveBus(id) {
+  const svcs = [...document.querySelectorAll('.bus-svc:checked')].map(c=>c.value);
+  const obj = {
+    codigo:document.getElementById('bf-codigo').value.trim(),
+    placa:document.getElementById('bf-placa').value.trim(),
+    propietario:document.getElementById('bf-prop').value,
+    tipo:document.getElementById('bf-tipo').value,
+    marca:document.getElementById('bf-marca').value.trim(),
+    modelo:document.getElementById('bf-modelo').value.trim(),
+    año:parseInt(document.getElementById('bf-año').value)||2020,
+    capacidad:parseInt(document.getElementById('bf-cap').value)||40,
+    pisos:parseInt(document.getElementById('bf-pisos').value)||1,
+    distribucion:document.getElementById('bf-dist').value,
+    estado:document.getElementById('bf-estado').value,
+    servicios:svcs
+  };
+  if(!obj.codigo||!obj.placa){showToast('Código y placa son obligatorios','warning');return;}
+  if(id){const idx=state.buses.findIndex(b=>b.id===id);if(idx>=0)state.buses[idx]={...state.buses[idx],...obj};}
+  else{obj.id=genId('B');state.buses.push(obj);}
+  saveState();closeModal();renderBusesGrid();showToast('Bus guardado','success');
+}
+
+function deleteBus(id) {
+  if(!confirm('¿Eliminar este bus?')) return;
+  state.buses=state.buses.filter(b=>b.id!==id);
+  saveState();renderBusesGrid();showToast('Bus eliminado','success');
+}
+
+// ============================================================
+// PROPIETARIOS
+// ============================================================
+function renderPropietarios(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex justify-between items-center">
+      <span class="text-sm text-slate-500">${state.propietarios.length} propietarios registrados</span>
+      <button onclick="showPropForm()" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo Propietario</button>
+    </div>
+    <div class="card overflow-hidden">
+      <table class="data-table">
+        <thead><tr><th>Propietario</th><th>RUC</th><th>Contacto</th><th>Buses</th><th>Comisión</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>${state.propietarios.map(p=>{
+          const numBuses = state.buses.filter(b=>b.propietario===p.id).length;
+          return `<tr>
+            <td><div class="font-semibold">${p.nombre}</div><div class="text-xs text-slate-500">${p.direccion||''}</div></td>
+            <td class="mono text-sm">${p.ruc}</td>
+            <td><div class="text-sm">${p.tel}</div><div class="text-xs text-slate-500">${p.email}</div></td>
+            <td><span class="badge badge-blue">${numBuses} bus(es)</span></td>
+            <td class="font-semibold">${p.comision}%</td>
+            <td><span class="badge ${p.estado==='Activo'?'badge-green':'badge-red'}">${p.estado}</span></td>
+            <td><div class="flex gap-1">
+              <button onclick="showPropForm('${p.id}')" class="btn btn-secondary btn-sm p-1.5"><i data-lucide="edit" class="w-3 h-3"></i></button>
+              <button onclick="showLiquidacion('${p.id}')" class="btn btn-accent btn-sm p-1.5" title="Liquidación"><i data-lucide="file-text" class="w-3 h-3"></i></button>
+              <button onclick="deleteProp('${p.id}')" class="btn btn-danger btn-sm p-1.5"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+            </div></td>
+          </tr>`;
+        }).join('')||'<tr><td colspan="7" class="text-center py-8 text-slate-400">No hay propietarios</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function showPropForm(id='') {
+  const p = id ? getPropietario(id) : {};
+  showModal(`<div class="p-6">
+    <h3 class="text-lg font-bold mb-4">${id?'Editar Propietario':'Nuevo Propietario'}</h3>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="col-span-2"><label class="form-label">Nombre / Empresa</label><input id="pf-nombre" class="form-input" value="${p.nombre||''}"></div>
+      <div><label class="form-label">RUC / Documento</label><input id="pf-ruc" class="form-input" value="${p.ruc||''}"></div>
+      <div><label class="form-label">Teléfono</label><input id="pf-tel" class="form-input" value="${p.tel||''}"></div>
+      <div><label class="form-label">Email</label><input id="pf-email" class="form-input" type="email" value="${p.email||''}"></div>
+      <div><label class="form-label">Comisión (%)</label><input id="pf-com" class="form-input" type="number" value="${p.comision||10}" min="0" max="50"></div>
+      <div class="col-span-2"><label class="form-label">Dirección</label><input id="pf-dir" class="form-input" value="${p.direccion||''}"></div>
+      <div><label class="form-label">Estado</label><select id="pf-estado" class="form-input"><option ${p.estado==='Activo'?'selected':''}>Activo</option><option ${p.estado==='Inactivo'?'selected':''}>Inactivo</option></select></div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="saveProp('${id}')" class="btn btn-primary flex-1">Guardar</button>
+      <button onclick="closeModal()" class="btn btn-secondary">Cancelar</button>
+    </div>
+  </div>`);
+}
+
+function saveProp(id) {
+  const obj={nombre:document.getElementById('pf-nombre').value.trim(),ruc:document.getElementById('pf-ruc').value.trim(),tel:document.getElementById('pf-tel').value,email:document.getElementById('pf-email').value,comision:parseFloat(document.getElementById('pf-com').value)||0,direccion:document.getElementById('pf-dir').value,estado:document.getElementById('pf-estado').value};
+  if(!obj.nombre){showToast('El nombre es obligatorio','warning');return;}
+  if(id){const idx=state.propietarios.findIndex(p=>p.id===id);if(idx>=0)state.propietarios[idx]={...state.propietarios[idx],...obj};}
+  else{obj.id=genId('P');obj.buses=0;state.propietarios.push(obj);}
+  saveState();closeModal();renderPropietarios(document.getElementById('page-content'));showToast('Propietario guardado','success');
+}
+
+function deleteProp(id){if(!confirm('¿Eliminar?'))return;state.propietarios=state.propietarios.filter(p=>p.id!==id);saveState();renderPropietarios(document.getElementById('page-content'));showToast('Eliminado','success');}
+
+function showLiquidacion(pid) {
+  const p = getPropietario(pid);
+  const buses = state.buses.filter(b=>b.propietario===pid);
+  const viajesP = state.viajes.filter(v=>buses.some(b=>b.id===v.busId));
+  const totalIngresos = viajesP.reduce((s,v)=>s+getTicketsForViaje(v.id).filter(t=>t.estadoPago==='Pagado').reduce((s2,t)=>s2+t.precio,0),0);
+  const comision = totalIngresos*(p.comision/100);
+  showModal(`<div class="p-6">
+    <h3 class="text-xl font-bold mb-2">Liquidación</h3>
+    <p class="text-slate-500 mb-4">${p.nombre}</p>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Buses</div><div class="text-2xl font-bold">${buses.length}</div></div>
+      <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Viajes</div><div class="text-2xl font-bold">${viajesP.length}</div></div>
+      <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Ingresos Brutos</div><div class="text-2xl font-bold text-blue-700">S/ ${totalIngresos.toFixed(2)}</div></div>
+      <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Comisión (${p.comision}%)</div><div class="text-2xl font-bold text-orange-600">S/ ${comision.toFixed(2)}</div></div>
+    </div>
+    <div class="bg-green-50 rounded-xl p-4 border border-green-200 flex justify-between items-center">
+      <span class="font-bold">Total a Liquidar</span>
+      <span class="text-2xl font-bold text-green-700">S/ ${(totalIngresos-comision).toFixed(2)}</span>
+    </div>
+    <button onclick="closeModal()" class="btn btn-secondary w-full mt-4">Cerrar</button>
+  </div>`);
+}
+
+// ============================================================
+// PASAJEROS
+// ============================================================
+function renderPasajeros(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex justify-between items-center">
+      <input type="text" class="form-input" style="width:260px" placeholder="Buscar por nombre, DNI..." oninput="filterPasajeros(this.value)">
+      <span class="text-sm text-slate-500">${state.pasajeros.length} pasajeros</span>
+    </div>
+    <div class="card overflow-hidden">
+      <table class="data-table" id="pasajeros-table">
+        <thead><tr><th>Pasajero</th><th>DNI</th><th>Contacto</th><th>Tickets</th><th>Acciones</th></tr></thead>
+        <tbody id="pasajeros-tbody"></tbody>
+      </table>
+    </div>
+  </div>`;
+  renderPasajerosTable();
+}
+
+function renderPasajerosTable(filter='') {
+  const tbody = document.getElementById('pasajeros-tbody');
+  if(!tbody) return;
+  const filtered = state.pasajeros.filter(p=>!filter||`${p.nombre} ${p.dni} ${p.tel}`.toLowerCase().includes(filter.toLowerCase()));
+  tbody.innerHTML = filtered.map(p=>{
+    const myTickets = state.tickets.filter(t=>(t.pasajeroId===p.id)||(t.pasajero&&t.pasajero.dni===p.dni));
+    return `<tr>
+      <td><div class="font-semibold">${p.nombre}</div><div class="text-xs text-slate-500">${p.nacionalidad||''}</div></td>
+      <td class="mono">${p.dni}</td>
+      <td><div class="text-sm">${p.tel||'-'}</div><div class="text-xs text-slate-500">${p.email||''}</div></td>
+      <td><span class="badge badge-blue">${myTickets.length}</span></td>
+      <td><div class="flex gap-1">
+        <button onclick="showPasajeroDetail('${p.id}')" class="btn btn-secondary btn-sm p-1.5"><i data-lucide="eye" class="w-3 h-3"></i></button>
+        <button onclick="navigate('ventas')" class="btn btn-primary btn-sm p-1.5" title="Nueva venta"><i data-lucide="plus" class="w-3 h-3"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay pasajeros</td></tr>';
+  lucide.createIcons();
+}
+
+function filterPasajeros(v){renderPasajerosTable(v);}
+
+function showPasajeroDetail(pid) {
+  const p = getPasajero(pid);
+  const myTickets = state.tickets.filter(t=>(t.pasajeroId===pid)||(t.pasajero&&t.pasajero.dni===p.dni));
+  showModal(`<div class="p-6">
+    <h3 class="text-xl font-bold mb-1">${p.nombre}</h3>
+    <p class="text-slate-500 mono mb-4">${p.dni}</p>
+    <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+      <div><span class="text-slate-400">Tel:</span> ${p.tel||'-'}</div>
+      <div><span class="text-slate-400">Email:</span> ${p.email||'-'}</div>
+      <div><span class="text-slate-400">Nac.:</span> ${p.nacionalidad||'-'}</div>
+      <div><span class="text-slate-400">Tickets:</span> ${myTickets.length}</div>
+    </div>
+    <h4 class="font-bold mb-2">Historial de Compras</h4>
+    <div class="space-y-2 max-h-48 overflow-y-auto">
+      ${myTickets.map(t=>{const v=getViaje(t.viajeId);const r=getRuta(v.rutaId);return `<div class="flex items-center justify-between bg-slate-50 rounded-lg p-2 text-sm"><div><span class="font-mono font-bold">${t.id}</span> · ${r.origen}→${r.destino} · Asiento ${t.asiento}</div><div class="flex items-center gap-2"><span class="text-blue-700 font-bold">S/ ${t.precio}</span><span class="badge ${t.estadoPago==='Pagado'?'badge-green':'badge-yellow'}">${t.estadoPago}</span></div></div>`;}).join('')||'<div class="text-slate-400 text-sm">Sin compras</div>'}
+    </div>
+    <button onclick="closeModal()" class="btn btn-secondary w-full mt-4">Cerrar</button>
+  </div>`);
+}
+
+// ============================================================
+// TICKETS VENDIDOS
+// ============================================================
+function renderTickets(el) {
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="flex flex-wrap gap-2 justify-between items-center">
+      <input type="text" class="form-input" style="width:240px" placeholder="Buscar ticket o pasajero..." oninput="filterTickets(this.value)">
+      <div class="flex gap-2">
+        <select class="form-input text-sm" onchange="filterTicketsByEstado(this.value)" style="width:140px">
+          <option value="">Todos los estados</option>
+          <option>Pagado</option><option>Reservado</option><option>Cancelado</option><option>Usado</option>
+        </select>
+      </div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Pasajero</th><th>Ruta</th><th>Fecha</th><th>Asiento</th><th>Precio</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+  renderTicketsTable();
+}
+
+function renderTicketsTable(filter='',estadoFilter='') {
+  const tbody = document.getElementById('tickets-tbody');
+  if(!tbody) return;
+  let filtered = [...state.tickets];
+  if(filter) filtered = filtered.filter(t=>{
+    const p=t.pasajero||getPasajero(t.pasajeroId);
+    return `${t.id} ${p.nombre||''} ${p.dni||''}`.toLowerCase().includes(filter.toLowerCase());
+  });
+  if(estadoFilter) filtered = filtered.filter(t=>t.estado===estadoFilter||t.estadoPago===estadoFilter);
+  const estadoPagoColor = {'Pagado':'badge-green','Pendiente':'badge-yellow','Parcial':'badge-orange','Reembolsado':'badge-gray'};
+  const estadoColor = {'Pagado':'badge-green','Reservado':'badge-blue','Cancelado':'badge-red','Usado':'badge-gray','Reembolsado':'badge-orange'};
+  tbody.innerHTML = filtered.map(t=>{
+    const p=t.pasajero||getPasajero(t.pasajeroId);
+    const v=getViaje(t.viajeId); const r=getRuta(v.rutaId||'');
+    return `<tr>
+      <td class="mono text-xs font-bold text-blue-700">${t.id}</td>
+      <td><div class="font-semibold text-sm">${p.nombre||'—'}</div><div class="text-xs text-slate-500">${p.dni||''}</div></td>
+      <td class="text-sm">${r.origen||'?'} → ${r.destino||'?'}</td>
+      <td class="text-sm">${v.fecha||t.fecha}</td>
+      <td class="font-bold mono">${t.asiento} <span class="badge ${t.tipoAsiento==='VIP'?'badge-purple':'badge-gray'} text-xs">${t.tipoAsiento}</span></td>
+      <td class="font-bold text-blue-700">S/ ${t.precio}</td>
+      <td><span class="badge ${estadoPagoColor[t.estadoPago]||'badge-gray'}">${t.estadoPago}</span></td>
+      <td><span class="badge ${estadoColor[t.estado]||'badge-gray'}">${t.estado}</span></td>
+      <td><div class="flex gap-1">
+        <button onclick="showTicketModal('${t.id}')" class="btn btn-secondary btn-sm p-1.5" title="Ver ticket"><i data-lucide="receipt" class="w-3 h-3"></i></button>
+        <button onclick="cancelTicket('${t.id}')" class="btn btn-danger btn-sm p-1.5" title="Cancelar"><i data-lucide="x" class="w-3 h-3"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" class="text-center py-8 text-slate-400">No hay tickets</td></tr>';
+  lucide.createIcons();
+}
+
+function filterTickets(v){renderTicketsTable(v);}
+function filterTicketsByEstado(v){renderTicketsTable('',v);}
+
+function showTicketModal(tid) {
+  const t = state.tickets.find(x=>x.id===tid);
+  if(!t) return;
+  const v = getViaje(t.viajeId); const r = getRuta(v.rutaId||''); const b = getBus(v.busId||'');
+  const p = t.pasajero||getPasajero(t.pasajeroId);
+  showModal(`<div class="p-6">${renderTicketCard(t,v,r,b)}
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeModal()" class="btn btn-secondary flex-1">Cerrar</button>
+      <button onclick="showToast('Ticket reenviado simulado','success');closeModal()" class="btn btn-primary">Reimprimir</button>
+    </div>
+  </div>`);
+}
+
+function cancelTicket(tid) {
+  if(!confirm('¿Cancelar este ticket?')) return;
+  const idx = state.tickets.findIndex(t=>t.id===tid);
+  if(idx>=0){
+    const t=state.tickets[idx];
+    state.tickets[idx].estado='Cancelado';
+    state.tickets[idx].estadoPago='Reembolsado';
+    // Liberar asiento
+    if(state.asientosOcupados[t.viajeId]){
+      state.asientosOcupados[t.viajeId]=state.asientosOcupados[t.viajeId].filter(s=>s!==t.asiento);
+    }
+  }
+  saveState();renderTicketsTable();showToast('Ticket cancelado','success');
+}
+
+// ============================================================
+// PAGOS
+// ============================================================
+function renderPagos(el) {
+  const hoy = state.pagos.filter(p=>p.fecha===today);
+  const totalHoy = hoy.filter(p=>p.estado==='Pagado').reduce((s,p)=>s+p.monto,0);
+  const pendientes = state.pagos.filter(p=>p.estado==='Pendiente').length;
+  const metodosMap = {};
+  state.pagos.forEach(p=>{ metodosMap[p.metodo]=(metodosMap[p.metodo]||0)+p.monto; });
+
+  el.innerHTML = `
+  <div class="space-y-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      ${statCard('Total Hoy','S/ '+totalHoy.toFixed(2),'trending-up','#dbeafe','#1e40af')}
+      ${statCard('Pagos Hoy',hoy.length,'receipt','#d1fae5','#059669')}
+      ${statCard('Pendientes',pendientes,'clock','#fef3c7','#d97706')}
+      ${statCard('Total Pagos',state.pagos.length,'credit-card','#f3e8ff','#7c3aed')}
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 card overflow-hidden">
+        <div class="p-4 border-b border-slate-100 font-bold">Registro de Pagos</div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Ticket</th><th>Pasajero</th><th>Monto</th><th>Método</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody>${state.pagos.map(pg=>{
+              const t=state.tickets.find(x=>x.id===pg.ticketId)||{};
+              const p=t.pasajero||getPasajero(t.pasajeroId)||{};
+              return `<tr>
+                <td class="mono text-xs">${pg.id}</td>
+                <td class="mono text-xs text-blue-700">${pg.ticketId}</td>
+                <td class="text-sm">${p.nombre||'—'}</td>
+                <td class="font-bold text-green-700">S/ ${pg.monto}</td>
+                <td class="text-sm">${pg.metodo}</td>
+                <td><span class="badge ${pg.estado==='Pagado'?'badge-green':'badge-yellow'}">${pg.estado}</span></td>
+                <td class="text-xs">${pg.fecha}</td>
+              </tr>`;
+            }).join('')||'<tr><td colspan="7" class="text-center py-8 text-slate-400">Sin pagos</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card p-4">
+        <h3 class="font-bold mb-4">Por Método de Pago</h3>
+        <div class="space-y-3">
+          ${Object.entries(metodosMap).map(([m,v])=>{
+            const pct = Math.round(v/Object.values(metodosMap).reduce((s,x)=>s+x,1)*100);
+            const colors = {'Efectivo':'#10b981','Tarjeta':'#3b82f6','Transferencia':'#8b5cf6','Yape / Plin':'#f59e0b','Pago Online':'#06b6d4'};
+            return `<div><div class="flex justify-between text-sm mb-1"><span>${m}</span><span class="font-bold">S/ ${v.toFixed(0)}</span></div><div class="occ-bar"><div class="occ-fill" style="width:${pct}%;background:${colors[m]||'#94a3b8'}"></div></div></div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// REPORTES
+// ============================================================
+function renderReportes(el) {
+  const totalTickets = state.tickets.length;
+  const totalIngresos = state.tickets.filter(t=>t.estadoPago==='Pagado').reduce((s,t)=>s+t.precio,0);
+  const cancelados = state.tickets.filter(t=>t.estado==='Cancelado').length;
+
+  el.innerHTML = `
+  <div class="space-y-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      ${statCard('Total Ingresos','S/ '+totalIngresos.toFixed(0),'dollar-sign','#d1fae5','#059669')}
+      ${statCard('Tickets Totales',totalTickets,'ticket','#dbeafe','#1e40af')}
+      ${statCard('Tickets Cancelados',cancelados,'x-circle','#fee2e2','#dc2626')}
+      ${statCard('Tasa Conversión',Math.round((totalTickets-cancelados)/Math.max(totalTickets,1)*100)+'%','percent','#fef3c7','#d97706')}
+    </div>
+    
+    <!-- Ventas por ruta -->
+    <div class="card p-4">
+      <h3 class="font-bold mb-4">Ventas por Ruta</h3>
+      <div class="space-y-3">
+        ${state.rutas.map(r=>{
+          const cnt = state.tickets.filter(t=>{const v=getViaje(t.viajeId);return v.rutaId===r.id&&t.estadoPago==='Pagado';}).length;
+          const ingresos = state.tickets.filter(t=>{const v=getViaje(t.viajeId);return v.rutaId===r.id&&t.estadoPago==='Pagado';}).reduce((s,t)=>s+t.precio,0);
+          const pct = Math.max(5, Math.round(cnt/Math.max(totalTickets,1)*100));
+          return `<div class="flex items-center gap-3">
+            <div class="text-sm font-medium w-40 flex-shrink-0">${r.origen} → ${r.destino}</div>
+            <div class="flex-1 occ-bar"><div class="occ-fill" style="width:${pct}%;background:#3b82f6"></div></div>
+            <div class="text-sm font-bold w-20 text-right">S/ ${ingresos.toFixed(0)}</div>
+            <div class="text-xs text-slate-500 w-16 text-right">${cnt} tickets</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Ventas por bus -->
+      <div class="card p-4">
+        <h3 class="font-bold mb-4">Ventas por Bus</h3>
+        <div class="space-y-3">
+          ${state.buses.map(b=>{
+            const mis = state.viajes.filter(v=>v.busId===b.id).map(v=>v.id);
+            const cnt = state.tickets.filter(t=>mis.includes(t.viajeId)&&t.estadoPago==='Pagado').length;
+            const ing = state.tickets.filter(t=>mis.includes(t.viajeId)&&t.estadoPago==='Pagado').reduce((s,t)=>s+t.precio,0);
+            return `<div class="flex items-center gap-3">
+              <div class="text-sm font-medium w-24 flex-shrink-0">${b.codigo}</div>
+              <div class="flex-1 occ-bar"><div class="occ-fill" style="width:${Math.max(5,Math.round(cnt/Math.max(totalTickets,1)*100))}%;background:#10b981"></div></div>
+              <div class="text-sm font-bold">S/ ${ing.toFixed(0)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <!-- Ocupación por viaje -->
+      <div class="card p-4">
+        <h3 class="font-bold mb-4">Ocupación por Viaje</h3>
+        <div class="space-y-3">
+          ${state.viajes.slice(0,5).map(v=>{
+            const r=getRuta(v.rutaId); const o=getOcupacion(v.id);
+            const pct=Math.round(o.ocupados/o.total*100)||0;
+            return `<div>
+              <div class="flex justify-between text-sm mb-1"><span>${r.origen}→${r.destino} ${v.horaSalida}</span><span class="font-bold">${pct}%</span></div>
+              <div class="occ-bar"><div class="occ-fill" style="width:${pct}%;background:${pct>80?'#ef4444':pct>50?'#f59e0b':'#10b981'}"></div></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// CONFIGURACION
+// ============================================================
+function renderConfig(el) {
+  const c = state.config;
+  el.innerHTML = `
+  <div class="space-y-4 max-w-2xl">
+    <div class="card p-4">
+      <h3 class="font-bold mb-4">Configuración General</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2"><label class="form-label">Nombre de la Empresa</label><input id="cfg-empresa" class="form-input" value="${c.empresa||''}"></div>
+        <div><label class="form-label">Moneda</label><select id="cfg-moneda" class="form-input"><option ${c.moneda==='PEN'?'selected':''}>PEN</option><option ${c.moneda==='USD'?'selected':''}>USD</option></select></div>
+        <div><label class="form-label">País</label><input id="cfg-pais" class="form-input" value="${c.pais||''}"></div>
+        <div><label class="form-label">Teléfono Soporte</label><input id="cfg-tel" class="form-input" value="${c.telefonoSoporte||''}"></div>
+        <div><label class="form-label">Zona Horaria</label><input id="cfg-zona" class="form-input" value="${c.zona||''}"></div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold mb-4">Portal Público</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2"><label class="form-label">Texto del Hero</label><input id="cfg-hero" class="form-input" value="${c.heroText||''}"></div>
+        <div><label class="form-label">Color Principal</label><input type="color" id="cfg-color" class="form-input h-10 cursor-pointer p-1" value="${c.colorPrimary||'#1e40af'}"></div>
+        <div><label class="form-label">URL Pública</label><input id="cfg-url" class="form-input" value="${c.urlPublica||''}"></div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold mb-4">Métodos de Pago Activos</h3>
+      <div class="flex flex-wrap gap-3">
+        ${['Efectivo','Tarjeta','Transferencia','Yape / Plin','Pago Online'].map(m=>`<label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked class="accent-blue-600">${m}</label>`).join('')}
+      </div>
+    </div>
+    <button onclick="saveConfig()" class="btn btn-primary">Guardar Configuración</button>
+  </div>`;
+}
+
+function saveConfig() {
+  state.config = {
+    ...state.config,
+    empresa:document.getElementById('cfg-empresa').value,
+    moneda:document.getElementById('cfg-moneda').value,
+    pais:document.getElementById('cfg-pais').value,
+    telefonoSoporte:document.getElementById('cfg-tel').value,
+    zona:document.getElementById('cfg-zona').value,
+    heroText:document.getElementById('cfg-hero').value,
+    colorPrimary:document.getElementById('cfg-color').value,
+    urlPublica:document.getElementById('cfg-url').value,
+  };
+  saveState(); showToast('Configuración guardada','success');
+}
+
+// ============================================================
+// PUBLIC PORTAL
+// ============================================================
+let portalState = { step:1, viaje:null, asientos:[], pasajero:{} };
+
+function showPublicPortal() {
+  document.getElementById('portal-overlay').classList.remove('hidden');
+  document.getElementById('p-date').value = today;
+  portalState = { step:1, viaje:null, asientos:[], pasajero:{} };
+  renderPortalContent();
+  lucide.createIcons();
+}
+
+function hidePublicPortal() {
+  document.getElementById('portal-overlay').classList.add('hidden');
+}
+
+function renderPortalContent() {
+  const el = document.getElementById('portal-content');
+  if(portalState.step===1) {
+    el.innerHTML = `<div class="text-center py-12 text-slate-400">
+      <i data-lucide="search" class="w-16 h-16 mx-auto mb-4 opacity-20"></i>
+      <p class="text-lg font-medium">Busca tu viaje arriba para comenzar</p>
+      <p class="text-sm mt-2">Ingresa el origen, destino y fecha deseada</p>
+    </div>`;
+  }
+  lucide.createIcons();
+}
+
+function searchPublicJourneys() {
+  const o = document.getElementById('p-origin').value;
+  const d = document.getElementById('p-dest').value;
+  const f = document.getElementById('p-date').value;
+  if(!o||!d){showToast('Selecciona origen y destino','warning');return;}
+  const viajes = state.viajes.filter(v=>{
+    const r=getRuta(v.rutaId);
+    return r.origen===o&&r.destino===d&&(!f||v.fecha===f)&&v.estado!=='Cancelado';
+  });
+  const el = document.getElementById('portal-content');
+  portalState.step=1;
+  if(!viajes.length){
+    el.innerHTML=`<div class="text-center py-12"><i data-lucide="frown" class="w-16 h-16 mx-auto mb-4 opacity-20 text-slate-400"></i><p class="text-xl font-bold text-slate-600">Sin resultados</p><p class="text-slate-400 mt-2">No hay viajes de ${o} a ${d} para esa fecha</p></div>`;
+    lucide.createIcons();return;
+  }
+  el.innerHTML=`
+  <div>
+    <h2 class="text-xl font-bold text-slate-800 mb-4">${viajes.length} viaje(s) encontrado(s): ${o} → ${d}</h2>
+    <div class="space-y-4">
+      ${viajes.map(v=>{
+        const r=getRuta(v.rutaId), b=getBus(v.busId), o2=getOcupacion(v.id);
+        return `<div class="bg-white rounded-2xl p-5 border-2 border-slate-100 hover:border-blue-300 transition-all shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-4 mb-2">
+                <div class="text-center"><div class="text-2xl font-bold text-slate-800">${v.horaSalida}</div><div class="text-xs text-slate-500">${r.origen}</div></div>
+                <div class="flex-1 flex items-center gap-2"><div class="h-px flex-1 bg-slate-200"></div><div class="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-full">${r.duracion}</div><div class="h-px flex-1 bg-slate-200"></div></div>
+                <div class="text-center"><div class="text-2xl font-bold text-slate-800">${v.horaLlegada}</div><div class="text-xs text-slate-500">${r.destino}</div></div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <span class="badge badge-blue">${b.tipo}</span>
+                <span class="badge badge-gray">${b.codigo}</span>
+                ${(b.servicios||[]).slice(0,3).map(s=>`<span class="badge badge-green text-xs">${s}</span>`).join('')}
+                <span class="badge badge-purple">${o2.disponibles} disponibles</span>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="text-3xl font-bold text-blue-700">S/ ${v.precioBase}</div>
+              <div class="text-xs text-slate-500 mb-3">por persona</div>
+              <button onclick="selectPublicViaje('${v.id}')" class="btn btn-primary">Elegir asiento →</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function selectPublicViaje(vid) {
+  portalState.viaje = getViaje(vid);
+  portalState.asientos = [];
+  portalState.step = 2;
+  renderPublicStep2();
+}
+
+function renderPublicStep2() {
+  const v = portalState.viaje;
+  const r = getRuta(v.rutaId);
+  const b = getBus(v.busId);
+  const ocupados = state.asientosOcupados[v.id]||[];
+  const el = document.getElementById('portal-content');
+  el.innerHTML = `
+  <div>
+    <!-- Progress -->
+    <div class="flex items-center gap-2 mb-6">
+      ${['Buscar','Asiento','Datos','Pago','Confirmación'].map((s,i)=>{
+        const n=i+1, st=portalState.step>n?'done':portalState.step===n?'active':'pending';
+        return `<div class="flex items-center gap-2 flex-shrink-0">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${st==='done'?'bg-green-500 text-white':st==='active'?'bg-blue-600 text-white':'bg-slate-200 text-slate-400'}">${st==='done'?'✓':n}</div>
+          <span class="text-xs font-medium hidden sm:block ${st==='active'?'text-blue-600':st==='done'?'text-green-600':'text-slate-400'}">${s}</span>
+          ${i<4?'<div class="w-4 h-px bg-slate-200 hidden sm:block"></div>':''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white rounded-2xl p-4 border border-slate-100">
+        <div class="flex items-center justify-between mb-4">
+          <div><h3 class="font-bold text-lg">${r.origen} → ${r.destino}</h3><p class="text-slate-500 text-sm">${v.fecha} · Salida ${v.horaSalida} · ${b.codigo} (${b.tipo})</p></div>
+          <button onclick="portalState.step=1;searchPublicJourneys()" class="btn btn-secondary btn-sm">← Volver</button>
+        </div>
+        <div id="portal-seat-map"></div>
+        <div class="flex flex-wrap gap-3 mt-4 text-xs">
+          <div class="flex items-center gap-1"><div class="w-5 h-5 rounded seat available" style="cursor:default;transform:none"></div> Disponible</div>
+          <div class="flex items-center gap-1"><div class="w-5 h-5 rounded seat occupied" style="cursor:default"></div> Ocupado</div>
+          <div class="flex items-center gap-1"><div class="w-5 h-5 rounded seat selected" style="cursor:default;transform:none"></div> Seleccionado</div>
+          <div class="flex items-center gap-1"><div class="w-5 h-5 rounded seat vip available" style="cursor:default;transform:none"></div> VIP (+S/ ${v.precioVip-v.precioBase})</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-slate-100 space-y-3">
+        <h3 class="font-bold">Tu Selección</h3>
+        <div id="portal-seat-summary"><p class="text-sm text-slate-400">Haz clic en un asiento para seleccionarlo</p></div>
+        <button onclick="continuePublicToStep3()" class="btn btn-primary w-full" id="portal-btn-next" disabled>Continuar → Mis datos</button>
+      </div>
+    </div>
+  </div>`;
+  renderSeatMap('portal-seat-map', v.id, b, ocupados, portalState.asientos, 'portal');
+  lucide.createIcons();
+}
+
+function toggleSeatPortal(seatId) {
+  const v = portalState.viaje;
+  const ocupados = state.asientosOcupados[v.id]||[];
+  if(ocupados.includes(seatId)) return;
+  const idx = portalState.asientos.indexOf(seatId);
+  if(idx>=0) portalState.asientos.splice(idx,1);
+  else portalState.asientos.push(seatId);
+  // Re-render map
+  const b = getBus(v.busId);
+  renderSeatMap('portal-seat-map', v.id, b, ocupados, portalState.asientos, 'portal');
+  // Update summary
+  const sumEl = document.getElementById('portal-seat-summary');
+  const btnEl = document.getElementById('portal-btn-next');
+  if(portalState.asientos.length>0&&sumEl) {
+    const total = portalState.asientos.reduce((s,sid)=>{
+      const isVip = parseInt(sid)>Math.floor((b.capacidad||40)*0.6);
+      return s+(isVip?v.precioVip:v.precioBase);
+    },0);
+    sumEl.innerHTML=`<div class="space-y-2">${portalState.asientos.map(s=>{const iv=parseInt(s)>Math.floor((b.capacidad||40)*0.6);return `<div class="flex justify-between text-sm"><span>Asiento ${s} <span class="badge ${iv?'badge-purple':'badge-blue'}">${iv?'VIP':'Normal'}</span></span><span class="font-bold">S/ ${iv?v.precioVip:v.precioBase}</span></div>`;}).join('')}<div class="border-t pt-2 flex justify-between font-bold"><span>Total</span><span class="text-blue-700">S/ ${total}</span></div></div>`;
+    if(btnEl) btnEl.disabled=false;
+  } else if(sumEl) {
+    sumEl.innerHTML='<p class="text-sm text-slate-400">Haz clic en un asiento para seleccionarlo</p>';
+    if(btnEl) btnEl.disabled=true;
+  }
+}
+
+function continuePublicToStep3() {
+  if(!portalState.asientos.length){showToast('Selecciona al menos un asiento','warning');return;}
+  portalState.step=3;
+  renderPublicStep3();
+}
+
+function renderPublicStep3() {
+  const el = document.getElementById('portal-content');
+  const v=portalState.viaje,r=getRuta(v.rutaId),b=getBus(v.busId);
+  const total=portalState.asientos.reduce((s,sid)=>{const iv=parseInt(sid)>Math.floor((b.capacidad||40)*0.6);return s+(iv?v.precioVip:v.precioBase);},0);
+  el.innerHTML=`<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100">
+      <h3 class="font-bold text-xl mb-6">Tus datos de viaje</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="col-span-2"><label class="form-label">Nombre completo *</label><input id="pp-nombre" class="form-input" placeholder="Como aparece en tu DNI"></div>
+        <div><label class="form-label">DNI / Pasaporte *</label><input id="pp-dni" class="form-input" placeholder="12345678"></div>
+        <div><label class="form-label">Teléfono</label><input id="pp-tel" class="form-input" type="tel" placeholder="987 654 321"></div>
+        <div class="col-span-2"><label class="form-label">Email (para recibir tu ticket)</label><input id="pp-email" class="form-input" type="email" placeholder="correo@ejemplo.com"></div>
+        <div><label class="form-label">Tipo de Pasajero</label><select id="pp-tipo" class="form-input"><option>Adulto</option><option>Niño</option><option>Adulto Mayor</option><option>Estudiante</option></select></div>
+      </div>
+      <button onclick="continuePublicToStep4()" class="btn btn-primary w-full mt-6 py-3 text-base">Continuar → Revisar y Pagar</button>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 space-y-3 h-fit">
+      <h3 class="font-bold">Resumen</h3>
+      <div class="text-sm space-y-2">
+        <div class="flex justify-between"><span class="text-slate-500">Ruta</span><span class="font-bold">${r.origen}→${r.destino}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Fecha</span><span>${v.fecha}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Salida</span><span>${v.horaSalida}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Asientos</span><span class="font-bold">${portalState.asientos.join(', ')}</span></div>
+        <div class="border-t pt-2 flex justify-between font-bold"><span>Total</span><span class="text-blue-700 text-lg">S/ ${total}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function continuePublicToStep4() {
+  const nombre=document.getElementById('pp-nombre').value.trim();
+  const dni=document.getElementById('pp-dni').value.trim();
+  if(!nombre||!dni){showToast('Nombre y DNI son obligatorios','warning');return;}
+  portalState.pasajero={nombre,dni,tel:document.getElementById('pp-tel').value,email:document.getElementById('pp-email').value,tipo:document.getElementById('pp-tipo').value};
+  portalState.step=4;
+  renderPublicStep4();
+}
+
+function renderPublicStep4() {
+  const el=document.getElementById('portal-content');
+  const v=portalState.viaje,b=getBus(v.busId);
+  const total=portalState.asientos.reduce((s,sid)=>{const iv=parseInt(sid)>Math.floor((b.capacidad||40)*0.6);return s+(iv?v.precioVip:v.precioBase);},0);
+  const p=portalState.pasajero;
+  el.innerHTML=`<div class="max-w-lg mx-auto space-y-4">
+    <div class="bg-white rounded-2xl p-6 border border-slate-100">
+      <h3 class="font-bold text-xl mb-4">Revisar y Pagar</h3>
+      <div class="bg-slate-50 rounded-xl p-4 mb-4 text-sm space-y-2">
+        <div class="flex justify-between"><span class="text-slate-500">Pasajero</span><span class="font-bold">${p.nombre}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">DNI</span><span>${p.dni}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Asientos</span><span class="font-bold">${portalState.asientos.join(', ')}</span></div>
+      </div>
+      <div class="text-center mb-6">
+        <div class="text-slate-500 text-sm mb-1">Total a pagar</div>
+        <div class="text-4xl font-bold text-blue-700">S/ ${total.toFixed(2)}</div>
+      </div>
+      <div class="mb-4"><label class="form-label">Método de Pago</label>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          ${[{m:'Tarjeta',i:'credit-card'},{m:'Yape',i:'smartphone'},{m:'Transferencia',i:'building'},{m:'Efectivo (agencia)',i:'banknote'}].map(x=>`<label class="flex items-center gap-2 p-3 border-2 rounded-xl cursor-pointer border-slate-200 hover:border-blue-400 text-sm font-medium has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"><input type="radio" name="p-metodo" value="${x.m}" class="sr-only" ${x.m==='Tarjeta'?'checked':''}><i data-lucide="${x.i}" class="w-4 h-4 text-slate-600"></i>${x.m}</label>`).join('')}
+        </div>
+      </div>
+      <button onclick="procesarCompraPublica(${total})" class="btn btn-primary w-full py-4 text-lg">
+        <i data-lucide="lock" class="w-5 h-5"></i> Pagar S/ ${total.toFixed(2)}
+      </button>
+      <p class="text-center text-xs text-slate-400 mt-3">🔒 Pago seguro y encriptado</p>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function procesarCompraPublica(total) {
+  const metodo = document.querySelector('input[name="p-metodo"]:checked')?.value||'Tarjeta';
+  const v=portalState.viaje, r=getRuta(v.rutaId), b=getBus(v.busId);
+  const p=portalState.pasajero;
+  const tickets=[];
+  
+  portalState.asientos.forEach(seatId=>{
+    const tkId=genId('TK');
+    const isVip=parseInt(seatId)>Math.floor((b.capacidad||40)*0.6);
+    const precio=isVip?v.precioVip:v.precioBase;
+    const tk={id:tkId,viajeId:v.id,pasajero:p,asiento:seatId,tipoAsiento:isVip?'VIP':'Normal',precio,tipoPasajero:p.tipo,metodoPago:metodo,estadoPago:'Pagado',estado:'Pagado',canal:'Portal',fecha:today,equipaje:false,notas:''};
+    state.tickets.push(tk); tickets.push(tk);
+    if(!state.asientosOcupados[v.id]) state.asientosOcupados[v.id]=[];
+    state.asientosOcupados[v.id].push(seatId);
+    state.pagos.push({id:genId('PG'),ticketId:tkId,monto:precio,metodo,estado:'Pagado',fecha:today,canal:'Portal'});
+  });
+  
+  const existe=state.pasajeros.find(x=>x.dni===p.dni);
+  if(!existe) state.pasajeros.push({id:genId('PA'),nombre:p.nombre,dni:p.dni,tel:p.tel,email:p.email,nacionalidad:'Peruana'});
+  saveState();
+
+  // Show confirmation
+  portalState.step=5;
+  const codigoReserva='BTP'+Date.now().toString(36).toUpperCase().slice(-8);
+  const el=document.getElementById('portal-content');
+  el.innerHTML=`<div class="max-w-2xl mx-auto text-center space-y-6">
+    <div class="bg-white rounded-2xl p-8 border border-slate-100">
+      <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="check-circle" class="w-12 h-12 text-green-600"></i>
+      </div>
+      <h2 class="text-3xl font-bold text-slate-800 mb-2">¡Compra exitosa!</h2>
+      <p class="text-slate-500 mb-6">Tu ticket ha sido generado. Guarda este código:</p>
+      <div class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
+        <div class="text-xs text-blue-600 mb-1">CÓDIGO DE RESERVA</div>
+        <div class="text-3xl font-bold mono text-blue-800">${codigoReserva}</div>
+      </div>
+      <div class="flex gap-3 justify-center">
+        <button onclick="portalState={step:1,viaje:null,asientos:[],pasajero:{}};renderPortalContent()" class="btn btn-secondary">Nueva Búsqueda</button>
+      </div>
+    </div>
+    ${tickets.map(tk=>renderTicketCard(tk,v,r,b)).join('')}
+  </div>`;
+  lucide.createIcons();
+}
+
+// ============================================================
+// MODAL SYSTEM
+// ============================================================
+function showModal(html) {
+  const container = document.getElementById('modals-container');
+  container.innerHTML = `<div class="modal-overlay" onclick="closeModal(event)" id="modal-overlay">
+    <div class="modal-box" onclick="event.stopPropagation()">${html}</div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function closeModal(e) {
+  if(e && e.target.id !== 'modal-overlay') return;
+  document.getElementById('modals-container').innerHTML='';
+}
+
+// ============================================================
+// TOAST SYSTEM
+// ============================================================
+function showToast(msg, type='info') {
+  const colors = {success:'bg-green-600',warning:'bg-yellow-500',error:'bg-red-600',info:'bg-blue-600'};
+  const icons = {success:'check-circle',warning:'alert-triangle',error:'x-circle',info:'info'};
+  const id = 'toast-'+Date.now();
+  const toast = document.createElement('div');
+  toast.id = id;
+  toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${colors[type]} transition-all duration-300 slide-in`;
+  toast.innerHTML = `<i data-lucide="${icons[type]}" class="w-4 h-4 flex-shrink-0"></i>${msg}`;
+  document.getElementById('toast-container').appendChild(toast);
+  lucide.createIcons();
+  setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateX(100%)'; setTimeout(()=>toast.remove(),300); }, 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today date in inputs
+  const dateInputs = document.querySelectorAll('input[type="date"]');
+  dateInputs.forEach(inp => { if(!inp.value) inp.value = today; });
+  
+  lucide.createIcons();
+  navigate('dashboard');
+  
+  // Collapse sidebar on mobile by default
+  if(window.innerWidth < 768) {
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
+});
+</script>
+</body>
+</html>

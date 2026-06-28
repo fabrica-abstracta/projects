@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nido Secreto — Bungalows para Parejas</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Fonts: Poppins + Tenor Sans + Libre Baskerville + Great Vibes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Tenor+Sans&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Great+Vibes&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rose:    '#C8636A',
+            roseDark:'#9E3D44',
+            roseLight:'#F4D6D8',
+            rosePale:'#FDF6F6',
+            wine:    '#5C1A26',
+            ivory:   '#FAF7F2',
+            sand:    '#EDE8DF',
+            bark:    '#3D2B1F',
+            mist:    '#8A7F7A',
+          },
+          fontFamily: {
+            poppins:  ['Poppins','sans-serif'],
+            tenor:    ['"Tenor Sans"','sans-serif'],
+            baskerville:['"Libre Baskerville"','serif'],
+            vibes:    ['"Great Vibes"','cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --rose: #C8636A;
+      --wine: #5C1A26;
+      --bark: #3D2B1F;
+      --ivory: #FAF7F2;
+      --sand: #EDE8DF;
+      --mist: #8A7F7A;
+    }
+
+    * { scroll-behavior: smooth; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--ivory);
+      color: var(--bark);
+      overflow-x: hidden;
+    }
+
+    /* === CUSTOM CURSOR === */
+    body { cursor: none; }
+    #cursor {
+      width: 10px; height: 10px;
+      background: var(--rose);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease, opacity 0.2s;
+      mix-blend-mode: multiply;
+    }
+    #cursorRing {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--rose);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9998;
+      transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), width 0.3s, height 0.3s, opacity 0.3s;
+      opacity: 0.6;
+    }
+    body:hover #cursor { opacity: 1; }
+
+    /* === HERO === */
+    .hero-section {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(250,247,242,0) 55%, rgba(250,247,242,1) 100%),
+        linear-gradient(90deg, rgba(92,26,38,0.35) 0%, rgba(92,26,38,0) 60%),
+        url('https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1800&q=80') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 80px;
+    }
+
+    /* === PETAL FLOAT === */
+    .petal {
+      position: fixed;
+      width: 8px; height: 14px;
+      border-radius: 50% 0 50% 0;
+      background: linear-gradient(135deg, #e88b8e, #c8636a55);
+      pointer-events: none;
+      z-index: 10;
+      animation: petalFall linear infinite;
+      opacity: 0;
+    }
+    @keyframes petalFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity:0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity:0; }
+    }
+
+    /* === GRAIN OVERLAY === */
+    .grain::before {
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events:none;
+      z-index:1;
+      opacity:0.4;
+    }
+
+    /* === NAVBAR === */
+    #navbar {
+      transition: background 0.4s, backdrop-filter 0.4s;
+      background: transparent;
+    }
+    #navbar.scrolled {
+      background: rgba(250,247,242,0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 rgba(200,99,106,0.15);
+    }
+
+    /* === CARD === */
+    .bungalow-card {
+      transition: transform 0.4s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+    }
+    .bungalow-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px rgba(92,26,38,0.12);
+    }
+    .bungalow-card .card-img img {
+      transition: transform 0.6s ease;
+    }
+    .bungalow-card:hover .card-img img {
+      transform: scale(1.06);
+    }
+
+    /* === TAGS === */
+    .tag-romantic { background: linear-gradient(135deg,#C8636A,#9E3D44); color:white; }
+    .tag-hot      { background: linear-gradient(135deg,#E07B3F,#C05020); color:white; }
+    .tag-popular  { background: linear-gradient(135deg,#7A6A9E,#5A4A7E); color:white; }
+    .tag-new      { background: linear-gradient(135deg,#4A9E7A,#2A7E5A); color:white; }
+
+    /* === FILTER PILL === */
+    .fpill {
+      border: 1.5px solid #C8636A44;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .fpill.active, .fpill:hover {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: white;
+    }
+
+    /* === AMENITY CHIP === */
+    .achip { border: 1.5px solid #C8636A33; transition: all 0.2s; cursor: pointer; }
+    .achip.on { background: #F4D6D8; border-color: var(--rose); color: var(--roseDark); }
+
+    /* === RANGE === */
+    input[type=range] { accent-color: var(--rose); }
+
+    /* === DRAWER === */
+    #cartDrawer {
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(.4,0,.2,1);
+    }
+    #cartDrawer.open { transform: translateX(0); }
+    #cartOverlay { opacity:0; pointer-events:none; transition:opacity 0.3s; }
+    #cartOverlay.open { opacity:1; pointer-events:all; }
+
+    /* === MODAL === */
+    #bModal { opacity:0; pointer-events:none; transition:opacity 0.3s; }
+    #bModal.open { opacity:1; pointer-events:all; }
+    #bModalBox {
+      transform: scale(0.93) translateY(30px);
+      transition: transform 0.35s cubic-bezier(.22,.68,0,1.2);
+    }
+    #bModal.open #bModalBox { transform: scale(1) translateY(0); }
+
+    /* === TOAST === */
+    #toast { transform: translateY(80px); opacity:0; transition: all 0.4s cubic-bezier(.22,.68,0,1.2); }
+    #toast.show { transform: translateY(0); opacity:1; }
+
+    /* === DIVIDER ORNAMENT === */
+    .ornament { color: var(--rose); letter-spacing: 8px; font-size: 10px; }
+
+    /* === HEART BUTTON === */
+    .heart-btn { transition: transform 0.2s; }
+    .heart-btn:hover { transform: scale(1.3); }
+    .heart-btn.liked { color: var(--rose); }
+
+    /* === SEARCH BAR === */
+    .sbar {
+      box-shadow: 0 12px 50px rgba(92,26,38,0.14), 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* === PAGE ENTRY ANIM === */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(30px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.8s ease forwards; opacity:0; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.25s; }
+    .delay-3 { animation-delay: 0.4s; }
+    .delay-4 { animation-delay: 0.55s; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--sand); }
+    ::-webkit-scrollbar-thumb { background: var(--rose); border-radius: 4px; }
+
+    /* Stars */
+    .sf { color: #C8636A; }
+    .se { color: #DDD; }
+
+    /* line-clamp */
+    .clamp2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  </style>
+</head>
+<body class="grain">
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursorRing"></div>
+
+<!-- Floating petals -->
+<div id="petals"></div>
+
+<!-- ================================================================
+     NAVBAR
+================================================================ -->
+<nav id="navbar" class="fixed top-0 inset-x-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2">
+      <span class="text-rose text-3xl" style="font-family:'Great Vibes',cursive; line-height:1">♥</span>
+      <div class="leading-none">
+        <div class="font-vibes text-2xl text-bark" style="line-height:1.2">Nido Secreto</div>
+        <div class="font-tenor text-xs text-mist tracking-widest uppercase" style="font-size:9px">Bungalows para parejas</div>
+      </div>
+    </a>
+
+    <!-- Links -->
+    <div class="hidden md:flex items-center gap-7 font-tenor text-sm tracking-wide text-bark">
+      <a href="#bungalows" class="hover:text-rose transition-colors">Bungalows</a>
+      <a href="#" class="hover:text-rose transition-colors">Experiencias</a>
+      <a href="#" class="hover:text-rose transition-colors">Gastronomía</a>
+      <a href="#" class="hover:text-rose transition-colors">Spa</a>
+      <a href="#" class="hover:text-rose transition-colors">Contacto</a>
+    </div>
+
+    <!-- Cart -->
+    <div class="flex items-center gap-3">
+      <button onclick="openCart()" class="relative p-2 rounded-full hover:bg-roseLight transition-colors group">
+        <i data-lucide="heart" class="w-5 h-5 text-bark group-hover:text-rose transition-colors"></i>
+        <span id="cartBadge" class="hidden absolute -top-1 -right-1 bg-rose text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-poppins font-bold">0</span>
+      </button>
+      <button onclick="openCart()" class="hidden md:flex items-center gap-2 bg-wine hover:bg-rose text-white text-xs font-tenor tracking-widest uppercase px-5 py-2.5 rounded-full transition-colors duration-300">
+        <i data-lucide="heart" class="w-3.5 h-3.5"></i> Mi Reserva
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     HERO
+================================================================ -->
+<section class="hero-section px-6">
+  <div class="max-w-7xl mx-auto w-full">
+    <!-- Tag line -->
+    <div class="fade-up delay-1">
+      <p class="font-vibes text-rose text-4xl mb-1">Un refugio solo para dos</p>
+    </div>
+
+    <h1 class="font-baskerville text-5xl md:text-7xl text-bark leading-none mb-4 fade-up delay-2">
+      Donde el amor<br/><em class="text-rose italic">se queda a dormir</em>
+    </h1>
+
+    <p class="font-poppins text-mist text-sm max-w-sm leading-relaxed mb-10 fade-up delay-3">
+      Bungalows privados diseñados para momentos íntimos. Jacuzzi, chimenea, vista al bosque y todo lo que una pareja necesita.
+    </p>
+
+    <!-- SEARCH BAR -->
+    <div class="sbar bg-ivory rounded-2xl p-3 md:p-2 flex flex-col md:flex-row gap-3 md:gap-0 md:items-center max-w-4xl fade-up delay-4">
+      <!-- Arrival -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-sand">
+        <i data-lucide="calendar-heart" class="w-5 h-5 text-rose shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-mist uppercase tracking-wider mb-0.5">Llegada</label>
+          <input type="date" id="checkIn" class="w-full bg-transparent font-poppins text-sm text-bark outline-none"/>
+        </div>
+      </div>
+      <!-- Departure -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-sand">
+        <i data-lucide="calendar-x2" class="w-5 h-5 text-rose shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-mist uppercase tracking-wider mb-0.5">Salida</label>
+          <input type="date" id="checkOut" class="w-full bg-transparent font-poppins text-sm text-bark outline-none"/>
+        </div>
+      </div>
+      <!-- Mood -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-sand">
+        <i data-lucide="sparkles" class="w-5 h-5 text-rose shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-mist uppercase tracking-wider mb-0.5">Ambiente</label>
+          <select id="moodFilter" class="w-full bg-transparent font-poppins text-sm text-bark outline-none cursor-pointer appearance-none" onchange="filterMood(this.value)">
+            <option value="all">Todos</option>
+            <option value="Romántico">Romántico</option>
+            <option value="Aventurero">Aventurero</option>
+            <option value="Íntimo">Íntimo</option>
+            <option value="Lujoso">Lujoso</option>
+          </select>
+        </div>
+      </div>
+      <!-- Nights -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2">
+        <i data-lucide="moon" class="w-5 h-5 text-rose shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-mist uppercase tracking-wider mb-0.5">Noches</label>
+          <select id="nights" class="w-full bg-transparent font-poppins text-sm text-bark outline-none cursor-pointer appearance-none">
+            <option value="1">1 noche</option>
+            <option value="2" selected>2 noches</option>
+            <option value="3">3 noches</option>
+            <option value="5">5 noches</option>
+            <option value="7">Semana</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="applySearch()" class="bg-wine hover:bg-rose text-white font-tenor tracking-widest uppercase text-xs px-8 py-4 rounded-xl transition-colors duration-300 flex items-center gap-2 shrink-0 mx-2">
+        <i data-lucide="search" class="w-4 h-4"></i> Buscar
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     STRIP
+================================================================ -->
+<div class="bg-wine text-white py-5 px-6">
+  <div class="max-w-7xl mx-auto flex flex-wrap justify-center gap-10 md:gap-20">
+    <div class="text-center">
+      <div class="font-vibes text-3xl text-roseLight" style="color:#F4D6D8">Privacidad</div>
+      <div class="font-tenor text-xs text-white/50 tracking-widest uppercase mt-0.5">100% exclusivo</div>
+    </div>
+    <div class="text-center">
+      <div class="font-vibes text-3xl" style="color:#F4D6D8">Jacuzzi</div>
+      <div class="font-tenor text-xs text-white/50 tracking-widest uppercase mt-0.5">En cada bungalow</div>
+    </div>
+    <div class="text-center">
+      <div class="font-vibes text-3xl" style="color:#F4D6D8">Check-in 24h</div>
+      <div class="font-tenor text-xs text-white/50 tracking-widest uppercase mt-0.5">Llega cuando quieras</div>
+    </div>
+    <div class="text-center">
+      <div class="font-vibes text-3xl" style="color:#F4D6D8">Sin vecinos</div>
+      <div class="font-tenor text-xs text-white/50 tracking-widest uppercase mt-0.5">Diseñado para 2</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     BUNGALOWS SECTION
+================================================================ -->
+<section id="bungalows" class="max-w-7xl mx-auto px-6 py-16">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+    <div>
+      <p class="ornament mb-1">✦ ✦ ✦</p>
+      <p class="font-vibes text-rose text-3xl leading-none mb-1">Elige tu refugio</p>
+      <h2 class="font-baskerville text-4xl md:text-5xl text-bark leading-tight">Bungalows disponibles</h2>
+    </div>
+    <div id="countDisplay" class="font-poppins text-sm text-mist"></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col lg:flex-row gap-5 mb-8">
+    <!-- Mood pills -->
+    <div class="flex flex-wrap gap-2 flex-1">
+      <button class="fpill active font-tenor text-sm px-5 py-2 rounded-full text-bark" onclick="moodPill(this,'all')">Todos</button>
+      <button class="fpill font-tenor text-sm px-5 py-2 rounded-full text-bark" onclick="moodPill(this,'Romántico')">Romántico</button>
+      <button class="fpill font-tenor text-sm px-5 py-2 rounded-full text-bark" onclick="moodPill(this,'Aventurero')">Aventurero</button>
+      <button class="fpill font-tenor text-sm px-5 py-2 rounded-full text-bark" onclick="moodPill(this,'Íntimo')">Íntimo</button>
+      <button class="fpill font-tenor text-sm px-5 py-2 rounded-full text-bark" onclick="moodPill(this,'Lujoso')">Lujoso</button>
+    </div>
+
+    <!-- Price + Sort + Search -->
+    <div class="flex flex-wrap items-center gap-5">
+      <div class="flex items-center gap-3 min-w-[210px]">
+        <i data-lucide="dollar-sign" class="w-4 h-4 text-rose shrink-0"></i>
+        <div class="flex-1">
+          <div class="flex justify-between text-xs font-poppins text-mist mb-1">
+            <span>Precio/noche</span>
+            <span id="priceLabel" class="text-rose font-semibold">$0–$1500</span>
+          </div>
+          <input type="range" id="priceRange" min="0" max="1500" value="1500" step="50" class="w-full" oninput="filterPrice(this.value)"/>
+        </div>
+      </div>
+
+      <div class="relative">
+        <i data-lucide="arrow-up-down" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose pointer-events-none"></i>
+        <select onchange="sortB(this.value)" class="font-poppins text-xs bg-ivory border border-sand rounded-full pl-9 pr-4 py-2 text-bark outline-none cursor-pointer shadow-sm">
+          <option value="default">Ordenar</option>
+          <option value="price-asc">Precio ↑</option>
+          <option value="price-desc">Precio ↓</option>
+          <option value="rating">Más valorado</option>
+          <option value="name">Nombre A–Z</option>
+        </select>
+      </div>
+
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose pointer-events-none"></i>
+        <input type="text" id="nameQ" placeholder="Buscar bungalow…" oninput="filterName(this.value)"
+          class="font-poppins text-xs bg-ivory border border-sand rounded-full pl-9 pr-4 py-2 text-bark outline-none shadow-sm w-44 focus:border-rose transition-colors"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Amenity chips -->
+  <div class="flex flex-wrap gap-2 mb-10">
+    <span class="font-tenor text-xs text-mist uppercase tracking-widest self-center mr-1">Incluye:</span>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'jacuzzi')">🛁 Jacuzzi</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'fireplace')">🔥 Chimenea</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'pool')">🏊 Piscina privada</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'terrace')">🌿 Terraza bosque</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'spa')">✨ Spa privado</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'breakfast')">🥂 Desayuno gourmet</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'telescope')">🔭 Telescopio</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'rosebath')">🌹 Baño de rosas</button>
+    <button class="achip text-xs font-poppins px-3 py-1.5 rounded-full bg-ivory text-bark" onclick="toggleA(this,'champagne')">🍾 Champagne</button>
+  </div>
+
+  <!-- Grid -->
+  <div id="bGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"></div>
+
+  <!-- Empty -->
+  <div id="emptyState" class="hidden text-center py-24">
+    <div class="text-6xl mb-4">🌹</div>
+    <p class="font-baskerville text-2xl text-sand mb-2">Sin bungalows disponibles</p>
+    <p class="font-poppins text-sm text-mist mb-6">Prueba cambiando los filtros.</p>
+    <button onclick="resetAll()" class="border border-rose text-rose font-tenor text-sm px-6 py-2 rounded-full hover:bg-rose hover:text-white transition-colors">Limpiar filtros</button>
+  </div>
+</section>
+
+<!-- ================================================================
+     PROMO BANNER
+================================================================ -->
+<section class="mx-6 max-w-7xl lg:mx-auto mb-16 rounded-3xl overflow-hidden relative">
+  <img src="https://images.unsplash.com/photo-1602002418082-a4443e081dd1?w=1600&q=80" alt="promo" class="w-full h-72 md:h-96 object-cover"/>
+  <div class="absolute inset-0 bg-gradient-to-r from-wine/85 to-wine/10 flex items-center px-10 md:px-16">
+    <div>
+      <p class="font-vibes text-roseLight text-4xl mb-1">Sorprende a tu pareja</p>
+      <h3 class="font-baskerville text-4xl md:text-5xl text-white mb-3 leading-tight">Paquete<br/><em class="text-roseLight italic">Luna de Miel</em></h3>
+      <p class="font-poppins text-sm text-white/70 mb-6 max-w-xs">Flores, champagne, baño de rosas, cena a la luz de las velas y masajes en pareja. Todo incluido.</p>
+      <button onclick="filterMoodDirect('Lujoso')" class="bg-rose hover:bg-roseDark text-white font-tenor tracking-widest uppercase text-xs px-7 py-3 rounded-full transition-colors">
+        Ver paquetes
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     CART DRAWER
+================================================================ -->
+<div id="cartOverlay" class="fixed inset-0 bg-wine/30 z-40 backdrop-blur-sm" onclick="closeCart()"></div>
+<div id="cartDrawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-ivory z-50 shadow-2xl flex flex-col">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-6 py-5 border-b border-sand">
+    <div>
+      <p class="font-vibes text-rose text-3xl leading-none">Mi Reserva</p>
+      <p class="font-tenor text-xs text-mist tracking-widest uppercase mt-0.5">Solicitud de bungalow</p>
+    </div>
+    <button onclick="closeCart()" class="p-2 rounded-full hover:bg-sand transition-colors">
+      <i data-lucide="x" class="w-5 h-5 text-bark"></i>
+    </button>
+  </div>
+
+  <!-- Dates -->
+  <div class="px-6 py-3 bg-roseLight border-b border-rose/20">
+    <div class="flex items-center gap-2 text-sm font-poppins text-bark">
+      <i data-lucide="calendar-heart" class="w-4 h-4 text-rose"></i>
+      <span id="cDates" class="font-medium">Selecciona fechas arriba</span>
+    </div>
+    <div class="flex items-center gap-2 text-sm font-poppins text-bark mt-1">
+      <i data-lucide="moon" class="w-4 h-4 text-rose"></i>
+      <span id="cNights">— noches</span>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div id="cartItems" class="flex-1 overflow-y-auto px-6 py-4 space-y-4"></div>
+
+  <!-- Empty -->
+  <div id="cartEmpty" class="flex-1 flex flex-col items-center justify-center text-center px-6">
+    <div class="text-5xl mb-3">🌹</div>
+    <p class="font-baskerville text-xl text-sand mb-1">Aún no has elegido</p>
+    <p class="font-poppins text-xs text-mist">Agrega un bungalow para comenzar.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="border-t border-sand px-6 py-5">
+    <div class="flex justify-between mb-1">
+      <span class="font-poppins text-xs text-mist">Subtotal / noche</span>
+      <span id="cSub" class="font-poppins font-semibold text-bark">$0</span>
+    </div>
+    <div class="flex justify-between mb-1">
+      <span id="cNightLabel" class="font-poppins text-xs text-mist">× 2 noches</span>
+      <span id="cSubTotal" class="font-poppins font-semibold text-bark">$0</span>
+    </div>
+    <div class="flex justify-between mb-4">
+      <span class="font-poppins text-xs text-mist">Impuestos (12%)</span>
+      <span id="cTax" class="font-poppins font-semibold text-bark">$0</span>
+    </div>
+    <div class="flex justify-between pb-4 mb-4 border-t border-sand pt-4">
+      <span class="font-baskerville text-lg text-bark">Total estimado</span>
+      <span id="cTotal" class="font-vibes text-2xl text-rose">$0</span>
+    </div>
+
+    <!-- Guest details mini form -->
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <input id="gName" type="text" placeholder="Tu nombre" class="font-poppins text-xs bg-white border border-sand rounded-lg px-3 py-2.5 text-bark outline-none focus:border-rose transition-colors"/>
+      <input id="gPhone" type="tel" placeholder="Teléfono / WhatsApp" class="font-poppins text-xs bg-white border border-sand rounded-lg px-3 py-2.5 text-bark outline-none focus:border-rose transition-colors"/>
+      <input id="gEmail" type="email" placeholder="Correo electrónico" class="col-span-2 font-poppins text-xs bg-white border border-sand rounded-lg px-3 py-2.5 text-bark outline-none focus:border-rose transition-colors"/>
+      <textarea id="gNote" placeholder="Ocasión especial (aniversario, cumpleaños…)" rows="2" class="col-span-2 font-poppins text-xs bg-white border border-sand rounded-lg px-3 py-2 text-bark outline-none focus:border-rose transition-colors resize-none"></textarea>
+    </div>
+
+    <button id="checkoutBtn" onclick="checkout()" class="w-full bg-wine hover:bg-rose text-white font-tenor tracking-widest uppercase text-xs py-4 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2">
+      <i data-lucide="heart" class="w-4 h-4"></i> Solicitar Reserva
+    </button>
+    <p class="text-center font-poppins text-xs text-mist mt-3">Sin cargo hasta confirmación · Check-in 24 h</p>
+  </div>
+</div>
+
+<!-- ================================================================
+     DETAIL MODAL
+================================================================ -->
+<div id="bModal" class="fixed inset-0 bg-wine/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div id="bModalBox" class="bg-ivory rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     TOAST
+================================================================ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-wine text-white font-poppins text-sm px-6 py-3 rounded-full shadow-xl flex items-center gap-2">
+  <span class="text-roseLight text-base">♥</span>
+  <span id="toastMsg">Bungalow agregado</span>
+</div>
+
+<!-- Float btn mobile -->
+<button onclick="openCart()" class="fixed bottom-6 right-6 z-40 bg-wine hover:bg-rose text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-colors duration-300 md:hidden">
+  <i data-lucide="heart" class="w-6 h-6"></i>
+  <span id="floatBadge" class="hidden absolute -top-1 -right-1 bg-rose text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+</button>
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+<script>
+/* ===== DATA ===== */
+const bungalows = [
+  {
+    id:1, name:"Bungalow Rosa Salvaje", mood:"Romántico",
+    price:280, rating:4.8, reviews:124, size:45,
+    tag:"Romántico", tagClass:"tag-romantic",
+    short:"Una cabaña envuelta en flores con chimenea y jacuzzi con vista al jardín secreto.",
+    desc:"El Bungalow Rosa Salvaje es nuestra joya más solicitada. Décor bohemio con pétalos de rosa, velas aromáticas y una chimenea de leña que enciende la magia. El jacuzzi exterior con vista al jardín privado es simplemente irresistible.",
+    amenities:["jacuzzi","fireplace","breakfast","champagne","rosebath","terrace"],
+    amenityLabel:["Jacuzzi exterior","Chimenea de leña","Desayuno en cama","Champagne bienvenida","Baño de rosas","Terraza privada"],
+    amenityEmoji:["🛁","🔥","🥂","🍾","🌹","🌿"],
+    images:[
+      "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?w=800&q=80",
+      "https://images.unsplash.com/photo-1543968996-ee822b8176ba?w=800&q=80",
+      "https://images.unsplash.com/photo-1585412727339-54e4bae3bbf9?w=800&q=80"
+    ]
+  },
+  {
+    id:2, name:"Nido del Bosque", mood:"Aventurero",
+    price:195, rating:4.6, reviews:89, size:38,
+    tag:"Aventurero", tagClass:"tag-new",
+    short:"Suspendido entre los árboles. Máxima privacidad, telescopio estelar y desayuno silvestre.",
+    desc:"Treehouse de lujo completamente privado. A 6 metros de altura entre robles centenarios. Cama redonda con dosel, telescopio para observar las estrellas y una ducha al aire libre que te conecta con la naturaleza.",
+    amenities:["telescope","terrace","breakfast","jacuzzi","fireplace"],
+    amenityLabel:["Telescopio estelar","Deck en árbol","Desayuno silvestre","Mini jacuzzi","Fogata privada"],
+    amenityEmoji:["🔭","🌿","🥂","🛁","🔥"],
+    images:[
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+      "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80"
+    ]
+  },
+  {
+    id:3, name:"Suite Pecado Dulce", mood:"Íntimo",
+    price:420, rating:4.9, reviews:201, size:60,
+    tag:"🔥 Hot", tagClass:"tag-hot",
+    short:"Nuestra suite más íntima. Cama redonda, espejos, jacuzzi interior y pétalos por doquier.",
+    desc:"Pensada para quienes buscan la máxima intimidad. Cama redonda king-size con espejo en el techo, jacuzzi interior con luces LED, cortinas de terciopelo, vino y tableta de chocolates de bienvenida. Check-in a cualquier hora.",
+    amenities:["jacuzzi","champagne","rosebath","spa","breakfast","fireplace"],
+    amenityLabel:["Jacuzzi LED interior","Champagne premium","Baño de rosas","Masaje en pareja","Desayuno gourmet","Chimenea eléctrica"],
+    amenityEmoji:["🛁","🍾","🌹","✨","🥂","🔥"],
+    images:[
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
+      "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80",
+      "https://images.unsplash.com/photo-1560185008-b033106af5c3?w=800&q=80"
+    ]
+  },
+  {
+    id:4, name:"Villa Magnolia", mood:"Lujoso",
+    price:680, rating:5.0, reviews:67, size:95,
+    tag:"Exclusivo", tagClass:"tag-popular",
+    short:"Nuestra villa más lujosa. Piscina privada climatizada, spa personal y mayordomo.",
+    desc:"La experiencia definitiva. Villa de dos ambientes con piscina privada climatizada, bañera de inmersión, sala de masajes, cocina equipada, mayordomo disponible 24h y decoración de diseñador. Para quienes merecen lo mejor.",
+    amenities:["pool","spa","jacuzzi","breakfast","champagne","rosebath","telescope","fireplace"],
+    amenityLabel:["Piscina climatizada","Sala de spa privada","Jacuzzi exterior","Desayuno gourmet","Champagne Moët","Baño de rosas","Telescopio","Chimenea"],
+    amenityEmoji:["🏊","✨","🛁","🥂","🍾","🌹","🔭","🔥"],
+    images:[
+      "https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800&q=80",
+      "https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80",
+      "https://images.unsplash.com/photo-1587985064135-0366536eab42?w=800&q=80"
+    ]
+  },
+  {
+    id:5, name:"Cabaña Luna Nueva", mood:"Romántico",
+    price:235, rating:4.7, reviews:155, size:42,
+    tag:"Popular", tagClass:"tag-popular",
+    short:"Cabaña rústica con piscina privada de agua caliente y terraza con hamaca bajo las estrellas.",
+    desc:"El encanto de lo rústico con el confort del lujo. Paredes de madera, cama con dosel, piscina temperada privada con nado nocturno incluido y una hamaca para dos donde el tiempo se detiene.",
+    amenities:["pool","terrace","breakfast","champagne","jacuzzi"],
+    amenityLabel:["Piscina privada temperada","Terraza hamaca","Desayuno incluido","Botella de vino","Jacuzzi"],
+    amenityEmoji:["🏊","🌿","🥂","🍾","🛁"],
+    images:[
+      "https://images.unsplash.com/photo-1561501900-3701fa6a0864?w=800&q=80",
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
+      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80"
+    ]
+  },
+  {
+    id:6, name:"Refugio Ambar", mood:"Íntimo",
+    price:310, rating:4.8, reviews:98, size:50,
+    tag:"Íntimo", tagClass:"tag-romantic",
+    short:"Tonos ambar, velas infinitas, bañera de inmersión para dos y jardín secreto enrejado.",
+    desc:"Decorado en tonos cálidos de ámbar y madera oscura. Una bañera de inmersión para dos con sales aromáticas, jardín enrejado completamente privado con jacuzzi al aire libre. Ideal para aniversarios y proposiciones de matrimonio.",
+    amenities:["jacuzzi","rosebath","champagne","terrace","breakfast","spa"],
+    amenityLabel:["Jacuzzi al aire libre","Baño sales aromáticas","Champagne rosé","Jardín enrejado privado","Desayuno al jardín","Ritual de spa"],
+    amenityEmoji:["🛁","🌹","🍾","🌿","🥂","✨"],
+    images:[
+      "https://images.unsplash.com/photo-1603825491103-bd638b1873b4?w=800&q=80",
+      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80",
+      "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?w=800&q=80"
+    ]
+  },
+  {
+    id:7, name:"Skyfall Penthouse", mood:"Lujoso",
+    price:890, rating:5.0, reviews:29, size:130,
+    tag:"Ultra VIP", tagClass:"tag-hot",
+    short:"Terraza 360° con piscina infinita, chef privado y helipuerto. La cima del romance.",
+    desc:"Para los que no tienen límites. Penthouse de lujo con piscina infinita de borde, terraza de 360°, chef privado disponible, decoración de alta costura y acceso en helicóptero opcional. Una experiencia que no se olvida jamás.",
+    amenities:["pool","spa","jacuzzi","breakfast","champagne","rosebath","telescope"],
+    amenityLabel:["Piscina infinita 360°","Spa & masajes diarios","Jacuzzi privado","Chef personal","Champagne ilimitado","Pétalos de rosa","Observatorio privado"],
+    amenityEmoji:["🏊","✨","🛁","🥂","🍾","🌹","🔭"],
+    images:[
+      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
+      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80"
+    ]
+  },
+  {
+    id:8, name:"Cabaña Río y Luna", mood:"Aventurero",
+    price:175, rating:4.5, reviews:112, size:35,
+    tag:"Natural", tagClass:"tag-new",
+    short:"A orillas del río, con kayaks para dos, fogata nocturna y desayuno con frutas del bosque.",
+    desc:"El sonido del río es el despertador más romántico. Cabaña de madera a la orilla del agua, kayaks dobles incluidos, fogata privada y una hamaca para dos. Sencilla, auténtica y completamente tuya.",
+    amenities:["fireplace","terrace","breakfast","telescope"],
+    amenityLabel:["Fogata & leña incluida","Deck sobre el río","Desayuno silvestre","Telescopio portátil"],
+    amenityEmoji:["🔥","🌿","🥂","🔭"],
+    images:[
+      "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&q=80",
+      "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80",
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80"
+    ]
+  },
+  {
+    id:9, name:"Suite Cerezos", mood:"Romántico",
+    price:355, rating:4.9, reviews:143, size:55,
+    tag:"Luna de Miel", tagClass:"tag-romantic",
+    short:"Inspirada en los jardines japoneses: bañera de madera hinoki, jardín zen y sake de bienvenida.",
+    desc:"Un oasis de calma y sensualidad. Bañera tradicional japonesa hinoki para dos con sales de bambú, jardín zen privado con piedras y agua corriente, cama tatami king, sake y wagashi de bienvenida. Para parejas que aprecian la poesía.",
+    amenities:["jacuzzi","rosebath","champagne","spa","breakfast","terrace"],
+    amenityLabel:["Bañera hinoki japonesa","Ritual de sales","Sake & wagashi","Masaje shiatsu","Desayuno japonés","Jardín zen privado"],
+    amenityEmoji:["🛁","🌹","🍾","✨","🥂","🌿"],
+    images:[
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
+      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&q=80",
+      "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800&q=80"
+    ]
+  }
+];
+
+/* ===== STATE ===== */
+let cart = [];
+let activeMood = 'all';
+let activeAmenities = [];
+let maxPrice = 1500;
+let sortMode = 'default';
+let nameQuery = '';
+let currentBId = null;
+let currentImgIdx = 0;
+const liked = new Set();
+
+/* ===== FILTER ===== */
+function getFiltered() {
+  let list = bungalows.filter(b => {
+    if (activeMood !== 'all' && b.mood !== activeMood) return false;
+    if (b.price > maxPrice) return false;
+    if (activeAmenities.length > 0 && !activeAmenities.every(a=>b.amenities.includes(a))) return false;
+    if (nameQuery && !b.name.toLowerCase().includes(nameQuery.toLowerCase())) return false;
+    return true;
+  });
+  if (sortMode === 'price-asc') list.sort((a,b)=>a.price-b.price);
+  else if (sortMode === 'price-desc') list.sort((a,b)=>b.price-a.price);
+  else if (sortMode === 'rating') list.sort((a,b)=>b.rating-a.rating);
+  else if (sortMode === 'name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  return list;
+}
+
+function renderStars(r) {
+  return Array.from({length:5},(_,i)=>`<span class="${i<Math.round(r)?'sf':'se'}">★</span>`).join('');
+}
+
+/* ===== RENDER CARDS ===== */
+function render() {
+  const list = getFiltered();
+  const grid = document.getElementById('bGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('countDisplay').textContent = `${list.length} bungalow${list.length!==1?'s':''} disponible${list.length!==1?'s':''}`;
+
+  if (!list.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = list.map(b => {
+    const inCart = cart.some(c=>c.id===b.id);
+    const isLiked = liked.has(b.id);
+    return `
+    <div class="bungalow-card bg-white rounded-2xl overflow-hidden shadow-sm border border-sand flex flex-col">
+      <!-- Image -->
+      <div class="card-img relative overflow-hidden h-60">
+        <img src="${b.images[0]}" alt="${b.name}" class="w-full h-full object-cover" loading="lazy"/>
+        <span class="absolute top-3 left-3 ${b.tagClass} text-xs font-poppins font-semibold px-3 py-1 rounded-full shadow">${b.tag}</span>
+        <!-- Heart -->
+        <button onclick="toggleLike(${b.id})" class="heart-btn absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full ${isLiked?'liked':'text-mist'}" id="likeBtn${b.id}">
+          <i data-lucide="${isLiked?'heart':'heart'}" class="w-4 h-4" style="${isLiked?'fill:#C8636A;color:#C8636A':''}"></i>
+        </button>
+        <!-- Quick view -->
+        <button onclick="openModal(${b.id})" class="absolute inset-0 bg-wine/0 hover:bg-wine/25 transition-colors duration-300 flex items-center justify-center group">
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-ivory text-bark font-tenor text-xs tracking-widest uppercase px-4 py-2 rounded-full flex items-center gap-1.5">
+            <i data-lucide="expand" class="w-3 h-3"></i> Ver detalles
+          </span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 flex flex-col flex-1">
+        <div class="flex items-start justify-between mb-1">
+          <h3 class="font-baskerville text-base text-bark leading-snug flex-1 mr-2">${b.name}</h3>
+          <div class="text-right shrink-0">
+            <div class="text-xs">${renderStars(b.rating)}</div>
+            <div class="font-poppins text-xs text-mist">${b.rating} · ${b.reviews}</div>
+          </div>
+        </div>
+        <p class="font-tenor text-xs text-rose tracking-wide mb-2">${b.mood} · ${b.size} m²</p>
+        <p class="font-poppins text-xs text-mist leading-relaxed clamp2 mb-4">${b.short}</p>
+
+        <!-- Amenities pills -->
+        <div class="flex flex-wrap gap-1.5 mb-5">
+          ${b.amenityEmoji.slice(0,5).map((e,i)=>`
+            <span title="${b.amenityLabel[i]}" class="text-xs bg-ivory border border-sand rounded-full px-2 py-0.5 font-poppins text-bark">${e} ${b.amenityLabel[i].split(' ').slice(0,2).join(' ')}</span>
+          `).join('')}
+        </div>
+
+        <!-- Price + CTA -->
+        <div class="flex items-end justify-between mt-auto">
+          <div>
+            <div class="font-poppins text-xs text-mist">desde</div>
+            <div class="font-vibes text-3xl text-rose leading-none">\$${b.price}</div>
+            <div class="font-poppins text-xs text-mist">por noche</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openModal(${b.id})" title="Detalles" class="p-2.5 border border-sand rounded-xl hover:border-rose transition-colors">
+              <i data-lucide="info" class="w-4 h-4 text-mist"></i>
+            </button>
+            <button onclick="addToCart(${b.id})" class="px-4 py-2.5 rounded-xl font-poppins text-xs font-semibold transition-colors duration-300 flex items-center gap-1.5
+              ${inCart?'bg-roseLight text-rose border border-rose':'bg-wine hover:bg-rose text-white'}">
+              <i data-lucide="${inCart?'check':'heart'}" class="w-4 h-4"></i>
+              ${inCart?'Elegido':'Reservar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+/* ===== FILTER HANDLERS ===== */
+function moodPill(btn, mood) {
+  activeMood = mood;
+  document.querySelectorAll('.fpill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('moodFilter').value = mood === 'all' ? 'all' : mood;
+  render();
+  document.getElementById('bungalows').scrollIntoView({behavior:'smooth'});
+}
+
+function filterMood(val) {
+  activeMood = val;
+  document.querySelectorAll('.fpill').forEach(b=>{
+    const match = b.getAttribute('onclick').includes(`'${val}'`) || (val==='all' && b.getAttribute('onclick').includes("'all'"));
+    b.classList.toggle('active', match);
+  });
+  render();
+}
+
+function filterMoodDirect(mood) {
+  activeMood = mood;
+  document.querySelectorAll('.fpill').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${mood}'`));
+  });
+  render();
+  document.getElementById('bungalows').scrollIntoView({behavior:'smooth'});
+}
+
+function filterPrice(v) {
+  maxPrice = parseInt(v);
+  document.getElementById('priceLabel').textContent = `$0–$${v}`;
+  render();
+}
+
+function sortB(v) { sortMode = v; render(); }
+function filterName(v) { nameQuery = v; render(); }
+
+function toggleA(btn, a) {
+  if (activeAmenities.includes(a)) {
+    activeAmenities = activeAmenities.filter(x=>x!==a);
+    btn.classList.remove('on');
+  } else {
+    activeAmenities.push(a);
+    btn.classList.add('on');
+  }
+  render();
+}
+
+function resetAll() {
+  activeMood = 'all'; activeAmenities = []; maxPrice = 1500; sortMode = 'default'; nameQuery = '';
+  document.getElementById('priceRange').value = 1500;
+  document.getElementById('priceLabel').textContent = '$0–$1500';
+  document.getElementById('nameQ').value = '';
+  document.getElementById('moodFilter').value = 'all';
+  document.querySelectorAll('.fpill').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('.achip').forEach(b=>b.classList.remove('on'));
+  render();
+}
+
+function applySearch() {
+  filterMood(document.getElementById('moodFilter').value);
+  render();
+  document.getElementById('bungalows').scrollIntoView({behavior:'smooth'});
+}
+
+/* ===== LIKE ===== */
+function toggleLike(id) {
+  liked.has(id) ? liked.delete(id) : liked.add(id);
+  render();
+}
+
+/* ===== CART ===== */
+function addToCart(id) {
+  const b = bungalows.find(x=>x.id===id);
+  if (!b) return;
+  if (cart.some(c=>c.id===id)) { removeFromCart(id); return; }
+  cart.push({...b});
+  updateCart();
+  showToast(`"${b.name}" agregado ♥`);
+  render();
+}
+
+function removeFromCart(id) { cart = cart.filter(c=>c.id!==id); updateCart(); render(); }
+
+function updateCart() {
+  const n = cart.length;
+  const nb = document.getElementById('cartBadge');
+  const fb = document.getElementById('floatBadge');
+  if (n > 0) { nb.textContent=n; nb.classList.remove('hidden'); fb.textContent=n; fb.classList.remove('hidden'); }
+  else { nb.classList.add('hidden'); fb.classList.add('hidden'); }
+
+  const nights = parseInt(document.getElementById('nights').value)||2;
+  const sub = cart.reduce((s,r)=>s+r.price,0);
+  const subTotal = sub * nights;
+  const tax = Math.round(subTotal * 0.12);
+  const total = subTotal + tax;
+
+  document.getElementById('cSub').textContent = `$${sub}`;
+  document.getElementById('cNightLabel').textContent = `× ${nights} noche${nights>1?'s':''}`;
+  document.getElementById('cSubTotal').textContent = `$${subTotal}`;
+  document.getElementById('cTax').textContent = `$${tax}`;
+  document.getElementById('cTotal').textContent = `$${total}`;
+
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  document.getElementById('cDates').textContent = ci && co ? `${fmtDate(ci)} → ${fmtDate(co)}` : 'Selecciona fechas arriba';
+  document.getElementById('cNights').textContent = `${nights} noche${nights>1?'s':''}`;
+
+  const itemsEl = document.getElementById('cartItems');
+  const emptyEl = document.getElementById('cartEmpty');
+
+  if (!n) { itemsEl.classList.add('hidden'); emptyEl.classList.remove('hidden'); }
+  else {
+    itemsEl.classList.remove('hidden'); emptyEl.classList.add('hidden');
+    itemsEl.innerHTML = cart.map(b=>`
+      <div class="flex gap-3 p-3 bg-white rounded-xl border border-sand">
+        <img src="${b.images[0]}" class="w-16 h-16 object-cover rounded-lg shrink-0"/>
+        <div class="flex-1 min-w-0">
+          <div class="font-baskerville text-sm text-bark leading-snug truncate">${b.name}</div>
+          <div class="font-tenor text-xs text-mist">${b.mood} · ${b.size}m²</div>
+          <div class="font-vibes text-xl text-rose mt-0.5">$${b.price}<span class="font-poppins text-xs text-mist">/noche</span></div>
+        </div>
+        <button onclick="removeFromCart(${b.id})" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors self-start">
+          <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
+        </button>
+      </div>
+    `).join('');
+    lucide.createIcons();
+  }
+}
+
+function fmtDate(d) {
+  const [y,m,day] = d.split('-');
+  const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${day} ${M[parseInt(m)-1]}`;
+}
+
+function openCart() {
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  updateCart();
+}
+function closeCart() {
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ===== CHECKOUT ===== */
+function checkout() {
+  const name = document.getElementById('gName').value.trim();
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  if (!cart.length) { showToast('Agrega al menos un bungalow'); return; }
+  if (!ci || !co) { showToast('Selecciona las fechas primero'); return; }
+  if (!name) { showToast('Ingresa tu nombre'); return; }
+  showToast(`¡Gracias ${name}! Te contactaremos pronto ♥`);
+  setTimeout(()=>{ cart=[]; updateCart(); closeCart(); render(); }, 1800);
+}
+
+/* ===== MODAL ===== */
+function openModal(id) {
+  const b = bungalows.find(x=>x.id===id);
+  if (!b) return;
+  currentBId = id; currentImgIdx = 0;
+  document.getElementById('modalContent').innerHTML = buildModal(b);
+  document.getElementById('bModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  lucide.createIcons();
+}
+
+function buildModal(b) {
+  const inCart = cart.some(c=>c.id===b.id);
+  return `
+  <div class="relative h-72 overflow-hidden rounded-t-3xl">
+    <img id="mImg" src="${b.images[0]}" class="w-full h-full object-cover transition-opacity duration-300"/>
+    <span class="absolute top-4 left-4 ${b.tagClass} text-xs font-poppins font-semibold px-3 py-1 rounded-full">${b.tag}</span>
+    <button onclick="closeModal()" class="absolute top-4 right-4 bg-ivory/90 p-2 rounded-full hover:bg-ivory transition-colors">
+      <i data-lucide="x" class="w-4 h-4 text-bark"></i>
+    </button>
+    <button onclick="mNav(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-ivory/80 p-2 rounded-full hover:bg-ivory">
+      <i data-lucide="chevron-left" class="w-4 h-4 text-bark"></i>
+    </button>
+    <button onclick="mNav(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-ivory/80 p-2 rounded-full hover:bg-ivory">
+      <i data-lucide="chevron-right" class="w-4 h-4 text-bark"></i>
+    </button>
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      ${b.images.map((_,i)=>`<span id="mdot${i}" class="w-2 h-2 rounded-full ${i===0?'bg-rose':'bg-white/50'}"></span>`).join('')}
+    </div>
+  </div>
+  <div class="flex gap-2 px-6 pt-3">
+    ${b.images.map((img,i)=>`<img src="${img}" onclick="mNavTo(${i})" class="w-16 h-12 object-cover rounded-lg cursor-pointer border-2 ${i===0?'border-rose':'border-transparent'}" id="mth${i}"/>`).join('')}
+  </div>
+  <div class="px-6 py-5">
+    <p class="font-vibes text-rose text-xl mb-0.5">${b.mood}</p>
+    <h2 class="font-baskerville text-3xl text-bark mb-1">${b.name}</h2>
+    <div class="flex items-center gap-3 mb-3">
+      <span class="text-sm">${renderStars(b.rating)}</span>
+      <span class="font-poppins text-xs text-mist">${b.rating} · ${b.reviews} reseñas · ${b.size} m²</span>
+    </div>
+    <p class="font-poppins text-sm text-mist leading-relaxed mb-5">${b.desc}</p>
+    <div class="grid grid-cols-2 gap-2 mb-6">
+      ${b.amenityLabel.map((l,i)=>`
+        <div class="flex items-center gap-2 font-poppins text-xs text-bark">
+          <span class="text-base">${b.amenityEmoji[i]}</span>${l}
+        </div>`).join('')}
+    </div>
+    <div class="flex items-center justify-between pt-4 border-t border-sand">
+      <div>
+        <div class="font-poppins text-xs text-mist">desde</div>
+        <div class="font-vibes text-4xl text-rose">\$${b.price}</div>
+        <div class="font-poppins text-xs text-mist">por noche</div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeModal()" class="px-5 py-3 border border-sand rounded-xl font-poppins text-xs text-mist hover:border-rose transition-colors">Cerrar</button>
+        <button onclick="addToCart(${b.id}); closeModal();" class="px-6 py-3 rounded-xl font-poppins text-xs font-semibold transition-colors flex items-center gap-2
+          ${inCart?'bg-roseLight text-rose border border-rose':'bg-wine hover:bg-rose text-white'}">
+          <i data-lucide="${inCart?'check':'heart'}" class="w-4 h-4"></i>
+          ${inCart?'Quitar':'Reservar'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function mNavTo(i) {
+  const b = bungalows.find(x=>x.id===currentBId); if(!b) return;
+  currentImgIdx = i;
+  const el = document.getElementById('mImg'); el.style.opacity=0;
+  setTimeout(()=>{ el.src=b.images[i]; el.style.opacity=1; },150);
+  b.images.forEach((_,j)=>{
+    const d=document.getElementById(`mdot${j}`); if(d) d.className=`w-2 h-2 rounded-full ${j===i?'bg-rose':'bg-white/50'}`;
+    const t=document.getElementById(`mth${j}`); if(t) t.className=`w-16 h-12 object-cover rounded-lg cursor-pointer border-2 ${j===i?'border-rose':'border-transparent'}`;
+  });
+}
+function mNav(dir) {
+  const b=bungalows.find(x=>x.id===currentBId); if(!b) return;
+  mNavTo((currentImgIdx+dir+b.images.length)%b.images.length);
+}
+function closeModal() {
+  document.getElementById('bModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ===== TOAST ===== */
+let tt;
+function showToast(msg) {
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
+}
+
+/* ===== CURSOR ===== */
+const cur=document.getElementById('cursor');
+const ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-5}px,${my-5}px)`; });
+(function animRing(){rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.transform=`translate(${rx-18}px,${ry-18}px)`; requestAnimationFrame(animRing);})();
+document.querySelectorAll('a,button,input,select,textarea').forEach(el=>{ el.addEventListener('mouseenter',()=>{ ring.style.width='56px'; ring.style.height='56px'; ring.style.opacity='0.4'; }); el.addEventListener('mouseleave',()=>{ ring.style.width='36px'; ring.style.height='36px'; ring.style.opacity='0.6'; }); });
+
+/* ===== PETALS ===== */
+function spawnPetal() {
+  const p=document.createElement('div');
+  p.className='petal';
+  p.style.left=Math.random()*100+'vw';
+  p.style.top='-20px';
+  const dur = 6+Math.random()*8;
+  p.style.animationDuration=dur+'s';
+  p.style.animationDelay=Math.random()*2+'s';
+  p.style.transform=`rotate(${Math.random()*360}deg) scale(${0.5+Math.random()})`;
+  document.getElementById('petals').appendChild(p);
+  setTimeout(()=>p.remove(),(dur+2)*1000);
+}
+setInterval(spawnPetal, 2200);
+
+/* ===== NAVBAR SCROLL ===== */
+window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',scrollY>60));
+
+/* ===== DEFAULT DATES ===== */
+const today=new Date(), tom=new Date(today);
+tom.setDate(today.getDate()+1);
+const fmt=d=>d.toISOString().split('T')[0];
+document.getElementById('checkIn').value=fmt(today);
+document.getElementById('checkOut').value=fmt(tom);
+
+/* ===== INIT ===== */
+render();
+lucide.createIcons();
+</script>
+
+<!-- FOOTER -->
+<footer class="bg-bark text-white py-14 px-6 mt-4">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-rose text-4xl" style="font-family:'Great Vibes'">♥</span>
+        <div>
+          <div class="font-vibes text-2xl" style="color:#F4D6D8">Nido Secreto</div>
+          <div class="font-tenor text-xs text-white/40 tracking-widest uppercase" style="font-size:9px">Bungalows para parejas</div>
+        </div>
+      </div>
+      <p class="font-poppins text-xs text-white/50 leading-relaxed">Un refugio diseñado para el amor, la intimidad y los momentos que no se olvidan.</p>
+    </div>
+    <div>
+      <h4 class="font-baskerville text-sm mb-4 text-white/70">Nuestros Bungalows</h4>
+      <ul class="space-y-2 font-poppins text-xs text-white/40">
+        <li><a href="#" class="hover:text-rose transition-colors">Románticos</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Íntimos</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Aventureros</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Lujosos</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-baskerville text-sm mb-4 text-white/70">Experiencias</h4>
+      <ul class="space-y-2 font-poppins text-xs text-white/40">
+        <li><a href="#" class="hover:text-rose transition-colors">Cena romántica</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Spa en pareja</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Noche de estrellas</a></li>
+        <li><a href="#" class="hover:text-rose transition-colors">Paquete aniversario</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-baskerville text-sm mb-4 text-white/70">Contacto</h4>
+      <ul class="space-y-2 font-poppins text-xs text-white/40">
+        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-3 h-3 text-rose"></i>+1 800 NIDO-SECRET</li>
+        <li class="flex items-center gap-2"><i data-lucide="mail" class="w-3 h-3 text-rose"></i>amor@nidosecreto.com</li>
+        <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3 h-3 text-rose"></i>Bosque de los Enamorados</li>
+      </ul>
+      <div class="flex gap-3 mt-4">
+        <a href="#" class="p-2 bg-white/10 hover:bg-rose rounded-full transition-colors"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+        <a href="#" class="p-2 bg-white/10 hover:bg-rose rounded-full transition-colors"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+        <a href="#" class="p-2 bg-white/10 hover:bg-rose rounded-full transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-2">
+    <p class="font-vibes text-rose text-xl">Hecho con ♥ para los enamorados</p>
+    <p class="font-poppins text-xs text-white/30">© 2024 Nido Secreto · Todos los derechos reservados</p>
+  </div>
+</footer>
+
+</body>
+</html>

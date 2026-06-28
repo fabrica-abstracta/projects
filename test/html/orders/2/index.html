@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comanda — Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js"></script>
+</head>
+<body class="kitchen-bg min-h-screen">
+
+<div class="max-w-6xl mx-auto px-6 py-14">
+
+  <header class="flex items-start justify-between mb-14 flex-wrap gap-6">
+    <div>
+      <div class="font-mono text-xs tracking-widest text-[#E85D2C] mb-2">COMANDA · SISTEMA DE OPERACIÓN</div>
+      <h1 class="font-display text-4xl md:text-5xl font-bold text-[#FAF6ED] leading-[1.05]">Todo el restaurante,<br>en tres pantallas.</h1>
+    </div>
+    <div class="ticket px-4 py-3 shrink-0">
+      <div class="font-mono text-[10px] text-[#3A342C]/60 tracking-widest mb-1">LOCALES ACTIVOS</div>
+      <div id="locCount" class="font-display text-3xl font-bold text-[#1C1917]">3</div>
+    </div>
+  </header>
+
+  <div class="grid md:grid-cols-3 gap-5">
+
+    <a href="productos.html" class="group ticket p-6 flex flex-col justify-between min-h-[280px] hover:-translate-y-1 transition-transform">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <span class="badge badge-llevar">01</span>
+          <i data-lucide="package" class="w-5 h-5 text-[#6F8F63]"></i>
+        </div>
+        <h2 class="font-display text-2xl font-bold mb-2">Productos &amp; Stock</h2>
+        <p class="text-sm text-[#3A342C]/75 leading-relaxed">Administra el catálogo maestro y activa o desactiva el stock de cada producto, día por día, en cada local.</p>
+      </div>
+      <div class="font-mono text-xs mt-6 flex items-center gap-1.5 text-[#57724E] font-semibold">
+        ABRIR MÓDULO <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+      </div>
+    </a>
+
+    <a href="pos.html" class="group ticket p-6 flex flex-col justify-between min-h-[280px] hover:-translate-y-1 transition-transform">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <span class="badge badge-online">02</span>
+          <i data-lucide="receipt" class="w-5 h-5 text-[#E85D2C]"></i>
+        </div>
+        <h2 class="font-display text-2xl font-bold mb-2">Punto de Venta</h2>
+        <p class="text-sm text-[#3A342C]/75 leading-relaxed">El mesero arma el pedido: mesa, para llevar o pedido online, con notas por producto, y lo envía directo a cocina.</p>
+      </div>
+      <div class="font-mono text-xs mt-6 flex items-center gap-1.5 text-[#C44A1F] font-semibold">
+        ABRIR MÓDULO <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+      </div>
+    </a>
+
+    <a href="cocina.html" class="group ticket p-6 flex flex-col justify-between min-h-[280px] hover:-translate-y-1 transition-transform">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <span class="badge badge-local">03</span>
+          <i data-lucide="chef-hat" class="w-5 h-5 text-[#46647A]"></i>
+        </div>
+        <h2 class="font-display text-2xl font-bold mb-2">Cocina (KDS)</h2>
+        <p class="text-sm text-[#3A342C]/75 leading-relaxed">Tablero de comandas en vivo. La cocina avanza cada ticket de Nuevo → En preparación → Listo con un toque.</p>
+      </div>
+      <div class="font-mono text-xs mt-6 flex items-center gap-1.5 text-[#33495B] font-semibold">
+        ABRIR MÓDULO <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="mt-10 flex items-center justify-between font-mono text-[11px] text-[#FAF6ED]/40 tracking-wide">
+    <span>DATOS DE DEMOSTRACIÓN GUARDADOS EN ESTE NAVEGADOR</span>
+    <button onclick="if(confirm('¿Reiniciar todos los datos de demo?')){resetDB(); location.reload();}" class="underline hover:text-[#FAF6ED]/70 transition-colors">reiniciar datos</button>
+  </div>
+
+</div>
+
+<script>
+  loadDB();
+  lucide.createIcons();
+</script>
+</body>
+</html>

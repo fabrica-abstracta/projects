@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Ruleta</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { cream:'#FDF6EC', caramel:'#C8872A', choco:'#3B1F0E', rose:'#E8929A', gold:'#F0C060' } } }
+}
+</script>
+<style>
+body { background: linear-gradient(135deg, #0f1a0a 0%, #1a3010 50%, #0f1a0a 100%); font-family:'Georgia', serif; min-height:100vh; }
+#roulette-canvas { border-radius: 50%; box-shadow: 0 0 60px rgba(240,192,96,0.4), 0 0 120px rgba(240,192,96,0.2); }
+.pointer { width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-top:40px solid #F0C060; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+@keyframes winner-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+.winner-box { animation: winner-pulse 0.8s ease-in-out infinite; }
+@keyframes confetti-fall { 0%{transform:translateY(-20px) rotate(0deg); opacity:1} 100%{transform:translateY(80px) rotate(720deg); opacity:0} }
+.confetti-piece { position:absolute; animation: confetti-fall 1.5s ease-out forwards; font-size:18px; }
+</style>
+</head>
+<body x-data="ruletaApp()" class="min-h-screen text-white">
+
+<nav class="flex items-center justify-between px-8 py-4 border-b border-white/10">
+  <a href="juegos.html" class="flex items-center gap-2 text-white/70 hover:text-white transition text-sm">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Juegos
+  </a>
+  <div class="flex items-center gap-3">
+    <span class="text-gold font-bold text-xl">🍰 SweetStamp</span>
+    <span class="bg-rose text-white text-xs px-3 py-1 rounded-full">Ruleta de Premios</span>
+  </div>
+  <div class="text-sm text-white/50">Pastelería La Dulce Época</div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div class="grid grid-cols-5 gap-8">
+    <div class="col-span-2 space-y-4">
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-5">
+        <h3 class="font-bold text-gold mb-3 uppercase text-xs tracking-widest">Cliente Actual</h3>
+        <div x-show="!clienteActual" class="text-center py-4">
+          <p class="text-white/50 text-sm mb-3">Sin cliente seleccionado</p>
+          <button @click="seleccionarCliente()" class="bg-rose text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition w-full">
+            <i class="fa-solid fa-user-check mr-1"></i> Seleccionar Cliente
+          </button>
+        </div>
+        <div x-show="clienteActual" class="space-y-3">
+          <div class="bg-white/10 rounded-xl p-4 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-rose flex items-center justify-center font-bold text-lg" x-text="clienteActual?.nombre?.split(' ').map(n=>n[0]).join('').slice(0,2)"></div>
+            <div>
+              <p class="font-bold" x-text="clienteActual?.nombre"></p>
+              <p class="text-xs text-white/50" x-text="clienteActual?.telefono"></p>
+              <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Cartilla completa ✅</span>
+            </div>
+          </div>
+          <button @click="seleccionarCliente()" class="w-full border border-white/20 text-white/60 py-2 rounded-lg text-xs hover:bg-white/10 transition">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i> Cambiar Cliente
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-5">
+        <h3 class="font-bold text-gold mb-3 uppercase text-xs tracking-widest">Premios en Ruleta</h3>
+        <div class="space-y-2">
+          <template x-for="(p, i) in premios" :key="p.id">
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full" :style="'background:' + p.color"></div>
+                <span x-text="p.emoji + ' ' + p.nombre"></span>
+              </div>
+              <button @click="premios.splice(i,1); redibujarRuleta()" class="text-white/30 hover:text-red-400 text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </template>
+        </div>
+        <button @click="agregarPremio()" class="mt-3 w-full border border-white/20 text-white/60 py-2 rounded-lg text-xs hover:bg-white/10 transition">
+          <i class="fa-solid fa-plus mr-1"></i> Agregar Premio
+        </button>
+      </div>
+
+      <div x-show="resultadoActual" x-transition class="winner-box bg-gradient-to-r from-gold/30 to-caramel/30 border border-gold rounded-2xl p-5 relative overflow-hidden">
+        <div id="confetti-area"></div>
+        <p class="text-gold text-xs font-bold uppercase tracking-widest mb-2">🎡 Resultado</p>
+        <p class="text-lg font-bold" x-text="clienteActual?.nombre"></p>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="text-2xl" x-text="resultadoActual?.emoji"></span>
+          <span class="font-semibold" x-text="resultadoActual?.nombre"></span>
+        </div>
+        <button @click="confirmarEntrega()" class="mt-4 w-full bg-gold text-choco py-2 rounded-xl font-bold text-sm hover:opacity-90 transition">
+          <i class="fa-solid fa-check mr-1"></i> Confirmar Entrega
+        </button>
+      </div>
+    </div>
+
+    <div class="col-span-3 flex flex-col items-center">
+      <h2 class="text-2xl font-bold text-center mb-6 text-gold">🎡 RULETA DE PREMIOS</h2>
+
+      <div class="relative flex flex-col items-center">
+        <div class="pointer mb-2 z-10"></div>
+        <canvas id="roulette-canvas" width="320" height="320"></canvas>
+      </div>
+
+      <div class="flex gap-4 mt-6">
+        <button
+          @click="girarRuleta()"
+          :disabled="girando || !clienteActual || premios.length < 2"
+          :class="girando ? 'opacity-50 cursor-not-allowed scale-95' : 'hover:scale-105 hover:shadow-2xl'"
+          class="bg-gradient-to-r from-rose to-pink-700 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg transition-all">
+          <span x-text="girando ? '🎡 Girando...' : '🎯 ¡GIRAR RULETA!'"></span>
+        </button>
+        <button x-show="resultadoActual" @click="resultadoActual=null" class="border border-white/30 text-white px-6 py-4 rounded-2xl text-sm hover:bg-white/10 transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Nueva Tirada
+        </button>
+      </div>
+      <p x-show="!clienteActual" class="text-white/40 text-xs mt-3">Selecciona un cliente para girar la ruleta</p>
+    </div>
+  </div>
+
+  <div class="mt-10 bg-white/10 backdrop-blur rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-gold text-lg">🏅 Tabla de Ganadores – Ruleta</h3>
+      <span class="text-white/40 text-sm" x-text="ganadores.length + ' tiradas'"></span>
+    </div>
+    <div x-show="ganadores.length === 0" class="text-center py-8 text-white/30">
+      <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 block"></i>
+      <p>Gira la ruleta para ver ganadores aquí</p>
+    </div>
+    <table x-show="ganadores.length > 0" class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-white/20 text-white/40 text-left">
+          <th class="pb-2">#</th>
+          <th class="pb-2">Cliente</th>
+          <th class="pb-2">Premio Ganado</th>
+          <th class="pb-2">Fecha y Hora</th>
+          <th class="pb-2">Estado</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        <template x-for="(g, i) in ganadores" :key="g.id">
+          <tr class="hover:bg-white/5 transition">
+            <td class="py-3 text-gold font-bold" x-text="'#' + (i+1)"></td>
+            <td class="py-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-rose flex items-center justify-center text-xs font-bold" x-text="g.cliente.split(' ').map(n=>n[0]).join('').slice(0,2)"></div>
+                <span x-text="g.cliente"></span>
+              </div>
+            </td>
+            <td class="py-3 font-medium">
+              <span x-text="g.emoji + ' ' + g.premio"></span>
+            </td>
+            <td class="py-3 text-white/40 text-xs" x-text="g.fecha"></td>
+            <td class="py-3">
+              <span :class="g.entregado ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'" class="px-2 py-0.5 rounded-full text-xs" x-text="g.entregado ? '✅ Entregado' : '⏳ Pendiente'"></span>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+function ruletaApp() {
+  return {
+    girando: false,
+    resultadoActual: null,
+    clienteActual: null,
+    currentAngle: 0,
+    premios: [
+      {id:1, nombre:'Torta Familiar', emoji:'🎂', color:'#C8872A'},
+      {id:2, nombre:'Café + Pastel', emoji:'☕', color:'#F0C060'},
+      {id:3, nombre:'Desc. 50%', emoji:'🏷️', color:'#E8929A'},
+      {id:4, nombre:'Alfajores', emoji:'🍫', color:'#3B1F0E'},
+      {id:5, nombre:'Taza + Galletas', emoji:'🫖', color:'#5B4FCF'},
+      {id:6, nombre:'¡Mejor la próxima!', emoji:'🌟', color:'#6B7280'},
+    ],
+    ganadores: [
+      {id:1, cliente:'Andrea Vidal', premio:'Torta Familiar', emoji:'🎂', fecha:'22 Jun 2025 – 15:45', entregado:true},
+      {id:2, cliente:'Tomás Bravo', premio:'Café + Pastel', emoji:'☕', fecha:'20 Jun 2025 – 11:20', entregado:true},
+      {id:3, cliente:'Carla Soto', premio:'Alfajores', emoji:'🍫', fecha:'18 Jun 2025 – 16:00', entregado:false},
+    ],
+    drawWheel() {
+      const canvas = document.getElementById('roulette-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const cx = 160, cy = 160, r = 155;
+      const n = this.premios.length;
+      if (n === 0) return;
+      const arc = (2 * Math.PI) / n;
+      ctx.clearRect(0, 0, 320, 320);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(this.currentAngle);
+      this.premios.forEach((p, i) => {
+        const start = i * arc;
+        const end = start + arc;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, r, start, end);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.save();
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Georgia';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(p.emoji + ' ' + p.nombre, r - 10, 4);
+        ctx.restore();
+      });
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.restore();
+    },
+    redibujarRuleta() { this.$nextTick(() => this.drawWheel()); },
+    girarRuleta() {
+      if (this.girando || !this.clienteActual || this.premios.length < 2) return;
+      this.girando = true;
+      this.resultadoActual = null;
+      const n = this.premios.length;
+      const winIdx = Math.floor(Math.random() * n);
+      const arc = (2 * Math.PI) / n;
+      const targetAngle = (2 * Math.PI * 5) + (2 * Math.PI - winIdx * arc - arc / 2);
+      const duration = 4000 + Math.random() * 1500;
+      const startAngle = this.currentAngle;
+      const startTime = performance.now();
+      const easeOut = t => 1 - Math.pow(1 - t, 4);
+      const animate = (time) => {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        this.currentAngle = startAngle + targetAngle * easeOut(progress);
+        this.drawWheel();
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          this.currentAngle = this.currentAngle % (2 * Math.PI);
+          this.girando = false;
+          this.resultadoActual = this.premios[winIdx];
+          this.lanzarConfetti();
+          Swal.fire({
+            title:'🎡 La ruleta decidió...',
+            html:`<p class="text-xl font-bold">${this.clienteActual.nombre}</p><p class="text-gray-500 mt-2">ganó:</p><p class="text-2xl font-bold mt-1">${this.resultadoActual.emoji} ${this.resultadoActual.nombre}</p>`,
+            icon:'success', confirmButtonColor:'#E8929A', confirmButtonText:'¡Fantástico!', timer:5000, timerProgressBar:true
+          });
+        }
+      };
+      requestAnimationFrame(animate);
+    },
+    lanzarConfetti() {
+      const area = document.getElementById('confetti-area');
+      if (!area) return;
+      const emojis = ['🎉','⭐','🎊','✨','🌟','🎁'];
+      for(let i=0;i<10;i++) {
+        setTimeout(()=>{
+          const el = document.createElement('span');
+          el.className = 'confetti-piece';
+          el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+          el.style.left = (Math.random()*90)+'%';
+          el.style.top = '0px';
+          area.appendChild(el);
+          setTimeout(()=>el.remove(), 1600);
+        }, i*150);
+      }
+    },
+    confirmarEntrega() {
+      Swal.fire({
+        title:'Confirmar Entrega', html:`<p>¿Entregar <strong>${this.resultadoActual.emoji} ${this.resultadoActual.nombre}</strong> a <strong>${this.clienteActual.nombre}</strong>?</p>`,
+        showCancelButton:true, confirmButtonColor:'#E8929A', confirmButtonText:'✅ Confirmar'
+      }).then(r=>{
+        if(r.isConfirmed){
+          const now = new Date();
+          this.ganadores.unshift({id:Date.now(), cliente:this.clienteActual.nombre, premio:this.resultadoActual.nombre, emoji:this.resultadoActual.emoji, fecha:`${now.getDate()} Jun 2025 – ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`, entregado:true});
+          this.resultadoActual=null; this.clienteActual=null;
+          Toastify({text:'🎡 Premio entregado correctamente', duration:3000, style:{background:'#E8929A'}}).showToast();
+        }
+      });
+    },
+    seleccionarCliente() {
+      Swal.fire({
+        title:'Seleccionar Cliente',
+        html:'<select id="sc" class="swal2-input"><option>Valentina Rojas – #VR-041</option><option>Camilo Herrera – #CH-038</option><option>Rodrigo Fuentes – #RF-035</option><option>Andrea Vidal – #AV-033</option><option>Natalia Pinto – #NP-031</option></select>',
+        showCancelButton:true, confirmButtonColor:'#E8929A', confirmButtonText:'Seleccionar'
+      }).then(r=>{
+        if(r.isConfirmed){
+          const val = document.getElementById('sc').value;
+          const nombre = val.split(' – ')[0];
+          const tel = {
+            'Valentina Rojas':'+56 9 7831 2244','Camilo Herrera':'+56 9 6512 9983',
+            'Rodrigo Fuentes':'+56 9 8843 1120','Andrea Vidal':'+56 9 6678 3312','Natalia Pinto':'+56 9 9901 2233'
+          }[nombre]||'+56 9 0000 0000';
+          this.clienteActual = {nombre, telefono:tel};
+          Toastify({text:'👤 Cliente seleccionado: '+nombre, duration:2000, style:{background:'#E8929A'}}).showToast();
+        }
+      });
+    },
+    agregarPremio() {
+      Swal.fire({
+        title:'Agregar Premio a Ruleta',
+        html:'<input id="ap" class="swal2-input" placeholder="Nombre del premio"><input id="ae" class="swal2-input" placeholder="Emoji 🎁">',
+        showCancelButton:true, confirmButtonColor:'#E8929A', confirmButtonText:'Agregar'
+      }).then(r=>{
+        if(r.isConfirmed){
+          const nombre = document.getElementById('ap').value;
+          if(!nombre) return;
+          const colores = ['#C8872A','#F0C060','#E8929A','#3B1F0E','#5B4FCF','#059669','#0891B2'];
+          this.premios.push({id:Date.now(), nombre, emoji:document.getElementById('ae').value||'🎁', color:colores[Math.floor(Math.random()*colores.length)]});
+          this.redibujarRuleta();
+          Toastify({text:'🎁 Premio agregado: '+nombre, duration:2000, style:{background:'#E8929A'}}).showToast();
+        }
+      });
+    },
+    init() {
+      this.$nextTick(() => { setTimeout(() => this.drawWheel(), 100); });
+    }
+  }
+}
+</script>
+</body>
+</html>

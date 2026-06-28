@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTO · Punto de Venta</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  #carrito-panel{ max-height: calc(100vh - 220px); }
+  .chip{ transition:.15s; }
+  .chip.active{ background:var(--copper); color:var(--cream); border-color:var(--copper); }
+</style>
+</head>
+<body class="min-h-screen bg-[var(--cream)]">
+
+<header class="resto-topbar sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[var(--copper)] flex items-center justify-center">
+        <i class="fa-solid fa-fire text-[var(--carbon-950)] text-sm"></i>
+      </div>
+      <span class="f-display text-lg tracking-widest">RESTO</span>
+    </div>
+    <nav class="flex items-center gap-6 text-sm f-display tracking-wide">
+      <a href="index.html" class="nav-link pb-1">Panel</a>
+      <a href="productos.html" class="nav-link pb-1">Productos</a>
+      <a href="pos.html" class="nav-link active pb-1">Punto de Venta</a>
+      <a href="cocina.html" class="nav-link pb-1">Cocina</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 md:px-6 py-6 grid lg:grid-cols-[1fr_380px] gap-6">
+
+  <!-- Columna izquierda: configuración de pedido + catálogo -->
+  <section>
+    <!-- Config del pedido -->
+    <div class="bg-white rounded-xl border border-[var(--line)] p-5 mb-5">
+      <p class="f-mono text-xs text-[var(--copper-dark)] tracking-widest mb-3">1 · CANAL Y MODALIDAD</p>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs f-display tracking-wide text-[var(--ink-soft)] mb-2">CANAL</p>
+          <div class="flex gap-2" id="canal-chips">
+            <button data-val="local" class="chip active px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display"><i class="fa-solid fa-store mr-1"></i>Local</button>
+            <button data-val="online" class="chip px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display"><i class="fa-solid fa-globe mr-1"></i>Online</button>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs f-display tracking-wide text-[var(--ink-soft)] mb-2">MODALIDAD</p>
+          <div class="flex gap-2" id="modalidad-chips">
+            <button data-val="mesa" class="chip active px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display"><i class="fa-solid fa-utensils mr-1"></i>En local</button>
+            <button data-val="llevar" class="chip px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display"><i class="fa-solid fa-bag-shopping mr-1"></i>Para llevar</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4 mt-4">
+        <div id="wrap-mesa">
+          <label class="text-xs f-display tracking-wide text-[var(--ink-soft)]">Nº DE MESA</label>
+          <input id="input-mesa" type="text" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="Ej: Mesa 7">
+        </div>
+        <div>
+          <label class="text-xs f-display tracking-wide text-[var(--ink-soft)]">CLIENTE / REFERENCIA</label>
+          <input id="input-cliente" type="text" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="Nombre o referencia">
+        </div>
+      </div>
+    </div>
+
+    <!-- Catálogo -->
+    <p class="f-mono text-xs text-[var(--copper-dark)] tracking-widest mb-3">2 · AGREGAR PRODUCTOS</p>
+    <div class="flex gap-2 flex-wrap mb-4" id="filtros-cat"></div>
+    <div id="catalogo-grid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+  </section>
+
+  <!-- Columna derecha: carrito / comanda -->
+  <aside class="lg:sticky lg:top-24 h-fit">
+    <div class="ticket-edge bg-[var(--carbon-950)] text-[var(--cream)] rounded-xl overflow-hidden">
+      <div class="p-5 pb-3 border-b border-[var(--line-dark)]">
+        <p class="f-mono text-xs text-[var(--cream)]/50 tracking-widest">3 · COMANDA</p>
+        <h2 class="f-display text-lg mt-1" id="carrito-resumen">Sin productos</h2>
+      </div>
+      <div id="carrito-panel" class="overflow-y-auto p-5 space-y-3"></div>
+      <div class="p-5 border-t border-[var(--line-dark)] bg-[var(--carbon-900)]">
+        <div class="flex justify-between text-sm mb-1 text-[var(--cream)]/70"><span>Ítems</span><span id="carrito-count">0</span></div>
+        <div class="flex justify-between f-display text-xl mb-4"><span>TOTAL</span><span class="text-[var(--copper)]" id="carrito-total">S/ 0.00</span></div>
+        <button onclick="enviarPedido()" class="w-full btn-copper rounded-lg py-3 f-display tracking-wide">
+          <i class="fa-solid fa-kitchen-set mr-2"></i>Enviar a cocina
+        </button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- Modal de características -->
+<div id="modal-item" class="fixed inset-0 bg-[var(--carbon-950)]/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-[var(--paper)] rounded-2xl w-full max-w-md p-6 ticket-edge">
+    <div class="flex items-center gap-3 mb-4">
+      <span class="text-3xl" id="mi-emoji"></span>
+      <h3 class="f-display text-lg" id="mi-nombre"></h3>
+    </div>
+    <p class="text-xs f-display tracking-wide text-[var(--ink-soft)] mb-2">CARACTERÍSTICAS</p>
+    <div class="flex flex-wrap gap-2 mb-4" id="mi-caracteristicas"></div>
+    <label class="text-xs f-display tracking-wide text-[var(--ink-soft)]">NOTA PARA COCINA</label>
+    <textarea id="mi-nota" rows="2" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="Ej: sin cebolla, punto medio..."></textarea>
+    <div class="flex items-center gap-3 mt-4">
+      <label class="text-xs f-display tracking-wide text-[var(--ink-soft)]">CANT.</label>
+      <div class="flex items-center border border-[var(--line)] rounded-lg overflow-hidden">
+        <button onclick="cambiarCant(-1)" class="w-9 h-9 hover:bg-[var(--line)]">-</button>
+        <span id="mi-cant" class="w-10 text-center f-mono">1</span>
+        <button onclick="cambiarCant(1)" class="w-9 h-9 hover:bg-[var(--line)]">+</button>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 mt-6">
+      <button onclick="cerrarModalItem()" class="px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display">Cancelar</button>
+      <button onclick="confirmarAgregar()" class="btn-copper px-5 py-2 rounded-lg text-sm f-display">Agregar a comanda</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  let carrito = [];
+  let filtroActual = 'Todas';
+  let itemTemp = null;
+  const CARACTERISTICAS = ['Sin cebolla', 'Sin picante', 'Extra picante', 'Sin ají', 'Para compartir', 'Bien cocido', 'Término medio'];
+
+  document.getElementById('canal-chips').addEventListener('click', e => {
+    const btn = e.target.closest('button'); if(!btn) return;
+    [...btn.parentElement.children].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+  document.getElementById('modalidad-chips').addEventListener('click', e => {
+    const btn = e.target.closest('button'); if(!btn) return;
+    [...btn.parentElement.children].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('wrap-mesa').style.display = btn.dataset.val === 'mesa' ? 'block' : 'none';
+  });
+
+  function renderCatalogo(){
+    const localId = RESTO_DB.getLocalActivo();
+    let productos = RESTO_DB.getProductos(localId).filter(p => p.activoHoy && p.stockHoy > 0);
+    const cats = ['Todas', ...new Set(productos.map(p => p.categoria))];
+    document.getElementById('filtros-cat').innerHTML = cats.map(c => `
+      <button onclick="filtrar('${c}')" class="px-4 py-1.5 rounded-full text-sm f-display tracking-wide border transition ${filtroActual===c ? 'bg-[var(--carbon-950)] text-[var(--cream)] border-[var(--carbon-950)]' : 'border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--copper)]'}">${c}</button>
+    `).join('');
+    if(filtroActual !== 'Todas') productos = productos.filter(p => p.categoria === filtroActual);
+
+    const grid = document.getElementById('catalogo-grid');
+    if(productos.length === 0){
+      grid.innerHTML = `<div class="col-span-full text-center py-14 text-[var(--ink-soft)]"><i class="fa-solid fa-ban text-2xl mb-2"></i><p class="f-display">Sin productos disponibles hoy</p></div>`;
+      return;
+    }
+    grid.innerHTML = productos.map(p => `
+      <button onclick='abrirModalItem(${JSON.stringify(p).replace(/'/g,"&apos;")})' class="card-hover text-left bg-white border border-[var(--line)] rounded-xl p-4 flex flex-col">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-2xl">${p.emoji}</span>
+          <span class="badge badge-listo">${p.stockHoy} und.</span>
+        </div>
+        <h4 class="f-display text-sm">${p.nombre}</h4>
+        <p class="f-mono text-sm mt-1 text-[var(--copper-dark)] font-semibold">S/ ${Number(p.precio).toFixed(2)}</p>
+      </button>
+    `).join('');
+  }
+  function filtrar(c){ filtroActual = c; renderCatalogo(); }
+
+  function abrirModalItem(p){
+    itemTemp = { producto: p, cantidad: 1, caracteristicas: [], nota: '' };
+    document.getElementById('mi-emoji').textContent = p.emoji;
+    document.getElementById('mi-nombre').textContent = p.nombre;
+    document.getElementById('mi-cant').textContent = '1';
+    document.getElementById('mi-nota').value = '';
+    document.getElementById('mi-caracteristicas').innerHTML = CARACTERISTICAS.map(c => `
+      <button type="button" onclick="toggleCarac(this,'${c}')" class="chip px-3 py-1.5 rounded-full border border-[var(--line)] text-xs f-display">${c}</button>
+    `).join('');
+    document.getElementById('modal-item').classList.remove('hidden');
+    document.getElementById('modal-item').classList.add('flex');
+  }
+  function toggleCarac(btn, c){
+    btn.classList.toggle('active');
+    const i = itemTemp.caracteristicas.indexOf(c);
+    if(i>=0) itemTemp.caracteristicas.splice(i,1); else itemTemp.caracteristicas.push(c);
+  }
+  function cambiarCant(delta){
+    itemTemp.cantidad = Math.max(1, itemTemp.cantidad + delta);
+    document.getElementById('mi-cant').textContent = itemTemp.cantidad;
+  }
+  function cerrarModalItem(){
+    document.getElementById('modal-item').classList.add('hidden');
+    document.getElementById('modal-item').classList.remove('flex');
+  }
+  function confirmarAgregar(){
+    itemTemp.nota = document.getElementById('mi-nota').value;
+    carrito.push({ ...itemTemp, uid: Date.now() });
+    cerrarModalItem();
+    renderCarrito();
+  }
+
+  function renderCarrito(){
+    const panel = document.getElementById('carrito-panel');
+    if(carrito.length === 0){
+      panel.innerHTML = `<p class="text-[var(--cream)]/40 text-sm text-center py-10">Aún no agregaste productos.<br>Toca un plato del catálogo →</p>`;
+    } else {
+      panel.innerHTML = carrito.map(it => `
+        <div class="bg-[var(--carbon-900)] rounded-lg p-3 border border-[var(--line-dark)]">
+          <div class="flex justify-between items-start">
+            <p class="f-display text-sm">${it.cantidad}× ${it.producto.nombre}</p>
+            <button onclick="quitarItem(${it.uid})" class="text-[var(--cream)]/40 hover:text-[var(--ember)]"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          ${it.caracteristicas.length ? `<p class="text-xs text-[var(--copper)] mt-1">${it.caracteristicas.join(', ')}</p>` : ''}
+          ${it.nota ? `<p class="text-xs text-[var(--cream)]/50 mt-0.5 italic">"${it.nota}"</p>` : ''}
+          <p class="f-mono text-xs text-[var(--cream)]/60 mt-1">S/ ${(it.producto.precio * it.cantidad).toFixed(2)}</p>
+        </div>
+      `).join('');
+    }
+    const total = carrito.reduce((s,it) => s + it.producto.precio * it.cantidad, 0);
+    const count = carrito.reduce((s,it) => s + it.cantidad, 0);
+    document.getElementById('carrito-total').textContent = 'S/ ' + total.toFixed(2);
+    document.getElementById('carrito-count').textContent = count;
+    document.getElementById('carrito-resumen').textContent = count ? count + ' producto(s)' : 'Sin productos';
+  }
+  function quitarItem(uid){ carrito = carrito.filter(it => it.uid !== uid); renderCarrito(); }
+
+  function enviarPedido(){
+    if(carrito.length === 0){ alert('Agrega al menos un producto antes de enviar.'); return; }
+    const canal = document.querySelector('#canal-chips .active').dataset.val;
+    const modalidad = document.querySelector('#modalidad-chips .active').dataset.val;
+    const mesa = document.getElementById('input-mesa').value;
+    const cliente = document.getElementById('input-cliente').value;
+
+    if(modalidad === 'mesa' && !mesa){ alert('Indica el número de mesa.'); return; }
+
+    const total = carrito.reduce((s,it) => s + it.producto.precio * it.cantidad, 0);
+    RESTO_DB.crearPedido({
+      localId: RESTO_DB.getLocalActivo(),
+      canal, modalidad, mesa: modalidad === 'mesa' ? mesa : null,
+      cliente: cliente || 'Sin nombre',
+      mesero: 'Mesero de turno',
+      items: carrito.map(it => ({
+        nombre: it.producto.nombre, emoji: it.producto.emoji,
+        cantidad: it.cantidad, caracteristicas: it.caracteristicas, nota: it.nota
+      })),
+      total,
+    });
+
+    // Descontar stock
+    carrito.forEach(it => {
+      const p = it.producto;
+      p.stockHoy = Math.max(0, p.stockHoy - it.cantidad);
+      RESTO_DB.saveProducto(p);
+    });
+
+    carrito = [];
+    renderCarrito();
+    renderCatalogo();
+    document.getElementById('input-mesa').value = '';
+    document.getElementById('input-cliente').value = '';
+    alert('✅ Comanda enviada a cocina.');
+  }
+
+  renderCatalogo();
+  renderCarrito();
+</script>
+</body>
+</html>

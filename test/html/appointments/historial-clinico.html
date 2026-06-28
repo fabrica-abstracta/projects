@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediFlow — Historial Clínico</title>
+<!-- CDNs -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2436;
+    --border: #2a2f45;
+    --accent: #4f8ef7;
+    --accent-soft: rgba(79,142,247,0.12);
+    --green: #22c97a;
+    --green-soft: rgba(34,201,122,0.12);
+    --yellow: #f5a623;
+    --yellow-soft: rgba(245,166,35,0.10);
+    --red: #f75c5c;
+    --red-soft: rgba(247,92,92,0.12);
+    --purple: #a78bfa;
+    --purple-soft: rgba(167,139,250,0.12);
+    --text: #e8eaf0;
+    --text2: #8b92a9;
+    --text3: #5a6070;
+    --radius: 10px;
+    --sidebar-w: 72px;
+    --agenda-w: 300px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; }
+
+  /* ── SIDEBAR NAV ── */
+  .nav-sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 4px; flex-shrink: 0; z-index: 10;
+  }
+  .nav-logo { width: 38px; height: 38px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 18px; font-weight: 700; color: #fff; }
+  .nav-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 16px; cursor: pointer; transition: all .15s; position: relative; }
+  .nav-icon:hover { background: var(--surface2); color: var(--text2); }
+  .nav-icon.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-icon .tooltip { position: absolute; left: 54px; background: #111827; color: var(--text); font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; border: 1px solid var(--border); }
+  .nav-icon:hover .tooltip { opacity: 1; }
+  .nav-spacer { flex: 1; }
+  .nav-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4f8ef7, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; margin-top: 8px; }
+
+  /* ── AGENDA PANEL ── */
+  .agenda-panel {
+    width: var(--agenda-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  }
+  .agenda-header { padding: 20px 16px 12px; border-bottom: 1px solid var(--border); }
+  .agenda-header h2 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .agenda-header .date-label { font-size: 18px; font-weight: 700; color: var(--text); }
+  .agenda-search { margin: 12px 16px 8px; position: relative; }
+  .agenda-search input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px 8px 34px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; }
+  .agenda-search input::placeholder { color: var(--text3); }
+  .agenda-search i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+  .agenda-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .agenda-list::-webkit-scrollbar { width: 4px; }
+  .agenda-list::-webkit-scrollbar-track { background: transparent; }
+  .agenda-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .cita-card {
+    padding: 12px; border-radius: 8px; cursor: pointer; transition: all .15s; margin-bottom: 4px;
+    border: 1px solid transparent; position: relative;
+  }
+  .cita-card:hover { background: var(--surface2); }
+  .cita-card.active { background: var(--accent-soft); border-color: var(--accent); }
+  .cita-card.active .cita-name { color: var(--accent); }
+  .cita-card.en-curso { border-left: 3px solid var(--green); padding-left: 9px; }
+  .cita-time { font-size: 11px; font-weight: 600; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .cita-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .badge-activa { background: var(--green-soft); color: var(--green); }
+  .badge-espera { background: var(--yellow-soft); color: var(--yellow); }
+  .badge-pendiente { background: var(--surface2); color: var(--text3); }
+  .badge-urgente { background: var(--red-soft); color: var(--red); }
+  .cita-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .cita-motivo { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .cita-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .cita-age { font-size: 11px; color: var(--text3); }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .main-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; background: var(--surface); }
+  .patient-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #4f8ef7 0%, #a78bfa 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .patient-info h1 { font-size: 17px; font-weight: 700; color: var(--text); }
+  .patient-info .patient-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .patient-tags { display: flex; gap: 6px; margin-top: 5px; }
+  .tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+  .tag-blue { background: var(--accent-soft); color: var(--accent); }
+  .tag-yellow { background: var(--yellow-soft); color: var(--yellow); }
+  .tag-red { background: var(--red-soft); color: var(--red); }
+  .tag-purple { background: var(--purple-soft); color: var(--purple); }
+  .header-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3d7de0; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #1aaf6a; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 24px; background: var(--surface); }
+  .tab { padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-count { background: var(--surface2); color: var(--text3); font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+  .tab.active .tab-count { background: var(--accent-soft); color: var(--accent); }
+
+  /* ── CONTENT BODY ── */
+  .content-body { flex: 1; overflow-y: auto; padding: 24px; display: none; }
+  .content-body.visible { display: block; }
+  .content-body::-webkit-scrollbar { width: 4px; }
+  .content-body::-webkit-scrollbar-track { background: transparent; }
+  .content-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── CONSULTA ACTIVA ── */
+  .consulta-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: 8px; }
+  .card-title i { color: var(--accent); font-size: 12px; }
+  .card-body { padding: 16px; }
+  .live-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--green); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+  textarea.nota { width: 100%; min-height: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 14px; color: var(--text); resize: vertical; outline: none; line-height: 1.6; }
+  textarea.nota:focus { border-color: var(--accent); }
+  .nota-placeholder { color: var(--text3); }
+
+  .soap-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+  .soap-tab { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--surface2); color: var(--text3); border: none; font-family: inherit; transition: all .15s; }
+  .soap-tab.active { background: var(--accent-soft); color: var(--accent); }
+
+  .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vital-item { background: var(--surface2); border-radius: 8px; padding: 12px; }
+  .vital-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-weight: 500; }
+  .vital-val { font-size: 20px; font-weight: 700; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .vital-unit { font-size: 12px; color: var(--text2); font-weight: 400; }
+  .vital-status { font-size: 10px; font-weight: 600; margin-top: 3px; }
+  .vital-ok { color: var(--green); }
+  .vital-warn { color: var(--yellow); }
+
+  /* ── HISTORIAL TIMELINE ── */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content:''; position:absolute; left:9px; top:0; bottom:0; width:2px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -24px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg); top: 5px; }
+  .dot-blue { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .dot-green { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+  .dot-yellow { background: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-soft); }
+  .dot-purple { background: var(--purple); box-shadow: 0 0 0 3px var(--purple-soft); }
+  .timeline-date { font-size: 11px; font-weight: 600; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; }
+  .timeline-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer; transition: all .15s; }
+  .timeline-card:hover { border-color: var(--accent); }
+  .timeline-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .timeline-card h4 { font-size: 13px; font-weight: 600; color: var(--text); }
+  .timeline-card .tc-doctor { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .timeline-card .tc-dx { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .tc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* ── DATOS GENERALES ── */
+  .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .info-item { background: var(--surface2); border-radius: 8px; padding: 12px; }
+  .info-label { font-size: 11px; color: var(--text3); font-weight: 500; margin-bottom: 4px; }
+  .info-val { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* Diagnósticos list */
+  .dx-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .dx-item { background: var(--surface2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .dx-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 7px; border-radius: 5px; flex-shrink: 0; }
+  .dx-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .dx-since { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+  /* Medicamentos */
+  .med-list { display: flex; flex-direction: column; gap: 8px; }
+  .med-item { background: var(--surface2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .med-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--purple-soft); display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 14px; flex-shrink: 0; }
+  .med-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .med-dosis { font-size: 12px; color: var(--text2); }
+  .med-status { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+
+  /* Modal historial previo */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 680px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 16px; font-weight: 700; }
+  .modal-close { background: var(--surface2); border: none; color: var(--text2); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .modal-search { padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .modal-search input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 14px; color: var(--text); outline: none; font-family: inherit; }
+  .modal-search input:focus { border-color: var(--accent); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 16px 24px; }
+  .modal-body::-webkit-scrollbar { width: 4px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .modal-cita { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; cursor: pointer; transition: all .15s; }
+  .modal-cita:hover { border-color: var(--accent); }
+  .modal-cita-header { padding: 12px 16px; background: var(--surface2); display: flex; align-items: center; gap: 12px; }
+  .modal-cita-date { font-size: 12px; font-weight: 700; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+  .modal-cita-motivo { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .modal-cita-body { padding: 14px 16px; }
+  .modal-cita-body p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .modal-cita-dx { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 200; opacity: 0; transform: translateY(10px); transition: all .3s; display: flex; align-items: center; gap: 8px; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Status bar */
+  .status-bar { padding: 6px 24px; border-top: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--text3); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 4px; }
+
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--text3); }
+  .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 14px; }
+
+  /* Responsive hint */
+  @media (max-width: 1100px) { .consulta-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR NAV -->
+<nav class="nav-sidebar">
+  <div class="nav-logo">M</div>
+  <div class="nav-icon" title="">
+    <i class="fas fa-calendar-check"></i>
+    <span class="tooltip">Agenda</span>
+  </div>
+  <div class="nav-icon active">
+    <i class="fas fa-notes-medical"></i>
+    <span class="tooltip">Historial Clínico</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-flask"></i>
+    <span class="tooltip">Laboratorio</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-x-ray"></i>
+    <span class="tooltip">Imágenes</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-prescription-bottle-medical"></i>
+    <span class="tooltip">Recetas</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-chart-line"></i>
+    <span class="tooltip">Estadísticas</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-icon">
+    <i class="fas fa-cog"></i>
+    <span class="tooltip">Configuración</span>
+  </div>
+  <div class="nav-avatar">RV</div>
+</nav>
+
+<!-- AGENDA PANEL -->
+<aside class="agenda-panel">
+  <div class="agenda-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h2>Agenda del día</h2>
+        <div class="date-label" id="fecha-hoy"></div>
+      </div>
+      <span style="font-size:11px;background:var(--accent-soft);color:var(--accent);padding:4px 8px;border-radius:6px;font-weight:600;">Dr. R. Vargas</span>
+    </div>
+  </div>
+  <div class="agenda-search">
+    <i class="fas fa-search"></i>
+    <input type="text" placeholder="Buscar paciente..." id="agenda-search-input" oninput="filtrarCitas()">
+  </div>
+  <div class="agenda-list" id="agenda-list"></div>
+</aside>
+
+<!-- MAIN AREA -->
+<main class="main">
+  <!-- Header paciente -->
+  <div class="main-header" id="main-header">
+    <div class="patient-avatar" id="pat-avatar">MR</div>
+    <div class="patient-info">
+      <h1 id="pat-name">Marco Rodríguez Pérez</h1>
+      <div class="patient-sub" id="pat-sub">38 años · M · HC-00142 · Lima, Perú</div>
+      <div class="patient-tags" id="pat-tags">
+        <span class="tag tag-red">HTA</span>
+        <span class="tag tag-yellow">Diabético T2</span>
+        <span class="tag tag-blue">Seguro SIS</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="abrirHistorialPrevio()"><i class="fas fa-history"></i> Historial previo</button>
+      <button class="btn btn-ghost" id="btn-iniciar" onclick="iniciarConsulta()"><i class="fas fa-play"></i> Iniciar consulta</button>
+      <button class="btn btn-green" id="btn-cerrar" style="display:none" onclick="cerrarConsulta()"><i class="fas fa-check"></i> Cerrar y guardar</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('consulta', this)"><i class="fas fa-stethoscope"></i> Consulta activa</div>
+    <div class="tab" onclick="showTab('historial', this)"><i class="fas fa-timeline"></i> Historial <span class="tab-count" id="tc-hist">8</span></div>
+    <div class="tab" onclick="showTab('general', this)"><i class="fas fa-id-card"></i> Datos generales</div>
+    <div class="tab" onclick="showTab('medicamentos', this)"><i class="fas fa-pills"></i> Medicamentos <span class="tab-count">4</span></div>
+    <div class="tab" onclick="showTab('examenes', this)"><i class="fas fa-vial"></i> Exámenes <span class="tab-count">6</span></div>
+  </div>
+
+  <!-- TAB: Consulta activa -->
+  <div class="content-body visible" id="tab-consulta">
+    <div class="consulta-grid">
+      <!-- Notas SOAP -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-pen-to-square"></i> Nota de evolución</div>
+            <div class="live-badge" id="live-indicator" style="display:none">
+              <div class="live-dot"></div> En curso
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="soap-tabs">
+              <button class="soap-tab active" onclick="soapTab('subjetivo',this)">S — Subjetivo</button>
+              <button class="soap-tab" onclick="soapTab('objetivo',this)">O — Objetivo</button>
+              <button class="soap-tab" onclick="soapTab('diagnostico',this)">A — Diagnóstico</button>
+              <button class="soap-tab" onclick="soapTab('plan',this)">P — Plan</button>
+            </div>
+            <div id="soap-subjetivo">
+              <textarea class="nota" id="nota-subjetivo" placeholder="Motivo de consulta, síntomas referidos por el paciente...">Paciente refiere cefalea occipital persistente desde hace 3 días, intensidad 7/10, asociada a náuseas. Refiere no haber tomado su medicación antihipertensiva en los últimos 2 días.</textarea>
+            </div>
+            <div id="soap-objetivo" style="display:none">
+              <textarea class="nota" id="nota-objetivo" placeholder="Hallazgos del examen físico...">PA: 158/98 mmHg (elevada). FC: 88 lpm. FR: 18 rpm. T°: 36.7°C. Peso: 87 kg. IMC: 28.4.
+Neurológico: sin focalidad. Fondo de ojo: no se realiza hoy.
+Abdomen: sin organomegalia.</textarea>
+            </div>
+            <div id="soap-diagnostico" style="display:none">
+              <textarea class="nota" id="nota-diagnostico" placeholder="Diagnósticos...">1. I10 — HTA esencial, no controlada por incumplimiento terapéutico
+2. R51 — Cefalea secundaria a HTA
+3. Z91.19 — Incumplimiento de tratamiento medicamentoso</textarea>
+            </div>
+            <div id="soap-plan" style="display:none">
+              <textarea class="nota" id="nota-plan" placeholder="Plan de tratamiento, indicaciones, próxima cita...">1. Reforzar adherencia a Losartán 50 mg/día
+2. Agregar Amlodipino 5 mg/día si PA no baja en 48h
+3. Paracetamol 1g c/8h por 3 días para cefalea
+4. Control en 7 días
+5. Solicitar: HbA1c, perfil lipídico, creatinina</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagnósticos de la consulta -->
+        <div class="card" style="margin-top:14px">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-tag"></i> Diagnósticos CIE-10</div>
+            <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px"><i class="fas fa-plus"></i> Agregar</button>
+          </div>
+          <div class="card-body">
+            <ul class="dx-list">
+              <li class="dx-item"><span class="dx-code">I10</span><span class="dx-name">Hipertensión arterial esencial, no controlada</span><span class="dx-since" style="background:var(--red-soft);color:var(--red);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Activo</span></li>
+              <li class="dx-item"><span class="dx-code">R51</span><span class="dx-name">Cefalea</span><span class="dx-since" style="background:var(--yellow-soft);color:var(--yellow);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Nuevo</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel lateral: vitales + acciones -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Signos vitales -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-heart-pulse"></i> Signos vitales</div>
+            <span style="font-size:11px;color:var(--text3)">Hoy 09:14</span>
+          </div>
+          <div class="card-body">
+            <div class="vitals-grid">
+              <div class="vital-item">
+                <div class="vital-label">Presión arterial</div>
+                <div class="vital-val">158<span class="vital-unit">/98</span></div>
+                <div class="vital-status vital-warn">⚠ Elevada</div>
+              </div>
+              <div class="vital-item">
+                <div class="vital-label">Frecuencia card.</div>
+                <div class="vital-val">88<span class="vital-unit"> lpm</span></div>
+                <div class="vital-status vital-ok">✓ Normal</div>
+              </div>
+              <div class="vital-item">
+                <div class="vital-label">Temperatura</div>
+                <div class="vital-val">36.7<span class="vital-unit"> °C</span></div>
+                <div class="vital-status vital-ok">✓ Normal</div>
+              </div>
+              <div class="vital-item">
+                <div class="vital-label">Peso / IMC</div>
+                <div class="vital-val">87<span class="vital-unit"> kg</span></div>
+                <div class="vital-status vital-warn">⚠ Sobrepeso</div>
+              </div>
+              <div class="vital-item">
+                <div class="vital-label">Glucosa capilar</div>
+                <div class="vital-val">142<span class="vital-unit"> mg/dL</span></div>
+                <div class="vital-status vital-warn">⚠ Alta</div>
+              </div>
+              <div class="vital-item">
+                <div class="vital-label">Saturación O₂</div>
+                <div class="vital-val">97<span class="vital-unit"> %</span></div>
+                <div class="vital-status vital-ok">✓ Normal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas clínicas -->
+        <div class="card" style="border-color:rgba(247,92,92,.3)">
+          <div class="card-header" style="background:var(--red-soft)">
+            <div class="card-title" style="color:var(--red)"><i class="fas fa-triangle-exclamation"></i> Alertas activas</div>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <i class="fas fa-pills" style="color:var(--red);margin-top:2px;font-size:12px;flex-shrink:0"></i>
+              <span style="font-size:12px;color:var(--text2)">Incumplimiento medicación antihipertensiva (2 días)</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <i class="fas fa-vial" style="color:var(--yellow);margin-top:2px;font-size:12px;flex-shrink:0"></i>
+              <span style="font-size:12px;color:var(--text2)">HbA1c pendiente (última hace 6 meses)</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <i class="fas fa-eye" style="color:var(--yellow);margin-top:2px;font-size:12px;flex-shrink:0"></i>
+              <span style="font-size:12px;color:var(--text2)">Fondo de ojo anual pendiente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Acciones rápidas</div>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;font-size:12px" onclick="showToast('Receta creada')"><i class="fas fa-prescription" style="width:16px"></i> Generar receta</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;font-size:12px" onclick="showToast('Orden generada')"><i class="fas fa-vial" style="width:16px"></i> Pedir exámenes</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;font-size:12px" onclick="showToast('Derivación creada')"><i class="fas fa-share" style="width:16px"></i> Derivar especialidad</button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;font-size:12px" onclick="showToast('Cita agendada')"><i class="fas fa-calendar-plus" style="width:16px"></i> Agendar control</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Historial -->
+  <div class="content-body" id="tab-historial">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:16px;font-weight:700">Historial clínico</h2>
+        <p style="font-size:13px;color:var(--text2);margin-top:3px">8 consultas registradas · Primer contacto: 12 Mar 2022</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="font-size:12px"><i class="fas fa-filter"></i> Filtrar</button>
+        <button class="btn btn-ghost" style="font-size:12px" onclick="abrirHistorialPrevio()"><i class="fas fa-search"></i> Buscar en historial</button>
+      </div>
+    </div>
+    <div class="timeline" id="timeline-container"></div>
+  </div>
+
+  <!-- TAB: Datos generales -->
+  <div class="content-body" id="tab-general">
+    <div style="max-width:800px">
+      <div class="section-title">Información personal</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Nombre completo</div><div class="info-val">Marco Rodríguez Pérez</div></div>
+        <div class="info-item"><div class="info-label">Fecha de nacimiento</div><div class="info-val">15 Mar 1986 (38 años)</div></div>
+        <div class="info-item"><div class="info-label">Sexo biológico</div><div class="info-val">Masculino</div></div>
+        <div class="info-item"><div class="info-label">DNI</div><div class="info-val">42851963</div></div>
+        <div class="info-item"><div class="info-label">Teléfono</div><div class="info-val">+51 987 654 321</div></div>
+        <div class="info-item"><div class="info-label">Seguro médico</div><div class="info-val">SIS — Activo</div></div>
+        <div class="info-item"><div class="info-label">Ocupación</div><div class="info-val">Conductor de transporte</div></div>
+        <div class="info-item"><div class="info-label">Dirección</div><div class="info-val">Jr. Los Pinos 341, Lima</div></div>
+        <div class="info-item"><div class="info-label">Contacto emergencia</div><div class="info-val">Ana Pérez (+51 976 543 210)</div></div>
+      </div>
+
+      <div class="section-title">Antecedentes patológicos</div>
+      <ul class="dx-list">
+        <li class="dx-item"><span class="dx-code">I10</span><span class="dx-name">Hipertensión arterial esencial</span><span class="dx-since">Desde 2019</span></li>
+        <li class="dx-item"><span class="dx-code">E11</span><span class="dx-name">Diabetes mellitus tipo 2</span><span class="dx-since">Desde 2021</span></li>
+        <li class="dx-item"><span class="dx-code">E78.5</span><span class="dx-name">Hiperlipidemia mixta</span><span class="dx-since">Desde 2022</span></li>
+      </ul>
+
+      <div class="section-title">Antecedentes quirúrgicos</div>
+      <div class="info-grid" style="grid-template-columns:1fr 1fr">
+        <div class="info-item"><div class="info-label">Apendicectomía</div><div class="info-val">2008 — Sin complicaciones</div></div>
+        <div class="info-item"><div class="info-label">Ninguna otra cirugía reportada</div><div class="info-val" style="color:var(--text3)">—</div></div>
+      </div>
+
+      <div class="section-title">Alergias</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="background:var(--red-soft);color:var(--red);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-ban" style="margin-right:5px"></i>Penicilina — Urticaria severa</span>
+        <span style="background:var(--yellow-soft);color:var(--yellow);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-exclamation-triangle" style="margin-right:5px"></i>AINEs — Intolerancia gástrica</span>
+      </div>
+
+      <div class="section-title">Antecedentes familiares</div>
+      <div class="info-grid" style="grid-template-columns:1fr 1fr">
+        <div class="info-item"><div class="info-label">Padre</div><div class="info-val">HTA, fallecido IAM 2018</div></div>
+        <div class="info-item"><div class="info-label">Madre</div><div class="info-val">Diabetes T2, viva, 68a</div></div>
+        <div class="info-item"><div class="info-label">Hermano</div><div class="info-val">Dislipidemia</div></div>
+        <div class="info-item"><div class="info-label">Sin hijos reportados</div><div class="info-val" style="color:var(--text3)">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Medicamentos -->
+  <div class="content-body" id="tab-medicamentos">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:16px;font-weight:700">Medicación actual</h2>
+      <button class="btn btn-primary" style="font-size:12px"><i class="fas fa-plus"></i> Agregar medicamento</button>
+    </div>
+    <div class="med-list" id="med-list"></div>
+  </div>
+
+  <!-- TAB: Exámenes -->
+  <div class="content-body" id="tab-examenes">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:16px;font-weight:700">Resultados de exámenes</h2>
+      <button class="btn btn-ghost" style="font-size:12px"><i class="fas fa-plus"></i> Registrar resultado</button>
+    </div>
+    <div id="examenes-list"></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Conectado</span>
+    <span>·</span>
+    <span>Dr. Rodrigo Vargas — Medicina Interna</span>
+    <span>·</span>
+    <span id="clock"></span>
+    <span style="margin-left:auto">MediFlow v2.4 · Guardado automático activo</span>
+  </div>
+</main>
+
+<!-- MODAL: Historial previo / buscador -->
+<div class="modal-overlay" id="modal-historial">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-history" style="color:var(--accent);margin-right:8px"></i> Búsqueda en historial clínico</h3>
+      <button class="modal-close" onclick="cerrarModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-search">
+      <input type="text" placeholder="Buscar por diagnóstico, síntoma, medicamento, fecha..." id="modal-search-input" oninput="filtrarModal()">
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg"></span></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const pacientes = [
+  { id:1, nombre:"Marco Rodríguez Pérez", edad:38, sexo:"M", hc:"HC-00142",
+    initials:"MR", color:"linear-gradient(135deg,#4f8ef7,#a78bfa)",
+    tags:[{l:"HTA",c:"red"},{l:"Diabético T2",c:"yellow"},{l:"Seguro SIS",c:"blue"}],
+    alergias:"Penicilina, AINEs" },
+  { id:2, nombre:"Lucía Torres Mendoza", edad:52, sexo:"F", hc:"HC-00089",
+    initials:"LT", color:"linear-gradient(135deg,#22c97a,#4f8ef7)",
+    tags:[{l:"Asma",c:"blue"},{l:"EPS Rimac",c:"purple"}],
+    alergias:"Ninguna conocida" },
+  { id:3, nombre:"Carlos Jiménez Soto", edad:65, sexo:"M", hc:"HC-00211",
+    initials:"CJ", color:"linear-gradient(135deg,#f5a623,#f75c5c)",
+    tags:[{l:"EPOC",c:"yellow"},{l:"Cardiopatía",c:"red"},{l:"EsSalud",c:"blue"}],
+    alergias:"Aspirina" },
+  { id:4, nombre:"Ana Flores Quispe", edad:29, sexo:"F", hc:"HC-00344",
+    initials:"AF", color:"linear-gradient(135deg,#a78bfa,#f75c5c)",
+    tags:[{l:"Embarazada 28s",c:"purple"},{l:"SIS",c:"blue"}],
+    alergias:"Penicilina" },
+  { id:5, nombre:"Roberto Paz Huaman", edad:44, sexo:"M", hc:"HC-00176",
+    initials:"RP", color:"linear-gradient(135deg,#22c97a,#a78bfa)",
+    tags:[{l:"Obesidad G2",c:"yellow"},{l:"Privado",c:"blue"}],
+    alergias:"Sulfamidas" },
+];
+
+const citas = [
+  { id:1, pacienteId:1, hora:"09:00", motivo:"Control HTA + Cefalea", estado:"activa" },
+  { id:2, pacienteId:2, hora:"09:30", motivo:"Control asma, revisión espirometría", estado:"espera" },
+  { id:3, pacienteId:3, hora:"10:00", motivo:"Disnea, control EPOC", estado:"espera" },
+  { id:4, pacienteId:4, hora:"10:30", motivo:"Control prenatal 3er trimestre", estado:"pendiente" },
+  { id:5, pacienteId:5, hora:"11:00", motivo:"Resultado análisis + plan nutricional", estado:"pendiente" },
+  { id:6, pacienteId:1, hora:"11:30", motivo:"[Slot disponible]", estado:"libre" },
+];
+
+const historial = [
+  { fecha:"2024-05-10", motivo:"Control mensual HTA/DM2", doctor:"Dr. R. Vargas", tipo:"blue",
+    dx:["I10 — HTA descompensada","E11 — DM2 mal controlada"], glucosa:168, pa:"162/100",
+    nota:"Paciente refiere incumplimiento dietético. Se ajusta Metformina a 1000mg c/12h. Control en 30 días." },
+  { fecha:"2024-03-22", motivo:"Infección respiratoria alta", doctor:"Dr. R. Vargas", tipo:"yellow",
+    dx:["J06.9 — IVAS","R05 — Tos"],
+    nota:"Faringitis viral. Se indica Paracetamol 500mg y reposo 3 días. No requiere antibiótico." },
+  { fecha:"2024-01-15", motivo:"Control trimestral — Laboratorio", doctor:"Dr. R. Vargas", tipo:"green",
+    dx:["I10 — HTA controlada","E11 — DM2 en meta"],
+    nota:"HbA1c 7.1% (meta). PA 130/82. Se mantiene esquema. Próximo control en 3 meses." },
+  { fecha:"2023-10-08", motivo:"Dolor torácico atípico", doctor:"Dr. R. Vargas", tipo:"red",
+    dx:["R07.9 — Dolor torácico NE","Z13.6 — Descarte cardiopatía"],
+    nota:"ECG normal, enzimas cardíacas negativas. Dolor musculoesquelético. Ibuprofeno (ajustado por alergia a AINEs: Paracetamol 1g)." },
+  { fecha:"2023-07-20", motivo:"Control semestral", doctor:"Dr. R. Vargas", tipo:"blue",
+    dx:["I10 — HTA en meta","E11 — DM2 estable"],
+    nota:"Perfil lipídico: CT 198, LDL 118, HDL 42. Se agrega Rosuvastatina 10mg. Derivación a nutricionista." },
+  { fecha:"2023-03-05", motivo:"Primera consulta — Referido HNAL", doctor:"Dr. R. Vargas", tipo:"purple",
+    dx:["I10 — HTA diagnosticada","E11 — DM2 reciente"],
+    nota:"Paciente referido de emergencia por PA 175/105. Se inicia Losartán 50mg/día y Metformina 500mg c/12h." },
+];
+
+const medicamentos = [
+  { nombre:"Losartán", dosis:"50 mg", frecuencia:"1 vez/día (mañana)", desde:"Mar 2023", estado:"Activo", tipo:"Antihipertensivo" },
+  { nombre:"Metformina", dosis:"1000 mg", frecuencia:"2 veces/día (mañana y noche)", desde:"Mar 2023", estado:"Activo", tipo:"Antidiabético" },
+  { nombre:"Rosuvastatina", dosis:"10 mg", frecuencia:"1 vez/día (noche)", desde:"Jul 2023", estado:"Activo", tipo:"Hipolipemiante" },
+  { nombre:"Ácido Acetilsalicílico", dosis:"100 mg", frecuencia:"1 vez/día (mañana)", desde:"Ene 2024", estado:"Activo", tipo:"Antiagregante" },
+];
+
+const examenes = [
+  { nombre:"HbA1c", fecha:"2024-01-15", resultado:"7.1%", referencia:"< 7.0%", estado:"warn", icon:"fa-droplet" },
+  { nombre:"Glucosa en ayuno", fecha:"2024-01-15", resultado:"138 mg/dL", referencia:"70-100 mg/dL", estado:"warn", icon:"fa-droplet" },
+  { nombre:"Colesterol Total", fecha:"2024-01-15", resultado:"198 mg/dL", referencia:"< 200 mg/dL", estado:"ok", icon:"fa-heart" },
+  { nombre:"LDL Colesterol", fecha:"2024-01-15", resultado:"118 mg/dL", referencia:"< 100 mg/dL", estado:"warn", icon:"fa-heart" },
+  { nombre:"Creatinina sérica", fecha:"2024-01-15", resultado:"0.92 mg/dL", referencia:"0.7-1.2 mg/dL", estado:"ok", icon:"fa-flask" },
+  { nombre:"Microalbuminuria", fecha:"2023-10-08", resultado:"32 mg/g", referencia:"< 30 mg/g", estado:"warn", icon:"fa-flask" },
+];
+
+// ── ESTADO ──────────────────────────────────────────────────────────────────
+let citaActiva = 1;
+let consultaEnCurso = false;
+let tabActual = 'consulta';
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-PE', {weekday:'long',day:'numeric',month:'long'});
+  renderAgenda();
+  renderTimeline();
+  renderMedicamentos();
+  renderExamenes();
+  updateClock();
+  setInterval(updateClock, 1000);
+  selectCita(1);
+});
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── AGENDA ────────────────────────────────────────────────────────────────
+function renderAgenda(filtro='') {
+  const container = document.getElementById('agenda-list');
+  container.innerHTML = '';
+  const citasFiltradas = citas.filter(c => {
+    if (c.estado === 'libre') return false;
+    const p = pacientes.find(p => p.id === c.pacienteId);
+    return !filtro || p.nombre.toLowerCase().includes(filtro.toLowerCase()) || c.motivo.toLowerCase().includes(filtro.toLowerCase());
+  });
+  citasFiltradas.forEach(c => {
+    const p = pacientes.find(p => p.id === c.pacienteId);
+    const div = document.createElement('div');
+    div.className = `cita-card ${c.id === citaActiva ? 'active' : ''} ${c.estado === 'activa' ? 'en-curso' : ''}`;
+    div.onclick = () => selectCita(c.id);
+    const badgeMap = {activa:'badge-activa',espera:'badge-espera',pendiente:'badge-pendiente',urgente:'badge-urgente'};
+    const labelMap = {activa:'En consulta',espera:'En sala',pendiente:'Pendiente',urgente:'Urgente'};
+    div.innerHTML = `
+      <div class="cita-time">
+        ${c.hora}
+        <span class="cita-badge ${badgeMap[c.estado]}">${labelMap[c.estado]}</span>
+      </div>
+      <div class="cita-name">${p.nombre}</div>
+      <div class="cita-motivo">${c.motivo}</div>
+      <div class="cita-meta">
+        <span class="cita-age">${p.edad}a · ${p.sexo}</span>
+        <span class="cita-age" style="margin-left:auto">${p.hc}</span>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function filtrarCitas() {
+  renderAgenda(document.getElementById('agenda-search-input').value);
+}
+
+function selectCita(id) {
+  citaActiva = id;
+  consultaEnCurso = false;
+  const c = citas.find(c => c.id === id);
+  const p = pacientes.find(p => p.id === c.pacienteId);
+  
+  document.getElementById('pat-avatar').textContent = p.initials;
+  document.getElementById('pat-avatar').style.background = p.color;
+  document.getElementById('pat-name').textContent = p.nombre;
+  document.getElementById('pat-sub').textContent = `${p.edad} años · ${p.sexo} · ${p.hc} · Lima, Perú`;
+  
+  const tagsEl = document.getElementById('pat-tags');
+  const colorMap = {red:'tag-red',yellow:'tag-yellow',blue:'tag-blue',purple:'tag-purple'};
+  tagsEl.innerHTML = p.tags.map(t => `<span class="tag ${colorMap[t.c]}">${t.l}</span>`).join('');
+  
+  document.getElementById('btn-iniciar').style.display = 'flex';
+  document.getElementById('btn-cerrar').style.display = 'none';
+  document.getElementById('live-indicator').style.display = 'none';
+  
+  renderAgenda(document.getElementById('agenda-search-input').value);
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.content-body').forEach(t => t.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('visible');
+  el.classList.add('active');
+  tabActual = name;
+}
+
+function soapTab(name, el) {
+  document.querySelectorAll('[id^="soap-"]').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.soap-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('soap-' + name).style.display = 'block';
+  el.classList.add('active');
+}
+
+// ── CONSULTA ──────────────────────────────────────────────────────────────
+function iniciarConsulta() {
+  consultaEnCurso = true;
+  document.getElementById('btn-iniciar').style.display = 'none';
+  document.getElementById('btn-cerrar').style.display = 'flex';
+  document.getElementById('live-indicator').style.display = 'flex';
+  // Marcar como activa en agenda
+  const c = citas.find(c => c.id === citaActiva);
+  if (c) c.estado = 'activa';
+  renderAgenda(document.getElementById('agenda-search-input').value);
+  showToast('Consulta iniciada');
+}
+
+function cerrarConsulta() {
+  consultaEnCurso = false;
+  document.getElementById('btn-iniciar').style.display = 'flex';
+  document.getElementById('btn-cerrar').style.display = 'none';
+  document.getElementById('live-indicator').style.display = 'none';
+  // Agregar al historial
+  historial.unshift({
+    fecha: new Date().toISOString().split('T')[0],
+    motivo: citas.find(c=>c.id===citaActiva)?.motivo || 'Consulta',
+    doctor: 'Dr. R. Vargas', tipo: 'green',
+    dx:['I10 — HTA no controlada','R51 — Cefalea'],
+    nota: document.getElementById('nota-subjetivo').value.substring(0,120) + '...'
+  });
+  document.getElementById('tc-hist').textContent = historial.length;
+  renderTimeline();
+  showToast('Consulta guardada correctamente');
+}
+
+// ── TIMELINE ──────────────────────────────────────────────────────────────
+function renderTimeline() {
+  const container = document.getElementById('timeline-container');
+  container.innerHTML = '';
+  historial.forEach(h => {
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    const tagsHtml = h.dx.map(d => `<span class="tag tag-blue" style="font-size:10px">${d}</span>`).join('');
+    item.innerHTML = `
+      <div class="timeline-dot dot-${h.tipo}"></div>
+      <div class="timeline-date">${formatFecha(h.fecha)}</div>
+      <div class="timeline-card" onclick="expandirCita(this)">
+        <div class="timeline-card-top">
+          <div>
+            <h4>${h.motivo}</h4>
+            <div class="tc-doctor">${h.doctor}</div>
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text3);font-size:12px;margin-top:4px"></i>
+        </div>
+        <div class="tc-dx" style="display:none">${h.nota}</div>
+        <div class="tc-tags">${tagsHtml}</div>
+        <div class="tc-extras" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          ${h.glucosa ? `<div style="display:flex;gap:12px;font-size:12px;color:var(--text2)"><span>Glucosa: <b style="color:var(--yellow)">${h.glucosa} mg/dL</b></span><span>PA: <b style="color:var(--red)">${h.pa}</b></span></div>` : ''}
+        </div>
+      </div>`;
+    container.appendChild(item);
+  });
+}
+
+function expandirCita(el) {
+  const nota = el.querySelector('.tc-dx');
+  const extras = el.querySelector('.tc-extras');
+  const chevron = el.querySelector('.fa-chevron-down, .fa-chevron-up');
+  const isOpen = nota.style.display !== 'none';
+  nota.style.display = isOpen ? 'none' : 'block';
+  if (extras) extras.style.display = isOpen ? 'none' : 'block';
+  chevron.className = `fas fa-chevron-${isOpen ? 'down' : 'up'}`;
+}
+
+function formatFecha(f) {
+  const d = new Date(f + 'T12:00:00');
+  return d.toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'});
+}
+
+// ── MEDICAMENTOS ──────────────────────────────────────────────────────────
+function renderMedicamentos() {
+  const container = document.getElementById('med-list');
+  container.innerHTML = '';
+  medicamentos.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'med-item';
+    div.innerHTML = `
+      <div class="med-icon"><i class="fas fa-pills"></i></div>
+      <div>
+        <div class="med-name">${m.nombre} <span style="font-size:11px;color:var(--text3);font-weight:400">${m.dosis}</span></div>
+        <div class="med-dosis">${m.frecuencia} · Desde ${m.desde}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.tipo}</div>
+      </div>
+      <span class="med-status" style="background:var(--green-soft);color:var(--green)">${m.estado}</span>
+      <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;margin-left:4px" onclick="showToast('Medicamento actualizado')"><i class="fas fa-pen"></i></button>`;
+    container.appendChild(div);
+  });
+}
+
+// ── EXÁMENES ──────────────────────────────────────────────────────────────
+function renderExamenes() {
+  const container = document.getElementById('examenes-list');
+  container.innerHTML = '';
+  examenes.forEach(e => {
+    const colorMap = { ok: 'var(--green)', warn: 'var(--yellow)', bad: 'var(--red)' };
+    const bgMap = { ok: 'var(--green-soft)', warn: 'var(--yellow-soft)', bad: 'var(--red-soft)' };
+    const div = document.createElement('div');
+    div.className = 'med-item';
+    div.style.marginBottom = '8px';
+    div.innerHTML = `
+      <div class="med-icon" style="background:${bgMap[e.estado]};color:${colorMap[e.estado]}"><i class="fas ${e.icon}"></i></div>
+      <div style="flex:1">
+        <div class="med-name">${e.nombre}</div>
+        <div class="med-dosis">Referencia: ${e.referencia} · ${formatFecha(e.fecha)}</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:${colorMap[e.estado]}">${e.resultado}</div>
+      ${e.estado!=='ok' ? `<span style="background:${bgMap[e.estado]};color:${colorMap[e.estado]};font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">Fuera de rango</span>` : `<span style="background:var(--green-soft);color:var(--green);font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">Normal</span>`}`;
+    container.appendChild(div);
+  });
+}
+
+// ── MODAL HISTORIAL PREVIO ────────────────────────────────────────────────
+function abrirHistorialPrevio() {
+  document.getElementById('modal-historial').classList.add('open');
+  renderModalHistorial('');
+}
+function cerrarModal() {
+  document.getElementById('modal-historial').classList.remove('open');
+}
+function filtrarModal() {
+  renderModalHistorial(document.getElementById('modal-search-input').value);
+}
+function renderModalHistorial(filtro) {
+  const container = document.getElementById('modal-body');
+  const f = filtro.toLowerCase();
+  const items = historial.filter(h =>
+    !f || h.motivo.toLowerCase().includes(f) ||
+    h.nota.toLowerCase().includes(f) ||
+    h.dx.some(d => d.toLowerCase().includes(f))
+  );
+  container.innerHTML = items.length ? '' : '<div class="empty-state"><i class="fas fa-search"></i><p>No se encontraron registros</p></div>';
+  items.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'modal-cita';
+    div.innerHTML = `
+      <div class="modal-cita-header">
+        <span class="modal-cita-date">${formatFecha(h.fecha)}</span>
+        <span class="modal-cita-motivo">${h.motivo}</span>
+        <span style="font-size:11px;color:var(--text3)">${h.doctor}</span>
+      </div>
+      <div class="modal-cita-body">
+        <p>${h.nota}</p>
+        <div class="modal-cita-dx">${h.dx.map(d=>`<span class="tag tag-blue" style="font-size:11px">${d}</span>`).join('')}</div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Cerrar modal al click afuera
+document.getElementById('modal-historial').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+</script>
+</body>
+</html>

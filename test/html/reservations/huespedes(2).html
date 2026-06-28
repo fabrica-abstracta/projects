@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bosque Verde — Huéspedes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{ink:'#1C2321',paper:'#F6F4EF',teal:{DEFAULT:'#0E4B43',light:'#157A6E',dark:'#0A332E'},gold:'#C99A3F',ok:'#1F9D6D',busy:'#D6473C',clean:'#E0A92D',off:'#6B6B63'},fontFamily:{display:['Fraunces','serif'],sans:['Inter','sans-serif'],dato:['"IBM Plex Mono"','monospace']}}}}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>body{font-family:'Inter',sans-serif;background:#F6F4EF;}[x-cloak]{display:none!important;}</style>
+</head>
+<body class="text-ink" x-data="huespedes()" x-cloak>
+<div class="flex min-h-screen">
+  <aside :class="sidebarOpen?'w-64':'w-20'" class="bg-teal-dark text-paper flex flex-col transition-all duration-300 shrink-0">
+    <div class="flex items-center gap-3 px-5 py-6 border-b border-white/10">
+      <div class="w-9 h-9 rounded-lg bg-gold flex items-center justify-center font-display font-bold text-teal-dark shrink-0">BV</div>
+      <span x-show="sidebarOpen" x-cloak class="font-display text-lg font-semibold tracking-tight whitespace-nowrap">Bosque Verde</span>
+    </div>
+    <nav class="flex-1 px-3 py-6 space-y-1">
+      <a href="hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Dashboard</span>
+      </a>
+      <a href="mis-hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 21V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M16 21v-9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Mis Hoteles</span>
+      </a>
+      <a href="habitaciones.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M4 13h16M7 13v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M4 20h16"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Habitaciones</span>
+      </a>
+      <a href="reservas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Reservas</span>
+      </a>
+      <a href="huespedes.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10 text-white">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M14 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Huéspedes</span>
+      </a>
+    </nav>
+    <button @click="sidebarOpen=!sidebarOpen" class="mx-3 mb-5 flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/60 hover:bg-white/10 hover:text-white transition">
+      <svg class="w-5 h-5 shrink-0 transition-transform" :class="!sidebarOpen&&'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <span x-show="sidebarOpen" x-cloak class="text-sm whitespace-nowrap">Contraer menú</span>
+    </button>
+  </aside>
+
+  <main class="flex-1 min-w-0 px-8 py-8">
+    <section class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
+      <div>
+        <h1 class="font-display text-3xl font-semibold tracking-tight">Huéspedes</h1>
+        <p class="text-sm text-ink/50 mt-1"><span x-text="lista.length"></span> huéspedes registrados</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div class="relative">
+          <svg class="w-4 h-4 text-ink/40 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z"/></svg>
+          <input x-model="busqueda" type="text" placeholder="Buscar huésped, documento o teléfono…" class="w-full sm:w-80 pl-10 pr-4 py-3 rounded-full border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <button @click="nuevo()" class="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition shadow-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16M4 12h16"/></svg>
+          Nuevo huésped
+        </button>
+      </div>
+    </section>
+
+    <section x-show="formAbierto" x-transition class="bg-white rounded-3xl border border-ink/10 shadow-sm p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold" x-text="editando?'Edición de registro':'Registro rápido'"></p>
+          <h2 class="font-display text-2xl font-semibold mt-1" x-text="editando?'Editar huésped':'Nuevo huésped'"></h2>
+        </div>
+        <button @click="cerrarFormulario()" class="w-10 h-10 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition self-start">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-6">
+          <label class="block text-sm font-semibold mb-1.5">Nombres completos <span class="text-busy">*</span></label>
+          <input x-model="form.nombre" type="text" placeholder="Ana Lucía Torres Vega" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">Tipo de documento <span class="text-busy">*</span></label>
+          <select x-model="form.tipoDoc" @change="form.documento=''" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+            <option value="">Seleccionar</option>
+            <option value="DNI">DNI</option>
+            <option value="Pasaporte">Pasaporte</option>
+            <option value="CE">CE</option>
+            <option value="RUC">RUC</option>
+          </select>
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">N° de documento <span class="text-busy">*</span></label>
+          <input x-model="form.documento" :disabled="!form.tipoDoc" type="text" :placeholder="placeholderDocumento" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal disabled:bg-ink/5 disabled:text-ink/30 disabled:cursor-not-allowed">
+          <p class="text-xs text-ink/40 mt-1" x-text="form.tipoDoc?'Ingresa el número según el tipo seleccionado':'Primero selecciona el tipo de documento'"></p>
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">Teléfono</label>
+          <input x-model="form.telefono" type="text" placeholder="987 654 321" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">Nacionalidad</label>
+          <input x-model="form.nacionalidad" type="text" placeholder="Peruana" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">Email</label>
+          <input x-model="form.email" type="email" placeholder="correo@email.com" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div class="lg:col-span-3">
+          <label class="block text-sm font-semibold mb-1.5">Fecha de nacimiento</label>
+          <input x-model="form.fechaNac" type="date" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal font-dato">
+        </div>
+        <div class="lg:col-span-12">
+          <label class="block text-sm font-semibold mb-1.5">Dirección</label>
+          <input x-model="form.direccion" type="text" placeholder="Av. La Marina 1560, San Miguel" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-paper/40 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-ink/10">
+        <button @click="limpiarFormulario()" class="px-5 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Limpiar</button>
+        <button @click="guardar()" class="px-6 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition" x-text="editando?'Guardar cambios':'Registrar huésped'"></button>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-3xl border border-ink/10 overflow-hidden shadow-sm">
+      <div class="hidden lg:grid grid-cols-12 gap-0 px-5 py-3.5 border-b border-ink/10 bg-paper/50">
+        <div class="col-span-3 text-left text-xs font-semibold text-ink/40 uppercase tracking-wide">Huésped</div>
+        <div class="col-span-2 text-left text-xs font-semibold text-ink/40 uppercase tracking-wide">Documento</div>
+        <div class="col-span-3 text-left text-xs font-semibold text-ink/40 uppercase tracking-wide">Contacto</div>
+        <div class="col-span-3 text-left text-xs font-semibold text-ink/40 uppercase tracking-wide">Datos generales</div>
+        <div class="col-span-1 text-right text-xs font-semibold text-ink/40 uppercase tracking-wide">Acciones</div>
+      </div>
+
+      <div class="divide-y divide-ink/5">
+        <template x-for="g in listaFiltrada" :key="g.id">
+          <article class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-0 px-5 py-5 hover:bg-paper/50 transition">
+            <div class="lg:col-span-3 flex items-start gap-3">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-bold text-white shrink-0" :style="`background:${g.color}`" x-text="iniciales(g.nombre)"></div>
+              <div class="min-w-0">
+                <p class="font-semibold text-sm leading-5" x-text="g.nombre"></p>
+                <p class="text-xs text-ink/45 mt-1" x-text="g.nacionalidad || 'Nacionalidad no registrada'"></p>
+              </div>
+            </div>
+            <div class="lg:col-span-2 space-y-1">
+              <p class="lg:hidden text-[11px] uppercase tracking-wide text-ink/35 font-semibold">Documento</p>
+              <p class="font-dato text-sm font-semibold" x-text="g.tipoDoc + ' ' + g.documento"></p>
+            </div>
+            <div class="lg:col-span-3 space-y-1">
+              <p class="lg:hidden text-[11px] uppercase tracking-wide text-ink/35 font-semibold">Contacto</p>
+              <p class="text-sm text-ink/70" x-text="g.telefono || 'Sin teléfono'"></p>
+              <p class="text-xs text-ink/45 break-all" x-text="g.email || 'Sin email'"></p>
+            </div>
+            <div class="lg:col-span-3 space-y-1.5">
+              <p class="lg:hidden text-[11px] uppercase tracking-wide text-ink/35 font-semibold">Datos generales</p>
+              <p class="text-sm text-ink/70"><span class="text-ink/40">Nacimiento:</span> <span class="font-dato" x-text="formatoFecha(g.fechaNac)"></span></p>
+              <p class="text-sm text-ink/70 leading-5"><span class="text-ink/40">Dirección:</span> <span x-text="g.direccion || 'Sin dirección registrada'"></span></p>
+            </div>
+            <div class="lg:col-span-1 flex lg:justify-end items-start gap-2">
+              <button @click="editar(g)" class="w-9 h-9 rounded-xl border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition" title="Editar">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.4-9.4a2 2 0 1 1 2.8 2.8L11.8 15H9v-2.8l8.6-8.6Z"/></svg>
+              </button>
+              <button @click="eliminar(g.id)" class="w-9 h-9 rounded-xl border border-ink/10 flex items-center justify-center hover:bg-busy/10 hover:border-busy/30 hover:text-busy transition" title="Eliminar">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </article>
+        </template>
+        <div x-show="listaFiltrada.length===0" class="px-5 py-16 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-paper mx-auto flex items-center justify-center text-ink/35 mb-3">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z"/></svg>
+          </div>
+          <p class="font-medium text-sm">No se encontraron huéspedes</p>
+          <p class="text-ink/45 text-sm mt-1">Prueba con otro nombre, documento, teléfono o email.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+function huespedes(){
+  return{
+    sidebarOpen:true,
+    busqueda:'',
+    formAbierto:false,
+    editando:null,
+    form:{nombre:'',tipoDoc:'',documento:'',telefono:'',nacionalidad:'',email:'',fechaNac:'',direccion:''},
+    lista:[
+      {id:1,nombre:'Ana Lucía Torres Vega',tipoDoc:'DNI',documento:'47823156',telefono:'987 654 321',nacionalidad:'Peruana',email:'ana.torres@email.com',fechaNac:'1991-04-18',direccion:'Av. La Marina 1560, San Miguel',color:'#0E4B43'},
+      {id:2,nombre:'Jorge Luis Medina Soto',tipoDoc:'DNI',documento:'40192875',telefono:'955 210 884',nacionalidad:'Peruana',email:'j.medina@correo.com',fechaNac:'1986-09-27',direccion:'Jr. Los Cedros 245, Miraflores',color:'#C99A3F'},
+      {id:3,nombre:'Patricia Elena Huamán Ríos',tipoDoc:'DNI',documento:'45102873',telefono:'976 431 209',nacionalidad:'Peruana',email:'patricia.huaman@email.com',fechaNac:'1994-01-12',direccion:'Calle Los Pinos 380, Surco',color:'#157A6E'},
+      {id:4,nombre:'Martín Alejandro Salazar Ponce',tipoDoc:'CE',documento:'CE-0098214',telefono:'944 765 120',nacionalidad:'Colombiana',email:'martin.salazar@mail.com',fechaNac:'1989-06-03',direccion:'Av. Arequipa 4210, Miraflores',color:'#1F9D6D'},
+      {id:5,nombre:'Sofía Valentina Quiroz Núñez',tipoDoc:'Pasaporte',documento:'P85421963',telefono:'933 582 741',nacionalidad:'Chilena',email:'sofia.quiroz@mail.com',fechaNac:'1997-11-22',direccion:'Malecón Balta 712, Miraflores',color:'#D6473C'},
+      {id:6,nombre:'Renzo Gabriel Castillo Burga',tipoDoc:'DNI',documento:'70231844',telefono:'922 104 589',nacionalidad:'Peruana',email:'renzo.castillo@correo.com',fechaNac:'1990-08-15',direccion:'Av. Larco 980, Trujillo',color:'#6B6B63'}
+    ],
+    get listaFiltrada(){
+      const q=this.busqueda.trim().toLowerCase();
+      if(!q)return this.lista;
+      return this.lista.filter(g=>[g.nombre,g.tipoDoc,g.documento,g.telefono,g.nacionalidad,g.email,g.fechaNac,g.direccion].join(' ').toLowerCase().includes(q));
+    },
+    get placeholderDocumento(){
+      if(this.form.tipoDoc==='DNI')return '47823156';
+      if(this.form.tipoDoc==='Pasaporte')return 'P85421963';
+      if(this.form.tipoDoc==='CE')return 'CE-0098214';
+      if(this.form.tipoDoc==='RUC')return '20601234567';
+      return 'Selecciona un tipo primero';
+    },
+    iniciales(nombre){
+      return nombre.split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    },
+    formatoFecha(fecha){
+      if(!fecha)return 'Sin fecha';
+      return new Date(fecha+'T00:00:00').toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+    },
+    toast(texto){
+      Toastify({text:texto,duration:2600,gravity:'top',position:'right',style:{background:'#0E4B43',borderRadius:'999px',boxShadow:'0 12px 30px rgba(0,0,0,.16)'}}).showToast();
+    },
+    nuevo(){
+      this.editando=null;
+      this.limpiarFormulario();
+      this.formAbierto=true;
+      setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),40);
+    },
+    editar(g){
+      this.editando=g.id;
+      this.form={nombre:g.nombre,tipoDoc:g.tipoDoc,documento:g.documento,telefono:g.telefono,nacionalidad:g.nacionalidad,email:g.email,fechaNac:g.fechaNac,direccion:g.direccion};
+      this.formAbierto=true;
+      setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),40);
+    },
+    cerrarFormulario(){
+      this.formAbierto=false;
+      this.editando=null;
+    },
+    limpiarFormulario(){
+      this.form={nombre:'',tipoDoc:'',documento:'',telefono:'',nacionalidad:'',email:'',fechaNac:'',direccion:''};
+    },
+    guardar(){
+      if(!this.form.nombre.trim()||!this.form.tipoDoc||!this.form.documento.trim()){
+        Swal.fire({icon:'warning',title:'Faltan datos',text:'Completa nombres, tipo de documento y número de documento.',confirmButtonColor:'#0E4B43'});
+        return;
+      }
+      const payload={...this.form,nombre:this.form.nombre.trim(),documento:this.form.documento.trim(),color:this.editando?this.lista.find(g=>g.id===this.editando).color:['#0E4B43','#C99A3F','#157A6E','#1F9D6D','#D6473C','#6B6B63'][this.lista.length%6]};
+      if(this.editando){
+        this.lista=this.lista.map(g=>g.id===this.editando?{...g,...payload}:g);
+        this.toast('Huésped actualizado');
+      }else{
+        this.lista.unshift({id:Date.now(),...payload});
+        this.toast('Huésped registrado');
+      }
+      this.cerrarFormulario();
+      this.limpiarFormulario();
+    },
+    eliminar(id){
+      const g=this.lista.find(item=>item.id===id);
+      Swal.fire({icon:'question',title:'Eliminar huésped',text:`Se eliminará el registro de ${g.nombre}.`,showCancelButton:true,confirmButtonText:'Eliminar',cancelButtonText:'Cancelar',confirmButtonColor:'#D6473C',cancelButtonColor:'#6B6B63'}).then(r=>{
+        if(r.isConfirmed){
+          this.lista=this.lista.filter(item=>item.id!==id);
+          this.toast('Huésped eliminado');
+        }
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>

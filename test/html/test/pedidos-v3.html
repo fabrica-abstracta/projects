@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Brasa Dorada — Restaurante</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Poppins + Playfair Display + DM Serif Display + Cormorant Garamond -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg:      '#0D0A07',
+              surface: '#161208',
+              card:    '#1C1610',
+              border:  '#2E2418',
+              gold:    '#C9973A',
+              amber:   '#E8B860',
+              cream:   '#F5EDD8',
+              muted:   '#8A7A60',
+              red:     '#C0392B',
+            }
+          },
+          fontFamily: {
+            poppins:   ['Poppins', 'sans-serif'],
+            playfair:  ['Playfair Display', 'serif'],
+            dm:        ['DM Serif Display', 'serif'],
+            cormorant: ['Cormorant Garamond', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0D0A07;
+      color: #F5EDD8;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #161208; }
+    ::-webkit-scrollbar-thumb { background: #C9973A; border-radius: 3px; }
+
+    /* Gold gradient text */
+    .gold-text {
+      background: linear-gradient(135deg, #C9973A 0%, #E8B860 50%, #C9973A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Hero overlay */
+    .hero-overlay {
+      background: linear-gradient(180deg,
+        rgba(13,10,7,0.3) 0%,
+        rgba(13,10,7,0.6) 50%,
+        rgba(13,10,7,0.98) 100%);
+    }
+
+    /* Card hover */
+    .menu-card {
+      transition: transform 0.35s cubic-bezier(.25,.8,.25,1),
+                  box-shadow 0.35s ease,
+                  border-color 0.3s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-6px);
+      border-color: #C9973A !important;
+      box-shadow: 0 24px 60px rgba(201,151,58,0.18);
+    }
+    .menu-card:hover .card-img {
+      transform: scale(1.07);
+    }
+    .card-img { transition: transform 0.5s ease; }
+
+    /* Badge pulse */
+    .cart-badge {
+      animation: pulse-gold 2s infinite;
+    }
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201,151,58,0.5); }
+      50%       { box-shadow: 0 0 0 6px rgba(201,151,58,0); }
+    }
+
+    /* Separator ornament */
+    .ornament::before,
+    .ornament::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #C9973A, transparent);
+    }
+
+    /* Filter pill active */
+    .filter-pill.active {
+      background: #C9973A;
+      color: #0D0A07;
+      border-color: #C9973A;
+    }
+
+    /* Quantity stepper */
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #2E2418;
+      border: 1px solid #C9973A;
+      color: #C9973A;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .qty-btn:hover { background: #C9973A; color: #0D0A07; }
+
+    /* Sidebar slide */
+    #cart-sidebar {
+      transition: transform 0.4s cubic-bezier(.77,0,.18,1);
+    }
+    #cart-sidebar.open  { transform: translateX(0); }
+    #cart-sidebar.closed{ transform: translateX(100%); }
+
+    /* Backdrop */
+    #cart-backdrop {
+      transition: opacity 0.3s ease;
+    }
+
+    /* Search glow */
+    #search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(201,151,58,0.45);
+    }
+
+    /* Notification toast */
+    #toast {
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    /* Star rating */
+    .stars { color: #E8B860; font-size: 0.75rem; }
+
+    /* Ribbon */
+    .ribbon {
+      position: absolute; top: 12px; left: 12px; z-index: 10;
+      background: #C9973A; color: #0D0A07;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* Shimmer effect on loading */
+    @keyframes shimmer {
+      0%   { background-position: -800px 0; }
+      100% { background-position: 800px 0; }
+    }
+
+    /* Section fade-in */
+    .fade-up {
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════ -->
+<nav class="fixed top-0 left-0 right-0 z-50 border-b border-brand-border"
+     style="background: rgba(13,10,7,0.92); backdrop-filter: blur(16px);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full border-2 border-brand-gold flex items-center justify-center"
+           style="background: linear-gradient(135deg,#1C1610,#2E2418);">
+        <i data-lucide="flame" class="w-5 h-5 text-brand-gold"></i>
+      </div>
+      <div>
+        <p class="font-dm text-brand-amber text-xl leading-none">La Brasa Dorada</p>
+        <p class="font-cormorant text-brand-muted text-xs italic">Cocina de autor · Desde 1998</p>
+      </div>
+    </div>
+
+    <!-- Nav Links (desktop) -->
+    <div class="hidden md:flex items-center gap-8 font-poppins text-sm font-medium">
+      <a href="#menu" class="text-brand-cream hover:text-brand-gold transition-colors">Menú</a>
+      <a href="#especiales" class="text-brand-cream hover:text-brand-gold transition-colors">Especiales</a>
+      <a href="#nosotros" class="text-brand-cream hover:text-brand-gold transition-colors">Nosotros</a>
+    </div>
+
+    <!-- Right actions -->
+    <div class="flex items-center gap-3">
+      <!-- Cart button -->
+      <button id="cart-btn"
+              class="relative flex items-center gap-2 px-4 py-2 rounded-full border border-brand-gold text-brand-gold font-poppins text-sm font-semibold hover:bg-brand-gold hover:text-brand-bg transition-all duration-300">
+        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">Carrito</span>
+        <span id="cart-count"
+              class="cart-badge absolute -top-2 -right-2 w-5 h-5 bg-brand-gold text-brand-bg text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════
+     HERO
+════════════════════════════════════════ -->
+<section class="relative h-screen flex flex-col items-center justify-center overflow-hidden">
+  <!-- BG image -->
+  <div class="absolute inset-0">
+    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1800&auto=format&fit=crop"
+         alt="Restaurante hero"
+         class="w-full h-full object-cover" />
+    <div class="hero-overlay absolute inset-0"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="relative z-10 text-center px-6 fade-up">
+    <p class="font-cormorant text-brand-amber italic text-xl sm:text-2xl mb-3 tracking-widest">
+      — Bienvenido a —
+    </p>
+    <h1 class="font-playfair font-black text-5xl sm:text-7xl md:text-8xl leading-none mb-4">
+      <span class="gold-text">La Brasa</span><br/>
+      <span class="text-brand-cream">Dorada</span>
+    </h1>
+    <p class="font-poppins text-brand-muted text-sm sm:text-base font-light tracking-[0.25em] uppercase mb-10">
+      Gastronomía · Sabor · Experiencia
+    </p>
+    <a href="#menu"
+       class="inline-flex items-center gap-2 px-8 py-4 rounded-full font-poppins text-sm font-semibold text-brand-bg transition-all duration-300 hover:scale-105"
+       style="background: linear-gradient(135deg,#C9973A,#E8B860);">
+      <i data-lucide="utensils" class="w-4 h-4"></i>
+      Ver el Menú Completo
+    </a>
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-brand-muted text-xs font-poppins animate-bounce">
+    <i data-lucide="chevrons-down" class="w-5 h-5"></i>
+    <span>Desliza</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     STATS BAR
+════════════════════════════════════════ -->
+<div class="border-y border-brand-border" style="background:#161208;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    <div>
+      <p class="font-playfair text-3xl gold-text font-bold">+120</p>
+      <p class="font-poppins text-brand-muted text-xs mt-1">Platillos disponibles</p>
+    </div>
+    <div>
+      <p class="font-playfair text-3xl gold-text font-bold">98%</p>
+      <p class="font-poppins text-brand-muted text-xs mt-1">Satisfacción del cliente</p>
+    </div>
+    <div>
+      <p class="font-playfair text-3xl gold-text font-bold">25 min</p>
+      <p class="font-poppins text-brand-muted text-xs mt-1">Tiempo promedio de entrega</p>
+    </div>
+    <div>
+      <p class="font-playfair text-3xl gold-text font-bold">+26 años</p>
+      <p class="font-poppins text-brand-muted text-xs mt-1">De tradición culinaria</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MENU SECTION
+════════════════════════════════════════ -->
+<section id="menu" class="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+
+  <!-- Heading -->
+  <div class="text-center mb-12">
+    <p class="font-cormorant italic text-brand-amber text-lg mb-2">Nuestra selección</p>
+    <h2 class="font-playfair font-black text-4xl sm:text-5xl text-brand-cream mb-4">
+      Menú del Día
+    </h2>
+    <div class="flex items-center justify-center gap-3 ornament">
+      <i data-lucide="gem" class="w-4 h-4 text-brand-gold mx-4 flex-shrink-0"></i>
+    </div>
+  </div>
+
+  <!-- Search + Filters -->
+  <div class="flex flex-col sm:flex-row items-center gap-4 mb-10">
+    <!-- Search -->
+    <div class="relative flex-1 w-full">
+      <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted"></i>
+      <input id="search-input"
+             type="text"
+             placeholder="Buscar platillo, ingrediente…"
+             class="w-full pl-11 pr-4 py-3 rounded-full font-poppins text-sm text-brand-cream placeholder-brand-muted border border-brand-border focus:border-brand-gold transition-all"
+             style="background:#161208;" />
+    </div>
+
+    <!-- Filter pills -->
+    <div class="flex flex-wrap gap-2 justify-center" id="filter-pills">
+      <button class="filter-pill active font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="todos">Todos</button>
+      <button class="filter-pill font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="entradas">Entradas</button>
+      <button class="filter-pill font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="principales">Principales</button>
+      <button class="filter-pill font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="mariscos">Mariscos</button>
+      <button class="filter-pill font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="postres">Postres</button>
+      <button class="filter-pill font-poppins text-xs font-semibold px-5 py-2 rounded-full border border-brand-border text-brand-cream transition-all" data-cat="bebidas">Bebidas</button>
+    </div>
+  </div>
+
+  <!-- Sort bar -->
+  <div class="flex items-center justify-between mb-6">
+    <p class="font-poppins text-brand-muted text-sm"><span id="results-count">16</span> platillos encontrados</p>
+    <select id="sort-select"
+            class="font-poppins text-xs text-brand-cream border border-brand-border rounded-full px-4 py-2 bg-brand-surface focus:outline-none focus:border-brand-gold">
+      <option value="default">Orden por defecto</option>
+      <option value="price-asc">Precio: menor a mayor</option>
+      <option value="price-desc">Precio: mayor a menor</option>
+      <option value="name">Nombre A-Z</option>
+    </select>
+  </div>
+
+  <!-- Product Grid -->
+  <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="hidden text-center py-20">
+    <i data-lucide="search-x" class="w-16 h-16 text-brand-muted mx-auto mb-4"></i>
+    <p class="font-playfair text-2xl text-brand-cream mb-2">Sin resultados</p>
+    <p class="font-poppins text-brand-muted text-sm">Intenta con otro término o categoría</p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     ESPECIALES BANNER
+════════════════════════════════════════ -->
+<section id="especiales" class="relative overflow-hidden py-24" style="background:#161208;">
+  <div class="absolute inset-0 opacity-10">
+    <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1800&auto=format&fit=crop"
+         class="w-full h-full object-cover" alt="" />
+  </div>
+  <div class="relative z-10 max-w-4xl mx-auto text-center px-6">
+    <p class="font-cormorant italic text-brand-amber text-xl mb-3">Oferta especial de hoy</p>
+    <h2 class="font-playfair font-black text-4xl sm:text-6xl text-brand-cream mb-6">
+      Menú Degustación<br/>
+      <span class="gold-text">Chef's Table</span>
+    </h2>
+    <p class="font-poppins text-brand-muted text-base max-w-xl mx-auto mb-10 leading-relaxed">
+      5 tiempos elaborados por nuestro chef ejecutivo con los mejores ingredientes de temporada. Maridaje opcional incluido.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div class="text-center">
+        <p class="font-poppins text-brand-muted text-xs uppercase tracking-widest">Precio por persona</p>
+        <p class="font-playfair text-5xl text-brand-amber font-bold">$85.00</p>
+      </div>
+      <button onclick="addSpecialToCart()"
+              class="flex items-center gap-2 px-8 py-4 rounded-full font-poppins text-sm font-semibold text-brand-bg transition-all duration-300 hover:scale-105"
+              style="background: linear-gradient(135deg,#C9973A,#E8B860);">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        Agregar al Carrito
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     NOSOTROS
+════════════════════════════════════════ -->
+<section id="nosotros" class="max-w-7xl mx-auto px-4 sm:px-6 py-24">
+  <div class="grid md:grid-cols-2 gap-16 items-center">
+    <div>
+      <p class="font-cormorant italic text-brand-amber text-xl mb-3">Nuestra historia</p>
+      <h2 class="font-playfair font-black text-4xl sm:text-5xl text-brand-cream mb-6">
+        Pasión por la<br/><span class="gold-text">gastronomía</span>
+      </h2>
+      <p class="font-poppins text-brand-muted leading-relaxed text-sm mb-5">
+        Desde 1998, La Brasa Dorada ha sido sinónimo de excelencia culinaria en la ciudad. Nuestra cocina combina técnicas de vanguardia con los sabores auténticos de la tradición local, usando ingredientes frescos de productores locales.
+      </p>
+      <p class="font-poppins text-brand-muted leading-relaxed text-sm mb-8">
+        Cada platillo es una historia: el del campesino que cultivó el maíz, el del pescador que trajo el marisco al alba, y el de nuestro chef que los transforma en experiencias inolvidables.
+      </p>
+      <div class="flex flex-wrap gap-6">
+        <div class="flex items-center gap-2">
+          <i data-lucide="leaf" class="w-5 h-5 text-brand-gold"></i>
+          <span class="font-poppins text-brand-cream text-sm">Ingredientes locales</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="award" class="w-5 h-5 text-brand-gold"></i>
+          <span class="font-poppins text-brand-cream text-sm">Chef premiado</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="heart" class="w-5 h-5 text-brand-gold"></i>
+          <span class="font-poppins text-brand-cream text-sm">Elaborado con amor</span>
+        </div>
+      </div>
+    </div>
+    <div class="relative">
+      <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=800&auto=format&fit=crop"
+           class="w-full h-96 object-cover rounded-2xl"
+           style="border: 1px solid #2E2418;"
+           alt="Chef cocinando" />
+      
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ════════════════════════════════════════
+     CART SIDEBAR
+════════════════════════════════════════ -->
+<!-- Backdrop -->
+<div id="cart-backdrop"
+     class="fixed inset-0 z-40 bg-black/60 hidden"
+     style="backdrop-filter:blur(4px);"
+     onclick="closeCart()"></div>
+
+<!-- Sidebar -->
+<aside id="cart-sidebar"
+       class="closed fixed top-0 right-0 h-full w-full sm:w-[420px] z-50 flex flex-col border-l border-brand-border"
+       style="background:#0D0A07;">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between p-6 border-b border-brand-border">
+    <div>
+      <p class="font-playfair text-xl text-brand-cream font-bold">Tu Pedido</p>
+      <p class="font-poppins text-brand-muted text-xs" id="cart-subtitle">Aún no has agregado nada</p>
+    </div>
+    <button onclick="closeCart()" class="w-9 h-9 rounded-full border border-brand-border flex items-center justify-center text-brand-muted hover:border-brand-gold hover:text-brand-gold transition-all">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <!-- Items -->
+  <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+  <!-- Empty state -->
+  <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+    <i data-lucide="shopping-cart" class="w-16 h-16 text-brand-muted mb-4"></i>
+    <p class="font-playfair text-2xl text-brand-cream mb-2">Tu carrito está vacío</p>
+    <p class="font-poppins text-brand-muted text-sm">Explora nuestro menú y agrega tus platillos favoritos</p>
+  </div>
+
+  <!-- Footer -->
+  <div id="cart-footer" class="hidden border-t border-brand-border p-6 space-y-4">
+    <!-- Summary -->
+    <div class="space-y-2">
+      <div class="flex justify-between font-poppins text-sm text-brand-muted">
+        <span>Subtotal</span><span id="cart-subtotal">$0.00</span>
+      </div>
+      <div class="flex justify-between font-poppins text-sm text-brand-muted">
+        <span>Envío estimado</span><span class="text-green-400">Gratis</span>
+      </div>
+      <div class="flex justify-between font-poppins text-sm text-brand-muted">
+        <span>IVA (10%)</span><span id="cart-tax">$0.00</span>
+      </div>
+      <div class="flex justify-between font-poppins text-base font-bold text-brand-cream border-t border-brand-border pt-2 mt-2">
+        <span>Total</span><span id="cart-total" class="text-brand-amber">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Customer info -->
+    <div class="space-y-3">
+      <p class="font-poppins text-brand-cream text-xs font-semibold uppercase tracking-widest">Datos de entrega</p>
+      <input id="c-name" type="text" placeholder="Tu nombre completo"
+             class="w-full px-4 py-3 rounded-xl font-poppins text-sm text-brand-cream placeholder-brand-muted border border-brand-border focus:border-brand-gold focus:outline-none transition-all"
+             style="background:#161208;" />
+      <input id="c-phone" type="tel" placeholder="Teléfono"
+             class="w-full px-4 py-3 rounded-xl font-poppins text-sm text-brand-cream placeholder-brand-muted border border-brand-border focus:border-brand-gold focus:outline-none transition-all"
+             style="background:#161208;" />
+      <input id="c-address" type="text" placeholder="Dirección de entrega"
+             class="w-full px-4 py-3 rounded-xl font-poppins text-sm text-brand-cream placeholder-brand-muted border border-brand-border focus:border-brand-gold focus:outline-none transition-all"
+             style="background:#161208;" />
+      <select id="c-payment"
+              class="w-full px-4 py-3 rounded-xl font-poppins text-sm text-brand-cream border border-brand-border focus:border-brand-gold focus:outline-none transition-all"
+              style="background:#161208;">
+        <option value="">Método de pago</option>
+        <option>💳 Tarjeta de crédito / débito</option>
+        <option>💵 Efectivo al entregar</option>
+        <option>📱 Transferencia / Yape / Plin</option>
+      </select>
+    </div>
+
+    <!-- CTA -->
+    <button onclick="placeOrder()"
+            class="w-full py-4 rounded-xl font-poppins text-sm font-bold text-brand-bg transition-all hover:scale-[1.02] active:scale-95"
+            style="background: linear-gradient(135deg,#C9973A,#E8B860);">
+      <span class="flex items-center justify-center gap-2">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        Confirmar Pedido
+      </span>
+    </button>
+    <button onclick="clearCart()"
+            class="w-full py-2 rounded-xl font-poppins text-xs text-brand-muted hover:text-brand-red transition-colors">
+      Vaciar carrito
+    </button>
+  </div>
+</aside>
+
+
+<!-- ════════════════════════════════════════
+     TOAST NOTIFICATION
+════════════════════════════════════════ -->
+<div id="toast"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 px-6 py-3 rounded-full font-poppins text-sm font-semibold border border-brand-gold shadow-2xl opacity-0 pointer-events-none"
+     style="background:#1C1610; transform: translateX(-50%) translateY(20px);">
+  <i data-lucide="check-circle" class="w-5 h-5 text-brand-gold"></i>
+  <span id="toast-msg">Producto agregado</span>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     ORDER SUCCESS MODAL
+════════════════════════════════════════ -->
+<div id="success-modal"
+     class="fixed inset-0 z-[70] hidden flex items-center justify-center p-6">
+  <div class="absolute inset-0 bg-black/80" style="backdrop-filter:blur(8px);"></div>
+  <div class="relative z-10 max-w-md w-full text-center p-10 rounded-3xl border border-brand-gold"
+       style="background:#161208;">
+    <div class="w-20 h-20 rounded-full border-2 border-brand-gold flex items-center justify-center mx-auto mb-6"
+         style="background: linear-gradient(135deg,#C9973A,#E8B860);">
+      <i data-lucide="check" class="w-10 h-10 text-brand-bg"></i>
+    </div>
+    <p class="font-cormorant italic text-brand-amber text-xl mb-2">¡Pedido confirmado!</p>
+    <h3 class="font-playfair text-3xl text-brand-cream font-bold mb-4">¡Gracias por tu orden!</h3>
+    <p class="font-poppins text-brand-muted text-sm mb-8 leading-relaxed">
+      Tu pedido ha sido recibido exitosamente. En breve recibirás una confirmación y tu comida estará en camino en <strong class="text-brand-amber">25 minutos</strong>.
+    </p>
+    <button onclick="closeSuccessModal()"
+            class="px-8 py-3 rounded-full font-poppins text-sm font-bold text-brand-bg transition-all hover:scale-105"
+            style="background: linear-gradient(135deg,#C9973A,#E8B860);">
+      Hacer otro pedido
+    </button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+// ─── DATA ───────────────────────────────
+const MENU = [
+  // ENTRADAS
+  {
+    id:1, name:"Ceviche Clásico", cat:"entradas", price:18.50, rating:4.9, reviews:312,
+    desc:"Pescado fresco marinado en limón, ají amarillo, cilantro y cebolla morada.",
+    img:"https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=600&auto=format&fit=crop",
+    tag:"Popular", veg:false
+  },
+  {
+    id:2, name:"Tabla de Quesos Artesanales", cat:"entradas", price:22.00, rating:4.7, reviews:184,
+    desc:"Selección de quesos locales, frutas frescas, miel de abeja y crackers crujientes.",
+    img:"https://images.unsplash.com/photo-1505575967455-40e256f73376?w=600&auto=format&fit=crop",
+    tag:"Veggie", veg:true
+  },
+  {
+    id:3, name:"Causa Limeña", cat:"entradas", price:16.00, rating:4.8, reviews:256,
+    desc:"Papa amarilla condimentada rellena de pollo deshilachado y mayonesa con palta.",
+    img:"https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&auto=format&fit=crop",
+    tag:null, veg:false
+  },
+  // PRINCIPALES
+  {
+    id:4, name:"Lomo Saltado Premium", cat:"principales", price:32.00, rating:4.9, reviews:498,
+    desc:"Tiras de lomo fino salteadas con verduras, tomate, ajíes y papas fritas doradas.",
+    img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop",
+    tag:"Chef's Pick", veg:false
+  },
+  {
+    id:5, name:"Pollo al Horno con Hierbas", cat:"principales", price:26.00, rating:4.6, reviews:203,
+    desc:"Pollo entero marinado 24h en hierbas frescas, asado lentamente con papas rústicas.",
+    img:"https://images.unsplash.com/photo-1432139509613-5c4255815697?w=600&auto=format&fit=crop",
+    tag:null, veg:false
+  },
+  {
+    id:6, name:"Risotto de Hongos Porcini", cat:"principales", price:28.00, rating:4.8, reviews:167,
+    desc:"Arroz arborio cremoso con hongos porcini, parmesano y un toque de trufa negra.",
+    img:"https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&auto=format&fit=crop",
+    tag:"Veggie", veg:true
+  },
+  {
+    id:7, name:"Costillas BBQ Ahumadas", cat:"principales", price:38.00, rating:4.9, reviews:421,
+    desc:"Costillas de res ahumadas 8 horas, glaseadas con salsa BBQ casera. Con coleslaw.",
+    img:"https://images.unsplash.com/photo-1544025162-d76594f0a765?w=600&auto=format&fit=crop",
+    tag:"Popular", veg:false
+  },
+  {
+    id:8, name:"Pasta Trufa y Parmesano", cat:"principales", price:29.50, rating:4.7, reviews:155,
+    desc:"Tagliatelle fresco con crema de parmesano 24 meses, yema de huevo y trufa rallada.",
+    img:"https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&auto=format&fit=crop",
+    tag:null, veg:true
+  },
+  // MARISCOS
+  {
+    id:9, name:"Langosta a la Mantequilla", cat:"mariscos", price:58.00, rating:5.0, reviews:89,
+    desc:"Langosta entera gratinada con mantequilla de ajo, hierbas y limón de Sicilia.",
+    img:"https://images.unsplash.com/photo-1559737558-2f5a35f4523b?w=600&auto=format&fit=crop",
+    tag:"Premium", veg:false
+  },
+  {
+    id:10, name:"Pulpo a la Gallega", cat:"mariscos", price:42.00, rating:4.8, reviews:178,
+    desc:"Pulpo tierno cocido y asado, sobre cama de papas, pimentón ahumado y aceite de oliva.",
+    img:"https://images.unsplash.com/photo-1625944525533-473f1a3d54e7?w=600&auto=format&fit=crop",
+    tag:null, veg:false
+  },
+  {
+    id:11, name:"Camarones al Ajillo", cat:"mariscos", price:36.00, rating:4.9, reviews:267,
+    desc:"Camarones jumbo salteados en aceite de oliva con ajo, guindilla y vino blanco.",
+    img:"https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&auto=format&fit=crop",
+    tag:"Popular", veg:false
+  },
+  // POSTRES
+  {
+    id:12, name:"Tiramisú Artesanal", cat:"postres", price:12.00, rating:4.9, reviews:345,
+    desc:"Bizcochos empapados en espresso, crema de mascarpone y cacao amargo importado.",
+    img:"https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&auto=format&fit=crop",
+    tag:"Favorito", veg:true
+  },
+  {
+    id:13, name:"Volcán de Chocolate", cat:"postres", price:14.00, rating:4.8, reviews:289,
+    desc:"Coulant tibio de chocolate 70% cacao con corazón líquido y helado de vainilla.",
+    img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&auto=format&fit=crop",
+    tag:null, veg:true
+  },
+  // BEBIDAS
+  {
+    id:14, name:"Cóctel de la Casa", cat:"bebidas", price:14.00, rating:4.7, reviews:312,
+    desc:"Gin artesanal, pepino, albahaca fresca, limón y agua tónica premium. Refrescante.",
+    img:"https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop",
+    tag:null, veg:true
+  },
+  {
+    id:15, name:"Smoothie Tropical", cat:"bebidas", price:9.00, rating:4.6, reviews:198,
+    desc:"Mango, piña, maracuyá y coco. Sin azúcar añadida. 100% fruta fresca.",
+    img:"https://images.unsplash.com/photo-1570696516188-ade861b84a49?w=600&auto=format&fit=crop",
+    tag:"Saludable", veg:true
+  },
+  {
+    id:16, name:"Café de Especialidad", cat:"bebidas", price:7.50, rating:4.9, reviews:521,
+    desc:"Single origin de altura, preparado en Chemex. Notas a chocolate y frutos rojos.",
+    img:"https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=600&auto=format&fit=crop",
+    tag:"Popular", veg:true
+  },
+];
+
+// ─── CART STATE ─────────────────────────
+let cart = [];
+
+// ─── RENDER MENU ────────────────────────
+function renderMenu(items) {
+  const grid = document.getElementById('menu-grid');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('results-count').textContent = items.length;
+
+  if (items.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = items.map(item => `
+    <div class="menu-card rounded-2xl border border-brand-border overflow-hidden flex flex-col" style="background:#161208;">
+      <!-- Image -->
+      <div class="relative h-48 overflow-hidden">
+        <img src="${item.img}" alt="${item.name}"
+             class="card-img w-full h-full object-cover" loading="lazy" />
+        ${item.tag ? `<span class="ribbon">${item.tag}</span>` : ''}
+        ${item.veg ? `<span class="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">V</span>` : ''}
+      </div>
+      <!-- Body -->
+      <div class="p-5 flex flex-col flex-1">
+        <p class="font-poppins text-brand-muted text-xs uppercase tracking-widest mb-1">${item.cat}</p>
+        <h3 class="font-playfair font-bold text-brand-cream text-lg leading-tight mb-2">${item.name}</h3>
+        <p class="font-poppins text-brand-muted text-xs leading-relaxed flex-1 mb-3">${item.desc}</p>
+        <!-- Rating -->
+        <div class="flex items-center gap-1 mb-4">
+          <span class="stars">★★★★★</span>
+          <span class="font-poppins text-brand-muted text-xs">${item.rating} (${item.reviews})</span>
+        </div>
+        <!-- Price + Add -->
+        <div class="flex items-center justify-between">
+          <p class="font-playfair text-brand-amber text-2xl font-bold">$${item.price.toFixed(2)}</p>
+          <button onclick="addToCart(${item.id})"
+                  class="flex items-center gap-1 px-4 py-2 rounded-full font-poppins text-xs font-semibold border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-brand-bg transition-all duration-200">
+            <i data-lucide="plus" class="w-3 h-3"></i>
+            Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  lucide.createIcons();
+}
+
+// ─── FILTERS ────────────────────────────
+let activeCategory = 'todos';
+let searchQuery   = '';
+let sortMode      = 'default';
+
+function getFiltered() {
+  let items = [...MENU];
+  if (activeCategory !== 'todos') items = items.filter(i => i.cat === activeCategory);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    items = items.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      i.desc.toLowerCase().includes(q) ||
+      i.cat.toLowerCase().includes(q)
+    );
+  }
+  if (sortMode === 'price-asc')  items.sort((a,b) => a.price - b.price);
+  if (sortMode === 'price-desc') items.sort((a,b) => b.price - a.price);
+  if (sortMode === 'name')       items.sort((a,b) => a.name.localeCompare(b.name));
+  return items;
+}
+
+document.querySelectorAll('.filter-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCategory = btn.dataset.cat;
+    renderMenu(getFiltered());
+  });
+});
+
+document.getElementById('search-input').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderMenu(getFiltered());
+});
+
+document.getElementById('sort-select').addEventListener('change', e => {
+  sortMode = e.target.value;
+  renderMenu(getFiltered());
+});
+
+// ─── ADD TO CART ────────────────────────
+function addToCart(id) {
+  const item = MENU.find(i => i.id === id);
+  if (!item) return;
+  const existing = cart.find(c => c.id === id);
+  if (existing) { existing.qty++; }
+  else           { cart.push({ ...item, qty: 1 }); }
+  updateCartUI();
+  showToast(`${item.name} agregado al carrito`);
+}
+
+function addSpecialToCart() {
+  const special = { id: 99, name: "Menú Degustación Chef's Table", price: 85.00, cat: "especiales",
+    img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop", qty: 1 };
+  const existing = cart.find(c => c.id === 99);
+  if (existing) { existing.qty++; }
+  else          { cart.push(special); }
+  updateCartUI();
+  showToast("¡Menú Degustación agregado!");
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) removeFromCart(id);
+  else updateCartUI();
+}
+
+function clearCart() {
+  cart = [];
+  updateCartUI();
+  showToast("Carrito vaciado");
+}
+
+// ─── UPDATE CART UI ─────────────────────
+function updateCartUI() {
+  const count    = cart.reduce((s, c) => s + c.qty, 0);
+  const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const tax      = subtotal * 0.1;
+  const total    = subtotal + tax;
+
+  // Badge
+  const badge = document.getElementById('cart-count');
+  if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
+  else           { badge.classList.add('hidden'); }
+
+  // Subtitle
+  document.getElementById('cart-subtitle').textContent =
+    count > 0 ? `${count} producto${count > 1 ? 's' : ''} en tu pedido` : 'Aún no has agregado nada';
+
+  // Items list
+  const itemsEl = document.getElementById('cart-items');
+  const emptyEl = document.getElementById('cart-empty');
+  const footerEl = document.getElementById('cart-footer');
+
+  if (cart.length === 0) {
+    itemsEl.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    footerEl.classList.add('hidden');
+  } else {
+    emptyEl.classList.add('hidden');
+    footerEl.classList.remove('hidden');
+    itemsEl.innerHTML = cart.map(c => `
+      <div class="flex items-center gap-3 p-3 rounded-xl border border-brand-border" style="background:#161208;">
+        <img src="${c.img}" alt="${c.name}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+        <div class="flex-1 min-w-0">
+          <p class="font-poppins text-brand-cream text-xs font-semibold truncate">${c.name}</p>
+          <p class="font-poppins text-brand-amber text-sm font-bold">$${c.price.toFixed(2)}</p>
+          <!-- Qty stepper -->
+          <div class="flex items-center gap-2 mt-2">
+            <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
+            <span class="font-poppins text-brand-cream text-sm w-5 text-center">${c.qty}</span>
+            <button class="qty-btn" onclick="changeQty(${c.id}, 1)">+</button>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <p class="font-poppins text-brand-cream text-xs font-bold">$${(c.price * c.qty).toFixed(2)}</p>
+          <button onclick="removeFromCart(${c.id})" class="text-brand-muted hover:text-brand-red transition-colors">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+    lucide.createIcons();
+  }
+
+  // Totals
+  document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+  document.getElementById('cart-tax').textContent      = `$${tax.toFixed(2)}`;
+  document.getElementById('cart-total').textContent    = `$${total.toFixed(2)}`;
+}
+
+// ─── CART OPEN / CLOSE ──────────────────
+function openCart() {
+  document.getElementById('cart-sidebar').classList.replace('closed','open');
+  document.getElementById('cart-backdrop').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cart-sidebar').classList.replace('open','closed');
+  document.getElementById('cart-backdrop').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+document.getElementById('cart-btn').addEventListener('click', openCart);
+
+// ─── PLACE ORDER ────────────────────────
+function placeOrder() {
+  const name    = document.getElementById('c-name').value.trim();
+  const phone   = document.getElementById('c-phone').value.trim();
+  const address = document.getElementById('c-address').value.trim();
+  const payment = document.getElementById('c-payment').value;
+
+  if (!name || !phone || !address || !payment) {
+    showToast("Por favor completa todos los campos");
+    return;
+  }
+  if (cart.length === 0) {
+    showToast("Tu carrito está vacío");
+    return;
+  }
+
+  // Show success
+  cart = [];
+  updateCartUI();
+  closeCart();
+  document.getElementById('success-modal').style.display = 'flex';
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-phone').value = '';
+  document.getElementById('c-address').value = '';
+  document.getElementById('c-payment').value = '';
+}
+
+function closeSuccessModal() {
+  document.getElementById('success-modal').style.display = 'none';
+}
+
+// ─── TOAST ──────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  toast.style.pointerEvents = 'auto';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    toast.style.pointerEvents = 'none';
+  }, 2800);
+}
+
+// ─── INIT ────────────────────────────────
+renderMenu(MENU);
+lucide.createIcons();
+</script>
+</body>
+</html>

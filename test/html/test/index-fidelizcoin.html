@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: '#FDF6EC',
+        caramel: '#C8872A',
+        choco: '#3B1F0E',
+        blush: '#F2C4C4',
+        rose: '#E8929A',
+        gold: '#F0C060',
+      }
+    }
+  }
+}
+</script>
+<style>
+body { background-color: #FDF6EC; font-family: 'Georgia', serif; }
+.sidebar-link:hover { background: rgba(200,135,42,0.15); }
+.stat-card { background: white; border-left: 4px solid #C8872A; }
+.badge-sello { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
+</style>
+</head>
+<body x-data="{ sidebarOpen: true, modalOpen: false, modalCliente: null }" class="flex min-h-screen">
+
+<aside :class="sidebarOpen ? 'w-64' : 'w-16'" class="bg-choco text-cream flex flex-col transition-all duration-300 min-h-screen fixed z-20">
+  <div class="flex items-center justify-between p-4 border-b border-yellow-900">
+    <span x-show="sidebarOpen" class="text-gold font-bold text-lg tracking-wide">🍰 SweetStamp</span>
+    <button @click="sidebarOpen = !sidebarOpen" class="text-gold hover:text-white transition">
+      <i :class="sidebarOpen ? 'fa-solid fa-angles-left' : 'fa-solid fa-angles-right'"></i>
+    </button>
+  </div>
+  <nav class="flex-1 py-4 space-y-1">
+    <a href="index.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gold rounded mx-2 bg-yellow-900/30">
+      <i class="fa-solid fa-house w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm font-medium">Dashboard</span>
+    </a>
+    <a href="clientes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-users w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Clientes & Cartillas</span>
+    </a>
+    <a href="premios.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-gift w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Premios</span>
+    </a>
+    <a href="juegos.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-dice w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Juegos</span>
+    </a>
+  </nav>
+  <div x-show="sidebarOpen" class="p-4 border-t border-yellow-900 text-xs text-yellow-700">
+    <p class="font-semibold text-cream">Pastelería La Dulce Época</p>
+    <p>Temporada 2025</p>
+  </div>
+</aside>
+
+<div :class="sidebarOpen ? 'ml-64' : 'ml-16'" class="flex-1 transition-all duration-300">
+  <header class="bg-white shadow-sm px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+    <div>
+      <h1 class="text-2xl font-bold text-choco">Dashboard</h1>
+      <p class="text-sm text-gray-500">Miércoles, 25 de junio 2025</p>
+    </div>
+    <div class="flex items-center gap-4">
+      <button @click="
+        Swal.fire({
+          title: '¿Registrar venta rápida?',
+          html: '<select id=\"cli\" class=\"swal2-input\"><option>Valentina Rojas</option><option>Camilo Herrera</option><option>Isabella Moreno</option></select>',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '🔖 Sellar Cartilla',
+          confirmButtonColor: '#C8872A',
+          cancelButtonText: 'Cancelar'
+        }).then(r => {
+          if(r.isConfirmed) {
+            Toastify({ text: '✅ Sello agregado correctamente', duration: 3000, style: { background: '#C8872A' } }).showToast();
+          }
+        })
+      " class="bg-caramel text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-yellow-700 transition flex items-center gap-2">
+        <i class="fa-solid fa-stamp"></i> Venta Rápida
+      </button>
+      <div class="w-9 h-9 rounded-full bg-rose flex items-center justify-center text-white font-bold text-sm">MR</div>
+    </div>
+  </header>
+
+  <main class="p-8">
+    <div class="grid grid-cols-4 gap-6 mb-8">
+      <div class="stat-card rounded-xl p-5 shadow">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">Clientes Activos</p>
+        <p class="text-3xl font-bold text-choco mt-1">148</p>
+        <p class="text-xs text-green-600 mt-1"><i class="fa-solid fa-arrow-up"></i> +12 este mes</p>
+      </div>
+      <div class="stat-card rounded-xl p-5 shadow" style="border-color:#E8929A">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">Sellos Otorgados Hoy</p>
+        <p class="text-3xl font-bold text-choco mt-1">34</p>
+        <p class="text-xs text-rose mt-1"><i class="fa-solid fa-star"></i> Récord diario</p>
+      </div>
+      <div class="stat-card rounded-xl p-5 shadow" style="border-color:#F0C060">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">Cartillas Completadas</p>
+        <p class="text-3xl font-bold text-choco mt-1">7</p>
+        <p class="text-xs text-yellow-600 mt-1"><i class="fa-solid fa-trophy"></i> Este mes</p>
+      </div>
+      <div class="stat-card rounded-xl p-5 shadow" style="border-color:#3B1F0E">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">Premios Entregados</p>
+        <p class="text-3xl font-bold text-choco mt-1">23</p>
+        <p class="text-xs text-gray-500 mt-1">Total acumulado</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <div class="col-span-2 bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-choco">Actividad Reciente – Sellos</h2>
+          <a href="clientes.html" class="text-caramel text-sm hover:underline">Ver todos</a>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-left text-gray-500">
+              <th class="pb-2">Cliente</th>
+              <th class="pb-2">Cartilla</th>
+              <th class="pb-2">Sellos</th>
+              <th class="pb-2">Estado</th>
+              <th class="pb-2">Hora</th>
+              <th class="pb-2"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <template x-for="row in [
+              {n:'Valentina Rojas', c:'#VR-041', s:8, max:10, est:'En curso', h:'10:32'},
+              {n:'Camilo Herrera', c:'#CH-038', s:10, max:10, est:'Completada', h:'10:18'},
+              {n:'Isabella Moreno', c:'#IM-037', s:5, max:10, est:'En curso', h:'09:55'},
+              {n:'Rodrigo Fuentes', c:'#RF-035', s:10, max:10, est:'Completada', h:'09:40'},
+              {n:'Sofía Castillo', c:'#SC-034', s:3, max:10, est:'En curso', h:'09:22'},
+            ]" :key="row.c">
+              <tr class="hover:bg-cream/50 transition">
+                <td class="py-3 font-medium text-choco" x-text="row.n"></td>
+                <td class="py-3 text-gray-400 font-mono text-xs" x-text="row.c"></td>
+                <td class="py-3">
+                  <div class="flex gap-1">
+                    <template x-for="i in row.max" :key="i">
+                      <span :class="i <= row.s ? 'bg-caramel text-white' : 'bg-gray-100 text-gray-300'" class="badge-sello text-xs">🔖</span>
+                    </template>
+                  </div>
+                </td>
+                <td class="py-3">
+                  <span :class="row.est === 'Completada' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" class="px-2 py-0.5 rounded-full text-xs font-medium" x-text="row.est"></span>
+                </td>
+                <td class="py-3 text-gray-400 text-xs" x-text="row.h + ' AM'"></td>
+                <td class="py-3">
+                  <button @click="
+                    if(row.est === 'Completada') {
+                      Swal.fire({ title: '🏆 Cartilla Completa', text: row.n + ' merece su premio. ¿Entregar ahora?', icon: 'success', confirmButtonColor: '#C8872A', confirmButtonText: 'Entregar Premio', showCancelButton: true })
+                      .then(r => { if(r.isConfirmed) Toastify({ text: '🎉 Premio entregado a ' + row.n, duration: 3500, style: { background: '#3B1F0E' } }).showToast() })
+                    } else {
+                      Swal.fire({ title: '🔖 Agregar Sello', text: '¿Sellar cartilla de ' + row.n + '?', icon: 'question', confirmButtonColor: '#C8872A', confirmButtonText: 'Sellar', showCancelButton: true })
+                      .then(r => { if(r.isConfirmed) Toastify({ text: '✅ Sello agregado a ' + row.n, duration: 2500, style: { background: '#C8872A' } }).showToast() })
+                    }
+                  " :class="row.est === 'Completada' ? 'bg-green-500 hover:bg-green-600' : 'bg-caramel hover:bg-yellow-700'" class="text-white px-3 py-1 rounded text-xs transition" x-text="row.est === 'Completada' ? '🏆 Premio' : '+ Sello'">
+                  </button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl shadow p-5">
+          <h3 class="text-sm font-bold text-choco mb-3 uppercase tracking-wide">Próximas a Completar</h3>
+          <div class="space-y-3">
+            <template x-for="c in [
+              {n:'Andrea Vidal', s:9, max:10},
+              {n:'Tomás Bravo', s:8, max:10},
+              {n:'Natalia Pinto', s:8, max:10},
+            ]" :key="c.n">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-choco" x-text="c.n"></p>
+                  <div class="flex gap-0.5 mt-1">
+                    <template x-for="i in c.max" :key="i">
+                      <div :class="i <= c.s ? 'bg-caramel' : 'bg-gray-200'" class="w-4 h-4 rounded-sm"></div>
+                    </template>
+                  </div>
+                </div>
+                <span class="text-xs text-caramel font-bold" x-text="c.s + '/' + c.max"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="bg-choco rounded-xl p-5 text-cream">
+          <h3 class="text-sm font-bold mb-3 text-gold uppercase tracking-wide">Accesos Rápidos</h3>
+          <div class="space-y-2">
+            <a href="clientes.html" class="flex items-center gap-2 text-sm hover:text-gold transition"><i class="fa-solid fa-user-plus w-5"></i> Nuevo Cliente</a>
+            <a href="premios.html" class="flex items-center gap-2 text-sm hover:text-gold transition"><i class="fa-solid fa-gift w-5"></i> Gestionar Premios</a>
+            <a href="juegos.html" class="flex items-center gap-2 text-sm hover:text-gold transition"><i class="fa-solid fa-dice w-5"></i> Iniciar Juego</a>
+            <button @click="
+              Swal.fire({title:'Configurar Cartilla', html:'<label class=\'block text-left text-sm mb-1\'>Sellos por cartilla</label><input id=\'ns\' class=\'swal2-input\' type=\'number\' value=\'10\' min=\'5\' max=\'20\'>', confirmButtonColor:\'#C8872A\', confirmButtonText:\'Guardar\', showCancelButton:true})
+              .then(r=>{ if(r.isConfirmed) Toastify({text:\'⚙️ Configuración guardada\', duration:2500, style:{background:\'#C8872A\'}}).showToast() })
+            " class="flex items-center gap-2 text-sm hover:text-gold transition w-full text-left"><i class="fa-solid fa-gear w-5"></i> Configurar Cartilla</button>
+          </div>
+        </div>
+
+        <div class="bg-rose/20 border border-rose rounded-xl p-4">
+          <p class="text-xs font-bold text-rose uppercase mb-1">🎉 Hoy se completaron</p>
+          <p class="text-2xl font-bold text-choco">2 cartillas</p>
+          <p class="text-xs text-gray-500 mt-1">Camilo Herrera y Rodrigo Fuentes esperan su premio</p>
+          <button @click="Toastify({text:'📋 Premios pendientes: 2 clientes esperan', duration:3000, style:{background:'#E8929A'}}).showToast()" class="mt-3 w-full bg-rose text-white py-1.5 rounded text-xs font-semibold hover:opacity-90 transition">Ver Pendientes</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

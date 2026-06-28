@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediFlow — Agenda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2436;
+    --surface3: #232840;
+    --border: #2a2f45;
+    --accent: #4f8ef7;
+    --accent-soft: rgba(79,142,247,0.12);
+    --green: #22c97a;
+    --green-soft: rgba(34,201,122,0.12);
+    --yellow: #f5a623;
+    --yellow-soft: rgba(245,166,35,0.10);
+    --red: #f75c5c;
+    --red-soft: rgba(247,92,92,0.12);
+    --purple: #a78bfa;
+    --purple-soft: rgba(167,139,250,0.12);
+    --text: #e8eaf0;
+    --text2: #8b92a9;
+    --text3: #5a6070;
+    --radius: 10px;
+    --sidebar-w: 72px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; }
+
+  /* NAV SIDEBAR */
+  .nav-sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 4px; flex-shrink: 0; z-index: 10;
+  }
+  .nav-logo { width: 38px; height: 38px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 18px; font-weight: 700; color: #fff; cursor: pointer; }
+  .nav-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 16px; cursor: pointer; transition: all .15s; position: relative; }
+  .nav-icon:hover { background: var(--surface2); color: var(--text2); }
+  .nav-icon.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-icon .tooltip { position: absolute; left: 54px; background: #111827; color: var(--text); font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; border: 1px solid var(--border); z-index: 50; }
+  .nav-icon:hover .tooltip { opacity: 1; }
+  .nav-spacer { flex: 1; }
+  .nav-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4f8ef7, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; margin-top: 8px; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOP BAR */
+  .topbar {
+    padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 700; }
+  .topbar .date-nav { display: flex; align-items: center; gap: 8px; }
+  .date-nav-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .date-nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .date-label-big { font-size: 14px; font-weight: 600; color: var(--text); min-width: 180px; text-align: center; }
+  .today-btn { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .today-btn:hover { background: var(--surface2); color: var(--text); }
+  .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .view-toggle { display: flex; background: var(--surface2); border-radius: 8px; padding: 3px; gap: 2px; }
+  .view-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--text3); font-family: inherit; transition: all .15s; }
+  .view-btn.active { background: var(--surface3); color: var(--text); }
+  .btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3d7de0; }
+
+  /* BODY */
+  .agenda-body { flex: 1; display: flex; overflow: hidden; }
+
+  /* MINI CALENDARIO LATERAL */
+  .cal-sidebar {
+    width: 260px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto; padding: 16px;
+  }
+  .cal-sidebar::-webkit-scrollbar { width: 4px; }
+  .cal-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .mini-cal { margin-bottom: 20px; }
+  .mini-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .mini-cal-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .mini-cal-nav { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text3); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .mini-cal-nav:hover { background: var(--surface2); color: var(--text2); }
+  .mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-name { font-size: 10px; font-weight: 600; color: var(--text3); text-align: center; padding: 4px 0; }
+  .cal-day { font-size: 12px; text-align: center; padding: 5px 2px; border-radius: 6px; cursor: pointer; color: var(--text2); transition: all .12s; position: relative; }
+  .cal-day:hover { background: var(--surface2); color: var(--text); }
+  .cal-day.today { background: var(--accent); color: #fff; font-weight: 700; }
+  .cal-day.selected { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .cal-day.other-month { color: var(--text3); }
+  .cal-day.has-citas::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .cal-day.today::after { background: rgba(255,255,255,0.7); }
+
+  /* Médicos / filtros sidebar */
+  .sidebar-section { margin-bottom: 20px; }
+  .sidebar-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .doctor-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; cursor: pointer; transition: all .12s; margin-bottom: 2px; }
+  .doctor-item:hover { background: var(--surface2); }
+  .doctor-item.active { background: var(--accent-soft); }
+  .doctor-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .doctor-name { font-size: 13px; color: var(--text); font-weight: 500; flex: 1; }
+  .doctor-count { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 1px 7px; border-radius: 10px; }
+  .doctor-item.active .doctor-count { background: var(--accent-soft); color: var(--accent); }
+
+  .stat-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .stat-mini { flex: 1; background: var(--surface2); border-radius: 8px; padding: 10px; }
+  .stat-mini-val { font-size: 18px; font-weight: 700; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .stat-mini-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .stat-mini-val.green { color: var(--green); }
+  .stat-mini-val.yellow { color: var(--yellow); }
+  .stat-mini-val.red { color: var(--red); }
+
+  /* AGENDA PRINCIPAL */
+  .agenda-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Barra de búsqueda + filtros */
+  .agenda-controls { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; background: var(--surface); flex-shrink: 0; }
+  .search-box { position: relative; flex: 1; max-width: 320px; }
+  .search-box input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px 8px 34px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; transition: border .15s; }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+  .search-box i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+  .filter-pills { display: flex; gap: 6px; }
+  .pill { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text2); font-family: inherit; transition: all .12s; white-space: nowrap; }
+  .pill:hover { background: var(--surface2); color: var(--text); }
+  .pill.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .pill.pill-green.active { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .pill.pill-yellow.active { background: var(--yellow-soft); border-color: var(--yellow); color: var(--yellow); }
+  .pill.pill-red.active { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+
+  /* VISTA DÍA — Timeline */
+  .day-view { flex: 1; overflow-y: auto; display: flex; }
+  .day-view::-webkit-scrollbar { width: 5px; }
+  .day-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .time-column { width: 64px; flex-shrink: 0; padding-top: 8px; }
+  .time-slot-label { height: 72px; display: flex; align-items: flex-start; justify-content: flex-end; padding: 0 12px 0 0; }
+  .time-slot-label span { font-size: 11px; font-weight: 500; color: var(--text3); font-family: 'JetBrains Mono', monospace; transform: translateY(-6px); }
+
+  .slots-column { flex: 1; padding: 8px 20px 20px 0; position: relative; }
+  .time-row { height: 72px; border-top: 1px solid var(--border); position: relative; }
+  .time-row:first-child { border-top: none; }
+  .time-row.half-mark::after { content: ''; position: absolute; left: 0; top: 50%; right: 0; height: 1px; background: var(--border); opacity: .35; }
+
+  /* Cita card en timeline */
+  .cita-slot {
+    position: absolute; left: 4px; right: 0;
+    border-radius: 8px; padding: 8px 10px;
+    cursor: pointer; transition: all .15s; overflow: hidden;
+    border-left: 3px solid transparent;
+  }
+  .cita-slot:hover { filter: brightness(1.1); transform: translateX(2px); }
+  .cita-slot.color-blue { background: rgba(79,142,247,.15); border-left-color: var(--accent); }
+  .cita-slot.color-green { background: rgba(34,201,122,.12); border-left-color: var(--green); }
+  .cita-slot.color-yellow { background: rgba(245,166,35,.12); border-left-color: var(--yellow); }
+  .cita-slot.color-red { background: rgba(247,92,92,.12); border-left-color: var(--red); }
+  .cita-slot.color-purple { background: rgba(167,139,250,.12); border-left-color: var(--purple); }
+  .cita-slot.libre { background: var(--surface2); border-left-color: var(--border); border-style: dashed; opacity: .5; }
+  .cita-slot.libre:hover { opacity: 1; }
+  .cs-time { font-size: 10px; font-weight: 600; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+  .cs-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .cs-motivo { font-size: 11px; color: var(--text2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cs-badges { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+  .cs-badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+  .badge-activa { background: var(--green-soft); color: var(--green); }
+  .badge-espera { background: var(--yellow-soft); color: var(--yellow); }
+  .badge-pendiente { background: var(--surface2); color: var(--text3); }
+  .badge-urgente { background: var(--red-soft); color: var(--red); }
+  .badge-libre { background: var(--surface2); color: var(--text3); }
+  .badge-completada { background: var(--green-soft); color: var(--green); }
+
+  /* Línea de hora actual */
+  .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--red); z-index: 5; pointer-events: none; }
+  .now-line::before { content: ''; position: absolute; left: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+
+  /* VISTA SEMANA */
+  .week-view { flex: 1; overflow: auto; display: flex; flex-direction: column; }
+  .week-view::-webkit-scrollbar { width: 5px; height: 5px; }
+  .week-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .week-header { display: flex; position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .week-header-corner { width: 64px; flex-shrink: 0; }
+  .week-day-header { flex: 1; padding: 10px 8px; text-align: center; border-left: 1px solid var(--border); }
+  .wdh-name { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
+  .wdh-num { font-size: 20px; font-weight: 700; color: var(--text2); margin-top: 2px; line-height: 1; }
+  .wdh-num.today { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 4px auto 0; }
+  .week-body { display: flex; flex: 1; }
+  .week-time-col { width: 64px; flex-shrink: 0; }
+  .week-time-lbl { height: 60px; display: flex; align-items: flex-start; justify-content: flex-end; padding: 0 10px 0 0; }
+  .week-time-lbl span { font-size: 10px; color: var(--text3); transform: translateY(-5px); font-family: 'JetBrains Mono', monospace; }
+  .week-days { flex: 1; display: flex; }
+  .week-day-col { flex: 1; border-left: 1px solid var(--border); position: relative; }
+  .week-slot { height: 60px; border-top: 1px solid var(--border); position: relative; }
+  .week-cita { position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 4px 7px; font-size: 11px; font-weight: 600; cursor: pointer; overflow: hidden; z-index: 2; transition: all .12s; }
+  .week-cita:hover { filter: brightness(1.12); z-index: 3; }
+
+  /* VISTA LISTA */
+  .list-view { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .list-view::-webkit-scrollbar { width: 5px; }
+  .list-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .list-group { margin-bottom: 24px; }
+  .list-group-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .list-group-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .list-cita {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 6px;
+    cursor: pointer; transition: all .15s; border-left: 3px solid transparent;
+  }
+  .list-cita:hover { background: var(--surface2); border-color: var(--accent); }
+  .list-cita.urgente { border-left-color: var(--red); }
+  .list-cita.activa { border-left-color: var(--green); }
+  .lc-time { font-size: 12px; font-weight: 700; color: var(--text2); font-family: 'JetBrains Mono', monospace; width: 48px; flex-shrink: 0; }
+  .lc-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .lc-info { flex: 1; min-width: 0; }
+  .lc-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .lc-motivo { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lc-meta { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .lc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .lc-badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .lc-dur { font-size: 11px; color: var(--text3); }
+  .lc-actions { display: flex; gap: 6px; }
+  .lc-action-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+  .lc-action-btn:hover { background: var(--surface2); color: var(--text); }
+  .lc-action-btn.green { border-color: var(--green); color: var(--green); }
+  .lc-action-btn.green:hover { background: var(--green-soft); }
+
+  /* STATUS BAR */
+  .status-bar { padding: 6px 24px; border-top: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--text3); flex-shrink: 0; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 4px; }
+
+  /* MODAL NUEVA CITA */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 15px; font-weight: 700; }
+  .modal-close { background: var(--surface2); border: none; color: var(--text2); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+  .modal-close:hover { background: var(--border); color: var(--text); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-body::-webkit-scrollbar { width: 4px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--text); outline: none; font-family: inherit; transition: border .15s; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+  select.form-input option { background: var(--surface2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* MODAL DETALLE CITA */
+  .detail-modal { width: 480px; }
+  .detail-section { background: var(--surface2); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .detail-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+  .detail-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .detail-row .label { font-size: 12px; color: var(--text2); }
+  .detail-row .val { font-size: 13px; font-weight: 600; color: var(--text); }
+  .history-mini { display: flex; flex-direction: column; gap: 8px; }
+  .history-mini-item { background: var(--surface3); border-radius: 7px; padding: 9px 11px; }
+  .hmi-date { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+  .hmi-dx { font-size: 12px; color: var(--text2); }
+  .alert-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px; background: var(--red-soft); border-radius: 7px; }
+  .alert-item i { color: var(--red); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .alert-item span { font-size: 12px; color: var(--text2); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 200; opacity: 0; transform: translateY(10px); transition: all .3s; display: flex; align-items: center; gap: 8px; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Colores de avatar */
+  .av-blue { background: linear-gradient(135deg,#4f8ef7,#a78bfa); }
+  .av-green { background: linear-gradient(135deg,#22c97a,#4f8ef7); }
+  .av-yellow { background: linear-gradient(135deg,#f5a623,#f75c5c); }
+  .av-purple { background: linear-gradient(135deg,#a78bfa,#f75c5c); }
+  .av-teal { background: linear-gradient(135deg,#22c97a,#a78bfa); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR NAV -->
+<nav class="nav-sidebar">
+  <div class="nav-logo">M</div>
+  <div class="nav-icon active">
+    <i class="fas fa-calendar-check"></i>
+    <span class="tooltip">Agenda</span>
+  </div>
+  <div class="nav-icon" onclick="irAHistorial()">
+    <i class="fas fa-notes-medical"></i>
+    <span class="tooltip">Historial Clínico</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-flask"></i>
+    <span class="tooltip">Laboratorio</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-x-ray"></i>
+    <span class="tooltip">Imágenes</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-prescription-bottle-medical"></i>
+    <span class="tooltip">Recetas</span>
+  </div>
+  <div class="nav-icon">
+    <i class="fas fa-chart-line"></i>
+    <span class="tooltip">Estadísticas</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-icon">
+    <i class="fas fa-cog"></i>
+    <span class="tooltip">Configuración</span>
+  </div>
+  <div class="nav-avatar">RV</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <h1>Agenda</h1>
+    <div class="date-nav">
+      <button class="date-nav-btn" onclick="cambiarDia(-1)"><i class="fas fa-chevron-left"></i></button>
+      <span class="date-label-big" id="top-date-label"></span>
+      <button class="date-nav-btn" onclick="cambiarDia(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <button class="today-btn" onclick="irAHoy()">Hoy</button>
+    <div class="topbar-actions">
+      <div class="view-toggle">
+        <button class="view-btn active" id="vbtn-dia" onclick="setView('dia',this)">Día</button>
+        <button class="view-btn" id="vbtn-semana" onclick="setView('semana',this)">Semana</button>
+        <button class="view-btn" id="vbtn-lista" onclick="setView('lista',this)">Lista</button>
+      </div>
+      <button class="btn btn-ghost" style="font-size:12px" onclick="abrirModalCita()"><i class="fas fa-plus"></i> Nueva cita</button>
+      <button class="btn btn-primary" style="font-size:12px" onclick="showToast('Agenda exportada')"><i class="fas fa-download"></i> Exportar</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="agenda-body">
+    <!-- CALENDARIO MINI + STATS -->
+    <div class="cal-sidebar">
+      <!-- Mini calendario -->
+      <div class="mini-cal">
+        <div class="mini-cal-header">
+          <span class="mini-cal-title" id="mini-cal-title"></span>
+          <div style="display:flex;gap:4px">
+            <button class="mini-cal-nav" onclick="cambiarMes(-1)"><i class="fas fa-chevron-left"></i></button>
+            <button class="mini-cal-nav" onclick="cambiarMes(1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="mini-cal-grid" id="mini-cal-grid"></div>
+      </div>
+
+      <!-- Stats del día -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Resumen hoy</div>
+        <div class="stat-row">
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="stat-total">0</div>
+            <div class="stat-mini-lbl">Total citas</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val green" id="stat-completadas">0</div>
+            <div class="stat-mini-lbl">Completadas</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-mini">
+            <div class="stat-mini-val yellow" id="stat-espera">0</div>
+            <div class="stat-mini-lbl">En sala</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val red" id="stat-urgentes">0</div>
+            <div class="stat-mini-lbl">Urgentes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Médicos -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Médicos<span style="font-size:10px;color:var(--text3);font-weight:400;cursor:pointer" onclick="showToast('Gestión de médicos')">+ Agregar</span></div>
+        <div id="doctors-list"></div>
+      </div>
+
+      <!-- Próximas alertas -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Alertas pendientes</div>
+        <div style="display:flex;flex-direction:column;gap:6px" id="sidebar-alerts"></div>
+      </div>
+    </div>
+
+    <!-- COLUMNA PRINCIPAL -->
+    <div class="agenda-main">
+      <!-- Controles -->
+      <div class="agenda-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Buscar paciente, motivo..." id="search-input" oninput="buscarCitas()">
+        </div>
+        <div class="filter-pills">
+          <button class="pill active" data-filter="todos" onclick="setFilter('todos',this)">Todos</button>
+          <button class="pill pill-green" data-filter="activa" onclick="setFilter('activa',this)">En consulta</button>
+          <button class="pill pill-yellow" data-filter="espera" onclick="setFilter('espera',this)">En sala</button>
+          <button class="pill" data-filter="pendiente" onclick="setFilter('pendiente',this)">Pendiente</button>
+          <button class="pill pill-red" data-filter="urgente" onclick="setFilter('urgente',this)">Urgente</button>
+        </div>
+      </div>
+
+      <!-- Vista día -->
+      <div class="day-view hidden" id="view-dia">
+        <div class="time-column" id="time-col-labels"></div>
+        <div class="slots-column" id="slots-col">
+          <div id="now-line-container"></div>
+        </div>
+      </div>
+
+      <!-- Vista semana -->
+      <div class="week-view hidden" id="view-semana">
+        <div class="week-header" id="week-header">
+          <div class="week-header-corner"></div>
+        </div>
+        <div class="week-body">
+          <div class="week-time-col" id="week-time-col"></div>
+          <div class="week-days" id="week-days"></div>
+        </div>
+      </div>
+
+      <!-- Vista lista -->
+      <div class="list-view hidden" id="view-lista">
+        <div id="list-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Conectado</span>
+    <span>·</span>
+    <span>Dr. Rodrigo Vargas — Medicina Interna</span>
+    <span>·</span>
+    <span id="clock"></span>
+    <span style="margin-left:auto">MediFlow v2.4 · <span id="citas-resumen"></span></span>
+  </div>
+</div>
+
+<!-- MODAL NUEVA CITA -->
+<div class="modal-overlay" id="modal-nueva">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-calendar-plus" style="color:var(--accent);margin-right:8px"></i> Nueva cita</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-nueva')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Paciente</label>
+        <select class="form-input" id="new-paciente">
+          <option value="">Seleccionar paciente...</option>
+          <option>Marco Rodríguez Pérez</option>
+          <option>Lucía Torres Mendoza</option>
+          <option>Carlos Jiménez Soto</option>
+          <option>Ana Flores Quispe</option>
+          <option>Roberto Paz Huaman</option>
+          <option>+ Nuevo paciente</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-input" id="new-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora</label>
+          <select class="form-input" id="new-hora">
+            <option>08:00</option><option>08:30</option><option>09:00</option>
+            <option>09:30</option><option>10:00</option><option>10:30</option>
+            <option>11:00</option><option>11:30</option><option>12:00</option>
+            <option>14:00</option><option>14:30</option><option>15:00</option>
+            <option>15:30</option><option>16:00</option><option>16:30</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duración</label>
+          <select class="form-input">
+            <option>20 minutos</option>
+            <option>30 minutos</option>
+            <option>45 minutos</option>
+            <option>60 minutos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de cita</label>
+          <select class="form-input">
+            <option>Control rutinario</option>
+            <option>Primera consulta</option>
+            <option>Urgencia</option>
+            <option>Seguimiento</option>
+            <option>Resultado laboratorio</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo de consulta</label>
+        <input type="text" class="form-input" placeholder="Ej: Control HTA mensual, cefalea recurrente..." id="new-motivo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Médico asignado</label>
+        <select class="form-input">
+          <option>Dr. Rodrigo Vargas — Medicina Interna</option>
+          <option>Dra. Carmen Salas — Cardiología</option>
+          <option>Dr. Luis Prado — Endocrinología</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas adicionales</label>
+        <textarea class="form-input" rows="3" placeholder="Observaciones para la cita..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-nueva')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCita()"><i class="fas fa-check"></i> Guardar cita</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE CITA -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal detail-modal">
+    <div class="modal-header" id="detail-header">
+      <div>
+        <h3 id="detail-title"></h3>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px" id="detail-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modal-detalle')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-footer" id="detail-footer"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg"></span></div>
+
+<script>
+// ── DATOS ─────────────────────────────────────────────────────────────────
+const pacientes = [
+  { id:1, nombre:"Marco Rodríguez Pérez", edad:38, sexo:"M", hc:"HC-00142", initials:"MR", avClass:"av-blue",
+    dx:["HTA esencial","Diabetes T2","Hiperlipidemia"], alergias:"Penicilina, AINEs",
+    historial:[
+      { fecha:"2024-05-10", dx:"HTA descompensada, incumplimiento terapéutico" },
+      { fecha:"2024-03-22", dx:"IVAS, faringitis viral" },
+      { fecha:"2024-01-15", dx:"Control HTA+DM2 estable, HbA1c 7.1%" },
+    ],
+    alertas:["HbA1c pendiente (6 meses)","Fondo de ojo anual pendiente","PA elevada 158/98 hoy"] },
+  { id:2, nombre:"Lucía Torres Mendoza", edad:52, sexo:"F", hc:"HC-00089", initials:"LT", avClass:"av-green",
+    dx:["Asma bronquial"], alergias:"Ninguna",
+    historial:[
+      { fecha:"2024-04-18", dx:"Exacerbación leve de asma" },
+      { fecha:"2024-02-05", dx:"Control asma, espirometría normal" },
+    ],
+    alertas:["Espirometría de control pendiente"] },
+  { id:3, nombre:"Carlos Jiménez Soto", edad:65, sexo:"M", hc:"HC-00211", initials:"CJ", avClass:"av-yellow",
+    dx:["EPOC GOLD II","Cardiopatía isquémica"], alergias:"Aspirina",
+    historial:[
+      { fecha:"2024-05-02", dx:"Disnea de esfuerzo, EPOC estable" },
+      { fecha:"2024-02-14", dx:"Control cardiológico, ECG normal" },
+    ],
+    alertas:["Oximetría basal baja 91%","Ecocardiograma pendiente 2024"] },
+  { id:4, nombre:"Ana Flores Quispe", edad:29, sexo:"F", hc:"HC-00344", initials:"AF", avClass:"av-purple",
+    dx:["Embarazo 28s — G2P1"], alergias:"Penicilina",
+    historial:[
+      { fecha:"2024-04-25", dx:"Control prenatal 2do trim, sin complicaciones" },
+      { fecha:"2024-03-10", dx:"Eco obstétrica 20s, morfología normal" },
+    ],
+    alertas:["Glucosa en ayuno elevada 105mg/dL","Vacuna TdAP pendiente 28-36s"] },
+  { id:5, nombre:"Roberto Paz Huaman", edad:44, sexo:"M", hc:"HC-00176", initials:"RP", avClass:"av-teal",
+    dx:["Obesidad grado II","Síndrome metabólico"], alergias:"Sulfamidas",
+    historial:[
+      { fecha:"2024-04-10", dx:"Inicio programa nutricional, IMC 34.2" },
+    ],
+    alertas:["Derivación nutricionista pendiente","Perfil lipídico sin revisar"] },
+];
+
+const medicos = [
+  { nombre:"Dr. Rodrigo Vargas", especialidad:"Medicina Interna", color:"#4f8ef7", id:1 },
+  { nombre:"Dra. Carmen Salas", especialidad:"Cardiología", color:"#22c97a", id:2 },
+  { nombre:"Dr. Luis Prado", especialidad:"Endocrinología", color:"#a78bfa", id:3 },
+];
+
+const HORAS = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
+
+function mkCitas(offsetDias) {
+  const base = new Date();
+  base.setHours(0,0,0,0);
+  base.setDate(base.getDate() + offsetDias);
+  const f = d => d.toISOString().split('T')[0];
+  if (offsetDias === 0) return [
+    { id:101, pacienteId:1, hora:"09:00", durMin:30, motivo:"Control HTA + Cefalea", estado:"activa", medicoId:1, colorClass:"color-green" },
+    { id:102, pacienteId:2, hora:"09:30", durMin:30, motivo:"Control asma, revisión espirometría", estado:"espera", medicoId:1, colorClass:"color-yellow" },
+    { id:103, pacienteId:3, hora:"10:00", durMin:30, motivo:"Disnea, control EPOC", estado:"espera", medicoId:1, colorClass:"color-yellow" },
+    { id:104, pacienteId:4, hora:"10:30", durMin:30, motivo:"Control prenatal 3er trimestre", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+    { id:105, pacienteId:5, hora:"11:00", durMin:30, motivo:"Resultado análisis + plan nutricional", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+    { id:106, pacienteId:3, hora:"11:30", durMin:30, motivo:"Urgencia: disnea aguda", estado:"urgente", medicoId:2, colorClass:"color-red" },
+    { id:107, pacienteId:1, hora:"14:00", durMin:20, motivo:"Ajuste de medicación antihipertensiva", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+    { id:108, pacienteId:2, hora:"15:00", durMin:30, motivo:"[Slot disponible]", estado:"libre", medicoId:1, colorClass:"libre" },
+  ];
+  if (offsetDias === 1) return [
+    { id:201, pacienteId:1, hora:"09:00", durMin:30, motivo:"Resultado HbA1c + perfil lipídico", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+    { id:202, pacienteId:4, hora:"10:00", durMin:30, motivo:"Eco obstétrica 28 semanas", estado:"pendiente", medicoId:3, colorClass:"color-purple" },
+    { id:203, pacienteId:5, hora:"11:30", durMin:30, motivo:"Seguimiento programa nutricional", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+  ];
+  if (offsetDias === -1) return [
+    { id:301, pacienteId:2, hora:"09:00", durMin:30, motivo:"Control asma post-exacerbación", estado:"completada", medicoId:1, colorClass:"color-green" },
+    { id:302, pacienteId:3, hora:"10:30", durMin:30, motivo:"Revisión ECG y ecocardiograma", estado:"completada", medicoId:2, colorClass:"color-green" },
+    { id:303, pacienteId:5, hora:"11:30", durMin:30, motivo:"Primera consulta síndrome metabólico", estado:"completada", medicoId:1, colorClass:"color-green" },
+  ];
+  return [
+    { id:Date.now(), pacienteId:1, hora:"10:00", durMin:30, motivo:"Control rutinario", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+    { id:Date.now()+1, pacienteId:2, hora:"11:00", durMin:30, motivo:"Consulta general", estado:"pendiente", medicoId:1, colorClass:"color-blue" },
+  ];
+}
+
+// ── ESTADO ────────────────────────────────────────────────────────────────
+let hoy = new Date(); hoy.setHours(0,0,0,0);
+let fechaActual = new Date(hoy);
+let calMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+let vistaActual = 'lista';
+let filtroActivo = 'todos';
+let busqueda = '';
+let medicoFiltro = null;
+
+function getCitasDia(fecha) {
+  const hoyBase = new Date(); hoyBase.setHours(0,0,0,0);
+  const diff = Math.round((new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()) - hoyBase) / 86400000);
+  return mkCitas(diff);
+}
+
+function citasFiltradas() {
+  let citas = getCitasDia(fechaActual);
+  if (filtroActivo !== 'todos') citas = citas.filter(c => c.estado === filtroActivo);
+  if (busqueda) {
+    const q = busqueda.toLowerCase();
+    citas = citas.filter(c => {
+      const p = pacientes.find(p => p.id === c.pacienteId);
+      return (p && p.nombre.toLowerCase().includes(q)) || c.motivo.toLowerCase().includes(q);
+    });
+  }
+  if (medicoFiltro) citas = citas.filter(c => c.medicoId === medicoFiltro);
+  return citas;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setView('lista');
+  renderMiniCal();
+  renderDoctors();
+  renderSidebarAlerts();
+  updateStats();
+  updateTopDate();
+  updateClock();
+  setInterval(updateClock, 1000);
+  const today = new Date();
+  document.getElementById('new-fecha').value = today.toISOString().split('T')[0];
+});
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+}
+
+function updateTopDate() {
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  const label = fechaActual.toLocaleDateString('es-PE', opts);
+  const esHoy = fechaActual.toDateString() === hoy.toDateString();
+  document.getElementById('top-date-label').textContent = esHoy ? 'Hoy, ' + label : label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function updateStats() {
+  const citas = getCitasDia(fechaActual).filter(c => c.estado !== 'libre');
+  document.getElementById('stat-total').textContent = citas.length;
+  document.getElementById('stat-completadas').textContent = citas.filter(c => c.estado === 'completada' || c.estado === 'activa').length;
+  document.getElementById('stat-espera').textContent = citas.filter(c => c.estado === 'espera').length;
+  document.getElementById('stat-urgentes').textContent = citas.filter(c => c.estado === 'urgente').length;
+  const resumen = `${citas.length} citas hoy`;
+  document.getElementById('citas-resumen').textContent = resumen;
+}
+
+// ── NAVEGACIÓN DE FECHA ───────────────────────────────────────────────────
+function cambiarDia(d) {
+  fechaActual.setDate(fechaActual.getDate() + d);
+  calMes = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 1);
+  updateTopDate();
+  updateStats();
+  renderMiniCal();
+  renderVista();
+}
+
+function irAHoy() {
+  fechaActual = new Date(hoy);
+  calMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  updateTopDate();
+  updateStats();
+  renderMiniCal();
+  renderVista();
+}
+
+function cambiarMes(d) {
+  calMes.setMonth(calMes.getMonth() + d);
+  renderMiniCal();
+}
+
+// ── MINI CALENDARIO ───────────────────────────────────────────────────────
+function renderMiniCal() {
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('mini-cal-title').textContent = `${meses[calMes.getMonth()]} ${calMes.getFullYear()}`;
+  const grid = document.getElementById('mini-cal-grid');
+  grid.innerHTML = '';
+  ['L','M','X','J','V','S','D'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-name'; el.textContent = d; grid.appendChild(el);
+  });
+  const primerDia = new Date(calMes.getFullYear(), calMes.getMonth(), 1);
+  const startDay = (primerDia.getDay() + 6) % 7;
+  const diasMes = new Date(calMes.getFullYear(), calMes.getMonth()+1, 0).getDate();
+  for (let i = 0; i < startDay; i++) {
+    const prev = new Date(calMes.getFullYear(), calMes.getMonth(), 1-startDay+i);
+    const el = crearDia(prev, true); grid.appendChild(el);
+  }
+  for (let d = 1; d <= diasMes; d++) {
+    const dia = new Date(calMes.getFullYear(), calMes.getMonth(), d);
+    const el = crearDia(dia, false); grid.appendChild(el);
+  }
+}
+
+function crearDia(dia, otroMes) {
+  const el = document.createElement('div');
+  el.className = 'cal-day';
+  if (otroMes) el.classList.add('other-month');
+  const esHoyDia = dia.toDateString() === hoy.toDateString();
+  const esSelected = dia.toDateString() === fechaActual.toDateString();
+  if (esHoyDia) el.classList.add('today');
+  else if (esSelected) el.classList.add('selected');
+  const diff = Math.round((new Date(dia.getFullYear(),dia.getMonth(),dia.getDate()) - new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate())) / 86400000);
+  if (Math.abs(diff) <= 5) el.classList.add('has-citas');
+  el.textContent = dia.getDate();
+  el.onclick = () => {
+    fechaActual = new Date(dia);
+    updateTopDate(); updateStats(); renderMiniCal(); renderVista();
+  };
+  return el;
+}
+
+// ── MÉDICOS SIDEBAR ───────────────────────────────────────────────────────
+function renderDoctors() {
+  const container = document.getElementById('doctors-list');
+  const all = document.createElement('div');
+  all.className = 'doctor-item active'; all.id = 'doc-all';
+  const counts = getCitasDia(fechaActual).filter(c=>c.estado!=='libre').length;
+  all.innerHTML = `<div class="doctor-dot" style="background:#8b92a9"></div><span class="doctor-name">Todos</span><span class="doctor-count">${counts}</span>`;
+  all.onclick = () => { medicoFiltro = null; document.querySelectorAll('.doctor-item').forEach(d=>d.classList.remove('active')); all.classList.add('active'); renderVista(); };
+  container.appendChild(all);
+  medicos.forEach(m => {
+    const c = getCitasDia(fechaActual).filter(ci=>ci.medicoId===m.id&&ci.estado!=='libre').length;
+    const div = document.createElement('div');
+    div.className = 'doctor-item';
+    div.innerHTML = `<div class="doctor-dot" style="background:${m.color}"></div><div><div class="doctor-name">${m.nombre}</div><div style="font-size:10px;color:var(--text3)">${m.especialidad}</div></div><span class="doctor-count">${c}</span>`;
+    div.onclick = () => {
+      medicoFiltro = m.id;
+      document.querySelectorAll('.doctor-item').forEach(d=>d.classList.remove('active'));
+      div.classList.add('active');
+      renderVista();
+    };
+    container.appendChild(div);
+  });
+}
+
+// ── ALERTAS SIDEBAR ───────────────────────────────────────────────────────
+function renderSidebarAlerts() {
+  const container = document.getElementById('sidebar-alerts');
+  const alertas = [
+    { tipo:'red', icono:'fa-triangle-exclamation', txt:'Carlos J. — Disnea aguda, urgente 11:30' },
+    { tipo:'yellow', icono:'fa-pills', txt:'Marco R. — Sin medicación 2 días' },
+    { tipo:'yellow', icono:'fa-vial', txt:'Ana F. — Glucosa elevada en control prenatal' },
+  ];
+  alertas.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'alert-item';
+    div.style.background = a.tipo === 'red' ? 'var(--red-soft)' : 'var(--yellow-soft)';
+    div.innerHTML = `<i class="fas ${a.icono}" style="color:var(--${a.tipo})"></i><span>${a.txt}</span>`;
+    container.appendChild(div);
+  });
+}
+
+// ── VISTAS ────────────────────────────────────────────────────────────────
+function setView(nombre, btn) {
+  vistaActual = nombre;
+  ['dia','semana','lista'].forEach(v => {
+    document.getElementById('view-'+v).classList.add('hidden');
+    document.getElementById('vbtn-'+v).classList.remove('active');
+  });
+  document.getElementById('view-'+nombre).classList.remove('hidden');
+  if (btn) btn.classList.add('active');
+  else document.getElementById('vbtn-'+nombre).classList.add('active');
+  renderVista();
+}
+
+function renderVista() {
+  if (vistaActual === 'dia') renderVistaD();
+  else if (vistaActual === 'semana') renderVistaSemana();
+  else renderVistaLista();
+}
+
+// ── VISTA DÍA ─────────────────────────────────────────────────────────────
+const HORA_INICIO = 8, HORA_FIN = 18;
+const SLOT_H = 72;
+
+function renderVistaD() {
+  const labelsCol = document.getElementById('time-col-labels');
+  const slotsCol = document.getElementById('slots-col');
+  labelsCol.innerHTML = '';
+  slotsCol.innerHTML = '';
+  const totalSlots = (HORA_FIN - HORA_INICIO) * 2;
+  for (let i = 0; i <= totalSlots; i++) {
+    const h = Math.floor(HORA_INICIO + i/2);
+    const m = (i%2)*30;
+    const lbl = document.createElement('div');
+    lbl.className = 'time-slot-label';
+    lbl.innerHTML = `<span>${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</span>`;
+    labelsCol.appendChild(lbl);
+    if (i < totalSlots) {
+      const row = document.createElement('div');
+      row.className = 'time-row half-mark';
+      slotsCol.appendChild(row);
+    }
+  }
+  // Línea ahora
+  const ahora = new Date();
+  if (fechaActual.toDateString() === hoy.toDateString()) {
+    const minDesdeInicio = (ahora.getHours() - HORA_INICIO)*60 + ahora.getMinutes();
+    if (minDesdeInicio >= 0 && minDesdeInicio <= (HORA_FIN - HORA_INICIO)*60) {
+      const top = (minDesdeInicio / 30) * SLOT_H;
+      const line = document.createElement('div');
+      line.className = 'now-line';
+      line.style.top = top + 'px';
+      slotsCol.appendChild(line);
+    }
+  }
+  // Citas
+  const citas = citasFiltradas();
+  citas.forEach(c => {
+    const [h,m] = c.hora.split(':').map(Number);
+    const minDesde = (h - HORA_INICIO)*60 + m;
+    const top = (minDesde / 30) * SLOT_H;
+    const height = Math.max(((c.durMin||30)/30)*SLOT_H - 4, 40);
+    const p = pacientes.find(p => p.id === c.pacienteId);
+    const badgeMap = { activa:'badge-activa',espera:'badge-espera',pendiente:'badge-pendiente',urgente:'badge-urgente',libre:'badge-libre',completada:'badge-completada' };
+    const labelMap = { activa:'En consulta',espera:'En sala',pendiente:'Pendiente',urgente:'⚡ Urgente',libre:'Libre',completada:'✓ Completada' };
+    const card = document.createElement('div');
+    card.className = `cita-slot ${c.colorClass}`;
+    card.style.cssText = `top:${top}px;height:${height}px;`;
+    card.innerHTML = `
+      <div class="cs-time">${c.hora} · ${c.durMin||30} min</div>
+      ${c.estado==='libre' ? `<div class="cs-name" style="color:var(--text3);font-weight:500">+ Slot disponible</div>` :
+      `<div class="cs-name">${p ? p.nombre : '—'}</div>
+       <div class="cs-motivo">${c.motivo}</div>
+       <div class="cs-badges"><span class="cs-badge ${badgeMap[c.estado]}">${labelMap[c.estado]}</span></div>`}`;
+    if (c.estado !== 'libre') card.onclick = () => abrirDetalle(c.id);
+    else card.onclick = () => { abrirModalCita(); document.getElementById('new-hora').value = c.hora; };
+    slotsCol.appendChild(card);
+  });
+}
+
+// ── VISTA SEMANA ──────────────────────────────────────────────────────────
+function renderVistaSemana() {
+  const header = document.getElementById('week-header');
+  const timecol = document.getElementById('week-time-col');
+  const days = document.getElementById('week-days');
+  header.innerHTML = '<div class="week-header-corner"></div>';
+  timecol.innerHTML = ''; days.innerHTML = '';
+  const lunes = new Date(fechaActual);
+  lunes.setDate(lunes.getDate() - ((lunes.getDay()+6)%7));
+  const diasSem = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  for (let d = 0; d < 7; d++) {
+    const dia = new Date(lunes); dia.setDate(dia.getDate()+d);
+    const hdr = document.createElement('div');
+    hdr.className = 'week-day-header';
+    const esHoyDia = dia.toDateString() === hoy.toDateString();
+    hdr.innerHTML = `<div class="wdh-name">${diasSem[d]}</div><div class="wdh-num ${esHoyDia?'today':''}">${dia.getDate()}</div>`;
+    header.appendChild(hdr);
+  }
+  for (let i = 0; i < (HORA_FIN-HORA_INICIO)*2; i++) {
+    const h = Math.floor(HORA_INICIO+i/2), m = (i%2)*30;
+    const lbl = document.createElement('div'); lbl.className='week-time-lbl';
+    lbl.innerHTML = `<span>${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</span>`;
+    timecol.appendChild(lbl);
+  }
+  for (let d = 0; d < 7; d++) {
+    const dia = new Date(lunes); dia.setDate(dia.getDate()+d);
+    const col = document.createElement('div'); col.className='week-day-col';
+    const citasDia = getCitasDia(dia).filter(c=>c.estado!=='libre');
+    for (let i = 0; i < (HORA_FIN-HORA_INICIO)*2; i++) {
+      const slot = document.createElement('div'); slot.className='week-slot'; col.appendChild(slot);
+    }
+    citasDia.forEach(c => {
+      const [h,m] = c.hora.split(':').map(Number);
+      const minDesde = (h-HORA_INICIO)*60+m;
+      const top = (minDesde/30)*60, height = Math.max(((c.durMin||30)/30)*60-2,22);
+      const p = pacientes.find(p=>p.id===c.pacienteId);
+      const colorMap = { 'color-blue':'rgba(79,142,247,.2)','color-green':'rgba(34,201,122,.18)','color-yellow':'rgba(245,166,35,.18)','color-red':'rgba(247,92,92,.18)','color-purple':'rgba(167,139,250,.18)' };
+      const borderMap = { 'color-blue':'var(--accent)','color-green':'var(--green)','color-yellow':'var(--yellow)','color-red':'var(--red)','color-purple':'var(--purple)' };
+      const wc = document.createElement('div'); wc.className='week-cita';
+      wc.style.cssText=`top:${top}px;height:${height}px;background:${colorMap[c.colorClass]||'rgba(79,142,247,.15)'};border-left:3px solid ${borderMap[c.colorClass]||'var(--accent)'};color:var(--text)`;
+      wc.textContent = p ? p.nombre.split(' ')[0] + ' ' + p.nombre.split(' ')[1] : c.motivo;
+      wc.onclick = () => { fechaActual=new Date(dia); abrirDetalle(c.id); };
+      col.appendChild(wc);
+    });
+    days.appendChild(col);
+  }
+}
+
+// ── VISTA LISTA ───────────────────────────────────────────────────────────
+function renderVistaLista() {
+  const container = document.getElementById('list-content');
+  container.innerHTML = '';
+  const citas = citasFiltradas();
+  if (!citas.length) {
+    container.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3)"><i class="fas fa-calendar-xmark" style="font-size:40px;display:block;margin-bottom:12px"></i><p>No hay citas con estos filtros</p></div>';
+    return;
+  }
+  const grupos = {};
+  citas.forEach(c => {
+    const g = c.estado === 'completada' ? 'Completadas' : c.estado === 'libre' ? 'Slots libres' :
+              c.hora < '13:00' ? 'Mañana' : 'Tarde';
+    if (!grupos[g]) grupos[g] = [];
+    grupos[g].push(c);
+  });
+  const orden = ['Mañana','Tarde','Completadas','Slots libres'];
+  orden.forEach(gNombre => {
+    if (!grupos[gNombre]) return;
+    const grp = document.createElement('div'); grp.className='list-group';
+    grp.innerHTML = `<div class="list-group-title">${gNombre} <span style="background:var(--surface2);color:var(--text3);font-size:10px;padding:1px 8px;border-radius:10px;font-weight:600">${grupos[gNombre].length}</span></div>`;
+    grupos[gNombre].forEach(c => {
+      if (c.estado === 'libre') {
+        const card = document.createElement('div'); card.className='list-cita';
+        card.style.opacity='.5';
+        card.innerHTML = `<div class="lc-time">${c.hora}</div><div style="width:36px;height:36px;border-radius:10px;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3)"><i class="fas fa-plus"></i></div><div class="lc-info"><div class="lc-name" style="color:var(--text3)">Slot disponible</div><div class="lc-motivo">Disponible para agendar</div></div>`;
+        card.onclick = () => abrirModalCita();
+        grp.appendChild(card); return;
+      }
+      const p = pacientes.find(p=>p.id===c.pacienteId);
+      const badgeMap = { activa:'badge-activa',espera:'badge-espera',pendiente:'badge-pendiente',urgente:'badge-urgente',completada:'badge-completada' };
+      const labelMap = { activa:'En consulta',espera:'En sala',pendiente:'Pendiente',urgente:'⚡ Urgente',completada:'✓ Completada' };
+      const card = document.createElement('div'); card.className=`list-cita ${c.estado}`;
+      const medico = medicos.find(m=>m.id===c.medicoId);
+      card.innerHTML = `
+        <div class="lc-time">${c.hora}</div>
+        <div class="lc-avatar ${p?p.avClass:'av-blue'}">${p?p.initials:'??'}</div>
+        <div class="lc-info">
+          <div class="lc-name">${p?p.nombre:'Paciente'}</div>
+          <div class="lc-motivo">${c.motivo}</div>
+          <div class="lc-meta">${p?p.edad+'a · '+p.sexo+' · ':''}<span>${p?p.hc:''}</span>${medico?' · '+medico.nombre:''}</div>
+        </div>
+        <div class="lc-right">
+          <span class="lc-badge ${badgeMap[c.estado]}">${labelMap[c.estado]}</span>
+          <span class="lc-dur">${c.durMin||30} min</span>
+          <div class="lc-actions">
+            ${c.estado==='activa'||c.estado==='espera'?`<button class="lc-action-btn green" onclick="event.stopPropagation();irHistorial(${c.pacienteId})" title="Abrir historial"><i class="fas fa-notes-medical"></i></button>`:''}
+            <button class="lc-action-btn" onclick="event.stopPropagation();showToast('Cita reprogramada')" title="Reprogramar"><i class="fas fa-calendar-pen"></i></button>
+            <button class="lc-action-btn" onclick="event.stopPropagation();showToast('Cita cancelada')" title="Cancelar" style="color:var(--red);border-color:var(--red)"><i class="fas fa-times"></i></button>
+          </div>
+        </div>`;
+      card.onclick = () => abrirDetalle(c.id);
+      grp.appendChild(card);
+    });
+    container.appendChild(grp);
+  });
+}
+
+// ── DETALLE CITA ──────────────────────────────────────────────────────────
+function abrirDetalle(citaId) {
+  const allCitas = getCitasDia(fechaActual);
+  const c = allCitas.find(ci=>ci.id===citaId); if (!c) return;
+  const p = pacientes.find(p=>p.id===c.pacienteId); if (!p) return;
+  const badgeMap = { activa:'badge-activa',espera:'badge-espera',pendiente:'badge-pendiente',urgente:'badge-urgente',completada:'badge-completada' };
+  const labelMap = { activa:'En consulta',espera:'En sala',pendiente:'Pendiente',urgente:'⚡ Urgente',completada:'✓ Completada' };
+  const medico = medicos.find(m=>m.id===c.medicoId)||medicos[0];
+  document.getElementById('detail-title').textContent = p.nombre;
+  document.getElementById('detail-subtitle').innerHTML = `${p.edad}a · ${p.sexo} · ${p.hc} &nbsp;<span class="lc-badge ${badgeMap[c.estado]}" style="font-size:11px">${labelMap[c.estado]}</span>`;
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Cita</div>
+      <div class="detail-row"><span class="label">Hora</span><span class="val">${c.hora} · ${c.durMin||30} min</span></div>
+      <div class="detail-row"><span class="label">Motivo</span><span class="val">${c.motivo}</span></div>
+      <div class="detail-row"><span class="label">Médico</span><span class="val">${medico.nombre}</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Paciente</div>
+      <div class="detail-row"><span class="label">Diagnósticos activos</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin:4px 0 8px">${p.dx.map(d=>`<span class="tag tag-blue" style="font-size:11px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:10px">${d}</span>`).join('')}</div>
+      <div class="detail-row"><span class="label">Alergias</span><span class="val" style="color:var(--red)">${p.alergias}</span></div>
+    </div>
+    ${p.alertas&&p.alertas.length?`<div class="detail-section" style="border:1px solid rgba(247,92,92,.3);background:var(--red-soft)">
+      <div class="detail-section-title" style="color:var(--red)">Alertas</div>
+      <div style="display:flex;flex-direction:column;gap:6px">${p.alertas.map(a=>`<div class="alert-item"><i class="fas fa-triangle-exclamation" style="color:var(--red)"></i><span>${a}</span></div>`).join('')}</div>
+    </div>`:''}
+    <div class="detail-section">
+      <div class="detail-section-title">Últimas consultas</div>
+      <div class="history-mini">${(p.historial||[]).map(h=>`<div class="history-mini-item"><div class="hmi-date">${h.fecha}</div><div class="hmi-dx">${h.dx}</div></div>`).join('')}</div>
+    </div>`;
+  const footer = document.getElementById('detail-footer');
+  footer.innerHTML = `
+    <button class="btn btn-ghost" onclick="cerrarModal('modal-detalle')">Cerrar</button>
+    <button class="btn btn-ghost" onclick="cerrarModal('modal-detalle');showToast('Cita reprogramada')"><i class="fas fa-calendar-pen"></i> Reprogramar</button>
+    <button class="btn btn-primary" onclick="cerrarModal('modal-detalle');irHistorial(${p.id})"><i class="fas fa-notes-medical"></i> Abrir historial</button>`;
+  document.getElementById('modal-detalle').classList.add('open');
+}
+
+function irHistorial(pacienteId) {
+  showToast('Abriendo historial clínico...');
+  setTimeout(() => { window.location.href = 'mediflow-historial.html'; }, 800);
+}
+
+function irAHistorial() { irHistorial(1); }
+
+// ── FILTROS ───────────────────────────────────────────────────────────────
+function setFilter(f, btn) {
+  filtroActivo = f;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderVista();
+}
+
+function buscarCitas() {
+  busqueda = document.getElementById('search-input').value;
+  renderVista();
+}
+
+// ── MODAL NUEVA CITA ──────────────────────────────────────────────────────
+function abrirModalCita() { document.getElementById('modal-nueva').classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+function guardarCita() {
+  cerrarModal('modal-nueva');
+  showToast('Cita agendada correctamente');
+  setTimeout(() => renderVista(), 100);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastT;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Cerrar modales al click afuera
+['modal-nueva','modal-detalle'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal(id);
+  });
+});
+</script>
+</body>
+</html>

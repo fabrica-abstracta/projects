@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grand Palacio — Reservas</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Poppins + Playfair Display + DM Serif Display + Cormorant Garamond -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: '#B8960C',
+            'gold-light': '#D4AF37',
+            'gold-pale': '#F5EFD0',
+            cream: '#FAF8F3',
+            charcoal: '#1C1C1E',
+            muted: '#6B6B6B',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            playfair: ['"Playfair Display"', 'serif'],
+            dm: ['"DM Serif Display"', 'serif'],
+            cormorant: ['"Cormorant Garamond"', 'serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { scroll-behavior: smooth; }
+    body { font-family: 'Poppins', sans-serif; background: #FAF8F3; }
+
+    /* ===== HERO ===== */
+    .hero-bg {
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(250,248,243,1) 100%),
+        url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1800&q=80');
+      background-size: cover;
+      background-position: center 30%;
+    }
+
+    /* ===== GOLD LINE ===== */
+    .gold-line::after {
+      content: '';
+      display: block;
+      width: 48px;
+      height: 2px;
+      background: #D4AF37;
+      margin-top: 10px;
+    }
+
+    /* ===== ROOM CARD ===== */
+    .room-card {
+      transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s ease;
+      will-change: transform;
+    }
+    .room-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.10);
+    }
+    .room-card img {
+      transition: transform 0.5s ease;
+    }
+    .room-card:hover img {
+      transform: scale(1.04);
+    }
+
+    /* ===== BADGE ===== */
+    .badge-gold {
+      background: linear-gradient(135deg, #D4AF37, #B8960C);
+      color: white;
+    }
+
+    /* ===== FILTERS ===== */
+    .filter-pill {
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1.5px solid #D4AF37;
+    }
+    .filter-pill.active, .filter-pill:hover {
+      background: #D4AF37;
+      color: white;
+    }
+
+    /* ===== RANGE SLIDER ===== */
+    input[type=range] {
+      accent-color: #D4AF37;
+    }
+
+    /* ===== CART DRAWER ===== */
+    #cartDrawer {
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    #cartDrawer.open {
+      transform: translateX(0);
+    }
+    #cartOverlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #cartOverlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ===== MODAL ===== */
+    #roomModal {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #roomModal.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #roomModalBox {
+      transform: scale(0.95) translateY(20px);
+      transition: transform 0.3s cubic-bezier(.22,.68,0,1.2);
+    }
+    #roomModal.open #roomModalBox {
+      transform: scale(1) translateY(0);
+    }
+
+    /* ===== TOAST ===== */
+    #toast {
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(.22,.68,0,1.2);
+    }
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+      box-shadow: 0 8px 40px rgba(184,150,12,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ===== NAV SCROLL ===== */
+    #navbar {
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #navbar.scrolled {
+      background: rgba(255,255,255,0.97);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    }
+
+    /* ===== STAR FILL ===== */
+    .star-filled { color: #D4AF37; }
+    .star-empty  { color: #E0E0E0; }
+
+    /* Scrollbar thin */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #F0EDE6; }
+    ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
+
+    /* ===== DATE PICKER STUB ===== */
+    input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+
+    /* ===== SELECT ===== */
+    select { appearance: none; }
+
+    /* ===== AMENITY ICON ===== */
+    .amenity-icon { background: #F5EFD0; border-radius: 8px; padding: 6px; }
+  </style>
+</head>
+
+<body class="text-charcoal">
+
+<!-- ================================================================
+     NAVBAR
+     ================================================================ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-transparent" onscroll="">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2 group">
+      <span class="text-gold text-2xl" style="font-family:'DM Serif Display',serif; letter-spacing:1px">✦</span>
+      <div class="leading-none">
+        <div class="font-dm text-xl text-charcoal tracking-wide">Grand Palacio</div>
+        <div class="font-cormorant text-xs text-muted italic tracking-widest">Hotel & Suites</div>
+      </div>
+    </a>
+
+    <!-- Nav links -->
+    <div class="hidden md:flex items-center gap-7 font-poppins text-sm font-medium text-charcoal">
+      <a href="#rooms" class="hover:text-gold transition-colors">Habitaciones</a>
+      <a href="#" class="hover:text-gold transition-colors">Experiencias</a>
+      <a href="#" class="hover:text-gold transition-colors">Restaurante</a>
+      <a href="#" class="hover:text-gold transition-colors">Spa</a>
+      <a href="#" class="hover:text-gold transition-colors">Contacto</a>
+    </div>
+
+    <!-- Cart + CTA -->
+    <div class="flex items-center gap-3">
+      <button onclick="openCart()" class="relative p-2 rounded-full hover:bg-gold-pale transition-colors group">
+        <i data-lucide="shopping-bag" class="w-5 h-5 text-charcoal group-hover:text-gold transition-colors"></i>
+        <span id="cartBadge" class="hidden absolute -top-1 -right-1 badge-gold text-xs w-5 h-5 rounded-full flex items-center justify-center font-poppins font-semibold">0</span>
+      </button>
+      <button onclick="openCart()" class="hidden md:block bg-charcoal hover:bg-gold text-white text-sm font-poppins font-medium px-5 py-2 rounded-full transition-colors duration-300">
+        Mi Reserva
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     HERO
+     ================================================================ -->
+<section class="hero-bg min-h-[78vh] flex flex-col justify-end pb-16 pt-32 px-6">
+  <div class="max-w-7xl mx-auto w-full">
+    <!-- Headline -->
+    <div class="mb-8">
+      <p class="font-cormorant italic text-gold text-lg tracking-widest mb-1">Bienvenido al lujo</p>
+      <h1 class="font-dm text-5xl md:text-7xl text-charcoal leading-none mb-3">
+        Encuentra tu<br/><span class="text-gold-light italic">habitación perfecta</span>
+      </h1>
+      <p class="font-poppins text-muted text-base max-w-md mt-4">Descubre espacios diseñados para el descanso y la elegancia. Selecciona fechas, filtra por categoría y reserva en minutos.</p>
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar bg-white rounded-2xl p-4 md:p-2 flex flex-col md:flex-row gap-3 md:gap-0 md:items-center max-w-5xl">
+      <!-- Check-in -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-gray-100">
+        <i data-lucide="calendar-check" class="w-5 h-5 text-gold shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-muted uppercase tracking-wider mb-0.5">Llegada</label>
+          <input type="date" id="checkIn" class="w-full bg-transparent font-poppins text-sm text-charcoal outline-none" />
+        </div>
+      </div>
+      <!-- Check-out -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-gray-100">
+        <i data-lucide="calendar-x" class="w-5 h-5 text-gold shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-muted uppercase tracking-wider mb-0.5">Salida</label>
+          <input type="date" id="checkOut" class="w-full bg-transparent font-poppins text-sm text-charcoal outline-none" />
+        </div>
+      </div>
+      <!-- Guests -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2 md:border-r border-gray-100">
+        <i data-lucide="users" class="w-5 h-5 text-gold shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-muted uppercase tracking-wider mb-0.5">Huéspedes</label>
+          <select id="guests" class="w-full bg-transparent font-poppins text-sm text-charcoal outline-none cursor-pointer">
+            <option value="1">1 Adulto</option>
+            <option value="2" selected>2 Adultos</option>
+            <option value="3">3 Adultos</option>
+            <option value="4">4 Adultos</option>
+            <option value="5">2 Adultos + 2 Niños</option>
+          </select>
+        </div>
+      </div>
+      <!-- Category -->
+      <div class="flex-1 flex items-center gap-3 px-4 py-2">
+        <i data-lucide="hotel" class="w-5 h-5 text-gold shrink-0"></i>
+        <div class="w-full">
+          <label class="block text-xs font-poppins font-semibold text-muted uppercase tracking-wider mb-0.5">Categoría</label>
+          <select id="categorySearch" class="w-full bg-transparent font-poppins text-sm text-charcoal outline-none cursor-pointer" onchange="filterByCategory(this.value)">
+            <option value="all">Todas</option>
+            <option value="Estándar">Estándar</option>
+            <option value="Superior">Superior</option>
+            <option value="Suite">Suite</option>
+            <option value="Presidencial">Presidencial</option>
+          </select>
+        </div>
+      </div>
+      <!-- Search btn -->
+      <button onclick="applySearch()" class="bg-charcoal hover:bg-gold text-white font-poppins font-semibold text-sm px-8 py-4 rounded-xl transition-colors duration-300 flex items-center gap-2 shrink-0 mx-2">
+        <i data-lucide="search" class="w-4 h-4"></i>
+        Buscar
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     STATS STRIP
+     ================================================================ -->
+<div class="bg-charcoal text-white py-5 px-6">
+  <div class="max-w-7xl mx-auto flex flex-wrap justify-center gap-8 md:gap-16">
+    <div class="text-center">
+      <div class="font-dm text-3xl text-gold-light">142</div>
+      <div class="font-poppins text-xs text-gray-400 mt-0.5 tracking-wider uppercase">Habitaciones</div>
+    </div>
+    <div class="text-center">
+      <div class="font-dm text-3xl text-gold-light">4.9★</div>
+      <div class="font-poppins text-xs text-gray-400 mt-0.5 tracking-wider uppercase">Calificación</div>
+    </div>
+    <div class="text-center">
+      <div class="font-dm text-3xl text-gold-light">12</div>
+      <div class="font-poppins text-xs text-gray-400 mt-0.5 tracking-wider uppercase">Años de lujo</div>
+    </div>
+    <div class="text-center">
+      <div class="font-dm text-3xl text-gold-light">5★</div>
+      <div class="font-poppins text-xs text-gray-400 mt-0.5 tracking-wider uppercase">Hotel boutique</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     ROOMS SECTION
+     ================================================================ -->
+<section id="rooms" class="max-w-7xl mx-auto px-6 py-16">
+
+  <!-- Section header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+    <div>
+      <p class="font-cormorant italic text-gold text-base tracking-widest">Nuestras habitaciones</p>
+      <h2 class="font-dm text-4xl md:text-5xl text-charcoal leading-tight gold-line">Espacios donde<br/>el lujo habla</h2>
+    </div>
+    <div id="roomCount" class="font-poppins text-sm text-muted"></div>
+  </div>
+
+  <!-- Filters row -->
+  <div class="flex flex-col lg:flex-row gap-6 mb-10">
+
+    <!-- Category pills -->
+    <div class="flex flex-wrap gap-2 flex-1">
+      <button class="filter-pill active font-poppins text-sm px-5 py-2 rounded-full" onclick="filterPill(this,'all')">Todas</button>
+      <button class="filter-pill font-poppins text-sm px-5 py-2 rounded-full" onclick="filterPill(this,'Estándar')">Estándar</button>
+      <button class="filter-pill font-poppins text-sm px-5 py-2 rounded-full" onclick="filterPill(this,'Superior')">Superior</button>
+      <button class="filter-pill font-poppins text-sm px-5 py-2 rounded-full" onclick="filterPill(this,'Suite')">Suite</button>
+      <button class="filter-pill font-poppins text-sm px-5 py-2 rounded-full" onclick="filterPill(this,'Presidencial')">Presidencial</button>
+    </div>
+
+    <!-- Price range + sort -->
+    <div class="flex flex-wrap items-center gap-6">
+      <!-- Price range -->
+      <div class="flex items-center gap-3 min-w-[220px]">
+        <i data-lucide="dollar-sign" class="w-4 h-4 text-gold shrink-0"></i>
+        <div class="flex-1">
+          <div class="flex justify-between text-xs font-poppins text-muted mb-1">
+            <span>Precio / noche</span>
+            <span id="priceLabel" class="text-gold font-semibold">$0 – $1000</span>
+          </div>
+          <input type="range" id="priceRange" min="0" max="1000" value="1000" step="50" class="w-full" oninput="filterPrice(this.value)"/>
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div class="relative">
+        <i data-lucide="arrow-up-down" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold pointer-events-none"></i>
+        <select onchange="sortRooms(this.value)" class="font-poppins text-sm bg-white border border-gray-200 rounded-full pl-9 pr-4 py-2 text-charcoal outline-none cursor-pointer shadow-sm">
+          <option value="default">Ordenar</option>
+          <option value="price-asc">Precio ↑</option>
+          <option value="price-desc">Precio ↓</option>
+          <option value="name">Nombre A–Z</option>
+          <option value="rating">Mejor valorado</option>
+        </select>
+      </div>
+
+      <!-- Search by name -->
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold pointer-events-none"></i>
+        <input type="text" id="nameSearch" placeholder="Buscar habitación…" oninput="filterName(this.value)"
+          class="font-poppins text-sm bg-white border border-gray-200 rounded-full pl-9 pr-4 py-2 text-charcoal outline-none shadow-sm w-48 focus:border-gold transition-colors"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Amenity filter chips -->
+  <div class="flex flex-wrap gap-2 mb-10" id="amenityFilters">
+    <span class="font-poppins text-xs font-semibold text-muted uppercase tracking-wider mr-2 self-center">Servicios:</span>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'wifi')">
+      <i data-lucide="wifi" class="w-3 h-3 inline mr-1"></i>WiFi
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'pool')">
+      <i data-lucide="waves" class="w-3 h-3 inline mr-1"></i>Piscina
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'spa')">
+      <i data-lucide="sparkles" class="w-3 h-3 inline mr-1"></i>Spa
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'jacuzzi')">
+      <i data-lucide="droplets" class="w-3 h-3 inline mr-1"></i>Jacuzzi
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'balcony')">
+      <i data-lucide="mountain-snow" class="w-3 h-3 inline mr-1"></i>Balcón
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'breakfast')">
+      <i data-lucide="coffee" class="w-3 h-3 inline mr-1"></i>Desayuno
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'gym')">
+      <i data-lucide="dumbbell" class="w-3 h-3 inline mr-1"></i>Gym
+    </button>
+    <button class="amenity-chip text-xs font-poppins px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:border-gold hover:text-gold transition-colors" onclick="toggleAmenity(this,'view')">
+      <i data-lucide="eye" class="w-3 h-3 inline mr-1"></i>Vista al mar
+    </button>
+  </div>
+
+  <!-- ===== ROOM GRID ===== -->
+  <div id="roomGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+    <!-- generated by JS -->
+  </div>
+
+  <!-- Empty state -->
+  <div id="emptyState" class="hidden text-center py-20">
+    <i data-lucide="bed-double" class="w-16 h-16 text-gray-200 mx-auto mb-4"></i>
+    <p class="font-dm text-2xl text-gray-300 mb-2">Sin resultados</p>
+    <p class="font-poppins text-sm text-muted">Intenta cambiar los filtros o el rango de precio.</p>
+    <button onclick="resetFilters()" class="mt-6 border border-gold text-gold font-poppins text-sm px-6 py-2 rounded-full hover:bg-gold hover:text-white transition-colors">Limpiar filtros</button>
+  </div>
+</section>
+
+<!-- ================================================================
+     PROMOTIONAL BANNER
+     ================================================================ -->
+<section class="mx-6 max-w-7xl lg:mx-auto my-4 mb-16 rounded-3xl overflow-hidden relative">
+  <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1600&q=80" alt="promo" class="w-full h-64 md:h-80 object-cover object-center"/>
+  <div class="absolute inset-0 bg-gradient-to-r from-charcoal/80 to-charcoal/10 flex items-center px-10 md:px-16">
+    <div>
+      <p class="font-cormorant italic text-gold-light text-lg mb-1 tracking-widest">Oferta limitada</p>
+      <h3 class="font-dm text-4xl md:text-5xl text-white mb-3">15% de descuento<br/>en suites</h3>
+      <p class="font-poppins text-sm text-gray-300 mb-6 max-w-xs">Reserva con 7 días de anticipación y disfruta de nuestras suites con vista al mar.</p>
+      <button onclick="filterPill(document.querySelector('[onclick*=\"Suite\"]'),'Suite')" class="bg-gold-light hover:bg-gold text-white font-poppins font-semibold text-sm px-7 py-3 rounded-full transition-colors">
+        Ver suites disponibles
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     CART DRAWER
+     ================================================================ -->
+<div id="cartOverlay" class="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm" onclick="closeCart()"></div>
+<div id="cartDrawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+    <div>
+      <h3 class="font-dm text-2xl text-charcoal">Mi Reserva</h3>
+      <p class="font-cormorant italic text-muted text-sm">Solicitud de habitaciones</p>
+    </div>
+    <button onclick="closeCart()" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+      <i data-lucide="x" class="w-5 h-5 text-charcoal"></i>
+    </button>
+  </div>
+
+  <!-- Guest summary -->
+  <div class="px-6 py-4 bg-gold-pale border-b border-gold/20">
+    <div class="flex items-center gap-3 text-sm font-poppins text-charcoal">
+      <i data-lucide="calendar-days" class="w-4 h-4 text-gold"></i>
+      <span id="cartDates" class="font-medium">Selecciona fechas en el buscador</span>
+    </div>
+    <div class="flex items-center gap-3 text-sm font-poppins text-charcoal mt-1">
+      <i data-lucide="users" class="w-4 h-4 text-gold"></i>
+      <span id="cartGuests">— huéspedes</span>
+    </div>
+  </div>
+
+  <!-- Cart items -->
+  <div id="cartItems" class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+    <!-- JS generated -->
+  </div>
+
+  <!-- Empty cart -->
+  <div id="cartEmpty" class="flex-1 flex flex-col items-center justify-center px-6 text-center">
+    <i data-lucide="bed" class="w-12 h-12 text-gray-200 mb-3"></i>
+    <p class="font-dm text-xl text-gray-300 mb-1">Tu carrito está vacío</p>
+    <p class="font-poppins text-sm text-muted">Agrega habitaciones para comenzar tu reserva.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="border-t border-gray-100 px-6 py-5">
+    <div class="flex justify-between items-center mb-1">
+      <span class="font-poppins text-sm text-muted">Subtotal / noche</span>
+      <span id="cartSubtotal" class="font-poppins font-semibold text-charcoal">$0</span>
+    </div>
+    <div class="flex justify-between items-center mb-4">
+      <span class="font-poppins text-sm text-muted">Impuestos (12%)</span>
+      <span id="cartTax" class="font-poppins font-semibold text-charcoal">$0</span>
+    </div>
+    <div class="flex justify-between items-center mb-5 pb-4 border-t pt-4">
+      <span class="font-dm text-lg text-charcoal">Total estimado</span>
+      <span id="cartTotal" class="font-dm text-xl text-gold-light font-bold">$0</span>
+    </div>
+    <button id="checkoutBtn" onclick="checkout()" class="w-full bg-charcoal hover:bg-gold text-white font-poppins font-semibold py-4 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+      <i data-lucide="send" class="w-4 h-4"></i>
+      Solicitar Reserva
+    </button>
+    <p class="text-center font-poppins text-xs text-muted mt-3">Sin cargos hasta confirmación.</p>
+  </div>
+</div>
+
+<!-- ================================================================
+     ROOM DETAIL MODAL
+     ================================================================ -->
+<div id="roomModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div id="roomModalBox" class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <!-- Modal content injected by JS -->
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     TOAST
+     ================================================================ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-charcoal text-white font-poppins text-sm px-6 py-3 rounded-full shadow-xl flex items-center gap-2">
+  <i data-lucide="check-circle" class="w-4 h-4 text-gold"></i>
+  <span id="toastMsg">Habitación agregada</span>
+</div>
+
+<!-- ================================================================
+     FLOATING CART BUTTON (mobile)
+     ================================================================ -->
+<button onclick="openCart()" id="floatCart" class="fixed bottom-6 right-6 z-40 bg-charcoal hover:bg-gold text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-colors duration-300 md:hidden">
+  <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+  <span id="floatBadge" class="hidden absolute -top-1 -right-1 badge-gold text-xs w-5 h-5 rounded-full flex items-center justify-center font-poppins font-semibold">0</span>
+</button>
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script>
+/* ==================== DATA ==================== */
+const rooms = [
+  {
+    id: 1,
+    name: "Habitación Estándar",
+    category: "Estándar",
+    price: 120,
+    rating: 4.3,
+    reviews: 87,
+    size: 28,
+    capacity: 2,
+    beds: "1 cama King",
+    description: "Habitación acogedora con vista al jardín, decoración moderna y todo lo que necesitas para un descanso perfecto.",
+    amenities: ["wifi","breakfast","gym"],
+    amenityLabels: ["WiFi gratuito","Desayuno incluido","Acceso al gym"],
+    amenityIcons: ["wifi","coffee","dumbbell"],
+    images: [
+      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80",
+      "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&q=80",
+      "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80"
+    ]
+  },
+  {
+    id: 2,
+    name: "Habitación Superior",
+    category: "Superior",
+    price: 220,
+    rating: 4.6,
+    reviews: 142,
+    size: 38,
+    capacity: 2,
+    beds: "1 cama King",
+    description: "Disfruta de mayor espacio, una sala de estar privada y amenidades premium para una estancia superior.",
+    amenities: ["wifi","balcony","breakfast","gym"],
+    amenityLabels: ["WiFi gratuito","Balcón privado","Desayuno incluido","Acceso al gym"],
+    amenityIcons: ["wifi","mountain-snow","coffee","dumbbell"],
+    images: [
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+      "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&q=80",
+      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800&q=80"
+    ]
+  },
+  {
+    id: 3,
+    name: "Suite Deluxe",
+    category: "Suite",
+    price: 380,
+    rating: 4.8,
+    reviews: 203,
+    size: 55,
+    capacity: 3,
+    beds: "1 cama King + sofá cama",
+    description: "Una suite de lujo con sala, comedor privado, bañera de hidromasaje y vistas panorámicas al mar.",
+    amenities: ["wifi","jacuzzi","pool","balcony","breakfast","spa"],
+    amenityLabels: ["WiFi premium","Jacuzzi privado","Acceso piscina","Balcón panorámico","Desayuno gourmet","Acceso al spa"],
+    amenityIcons: ["wifi","droplets","waves","mountain-snow","coffee","sparkles"],
+    images: [
+      "https://images.unsplash.com/photo-1602002418082-a4443e081dd1?w=800&q=80",
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
+      "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80"
+    ],
+    tag: "Más popular"
+  },
+  {
+    id: 4,
+    name: "Suite Familiar",
+    category: "Suite",
+    price: 340,
+    rating: 4.7,
+    reviews: 96,
+    size: 62,
+    capacity: 4,
+    beds: "2 camas Queen",
+    description: "Perfecta para familias: dos dormitorios, sala de estar amplia y amenidades especiales para los más pequeños.",
+    amenities: ["wifi","pool","breakfast","gym","view"],
+    amenityLabels: ["WiFi gratuito","Piscina infantil","Desayuno familiar","Gym","Vista al mar"],
+    amenityIcons: ["wifi","waves","coffee","dumbbell","eye"],
+    images: [
+      "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&q=80",
+      "https://images.unsplash.com/photo-1560185127-6a30de5e7a82?w=800&q=80",
+      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80"
+    ]
+  },
+  {
+    id: 5,
+    name: "Suite Presidencial",
+    category: "Presidencial",
+    price: 950,
+    rating: 5.0,
+    reviews: 34,
+    size: 120,
+    capacity: 2,
+    beds: "1 cama King + sala y comedor",
+    description: "Lo máximo en lujo. Tres ambientes, mayordomo privado, terraza con vista al océano y experiencias exclusivas.",
+    amenities: ["wifi","jacuzzi","pool","balcony","breakfast","spa","view","gym"],
+    amenityLabels: ["WiFi premium","Jacuzzi privado","Piscina privada","Terraza panorámica","Desayuno en suite","Spa privado","Vista 360°","Gym privado"],
+    amenityIcons: ["wifi","droplets","waves","mountain-snow","coffee","sparkles","eye","dumbbell"],
+    images: [
+      "https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800&q=80",
+      "https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80",
+      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80"
+    ],
+    tag: "Exclusivo"
+  },
+  {
+    id: 6,
+    name: "Estándar Vista Jardín",
+    category: "Estándar",
+    price: 145,
+    rating: 4.4,
+    reviews: 61,
+    size: 30,
+    capacity: 2,
+    beds: "2 camas Twin",
+    description: "Habitación tranquila con impresionante vista a los jardines del hotel y decoración natural.",
+    amenities: ["wifi","breakfast","gym","balcony"],
+    amenityLabels: ["WiFi gratuito","Desayuno","Gym","Balcón jardín"],
+    amenityIcons: ["wifi","coffee","dumbbell","mountain-snow"],
+    images: [
+      "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800&q=80",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
+      "https://images.unsplash.com/photo-1609766859067-4b8a04bb8a46?w=800&q=80"
+    ]
+  },
+  {
+    id: 7,
+    name: "Superior Vista Mar",
+    category: "Superior",
+    price: 290,
+    rating: 4.9,
+    reviews: 178,
+    size: 42,
+    capacity: 2,
+    beds: "1 cama King",
+    description: "Desperta con la vista al mar desde tu cama. Decoración náutica de lujo y terraza privada.",
+    amenities: ["wifi","view","balcony","spa","breakfast"],
+    amenityLabels: ["WiFi premium","Vista al mar","Terraza privada","Acceso spa","Desayuno incluido"],
+    amenityIcons: ["wifi","eye","mountain-snow","sparkles","coffee"],
+    images: [
+      "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80",
+      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80",
+      "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=800&q=80"
+    ],
+    tag: "Top rated"
+  },
+  {
+    id: 8,
+    name: "Suite Honeymoon",
+    category: "Suite",
+    price: 520,
+    rating: 4.9,
+    reviews: 57,
+    size: 65,
+    capacity: 2,
+    beds: "1 cama King circular",
+    description: "Diseñada para parejas: rosas, champagne de bienvenida, bañera para dos con vista al mar y decoración romántica.",
+    amenities: ["wifi","jacuzzi","view","spa","breakfast","balcony"],
+    amenityLabels: ["WiFi premium","Jacuzzi vista mar","Vista al océano","Spa privado","Desayuno romántico","Balcón privado"],
+    amenityIcons: ["wifi","droplets","eye","sparkles","coffee","mountain-snow"],
+    images: [
+      "https://images.unsplash.com/photo-1603825491103-bd638b1873b4?w=800&q=80",
+      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80",
+      "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?w=800&q=80"
+    ],
+    tag: "Romántica"
+  },
+  {
+    id: 9,
+    name: "Habitación Accesible",
+    category: "Estándar",
+    price: 135,
+    rating: 4.5,
+    reviews: 29,
+    size: 35,
+    capacity: 2,
+    beds: "1 cama King",
+    description: "Totalmente adaptada para personas con movilidad reducida. Amplia, cómoda y con todos los servicios.",
+    amenities: ["wifi","breakfast","gym"],
+    amenityLabels: ["WiFi gratuito","Desayuno","Acceso al gym"],
+    amenityIcons: ["wifi","coffee","dumbbell"],
+    images: [
+      "https://images.unsplash.com/photo-1560185127-6a30de5e7a82?w=800&q=80",
+      "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?w=800&q=80",
+      "https://images.unsplash.com/photo-1559599101-f09722fb4948?w=800&q=80"
+    ]
+  }
+];
+
+/* ==================== STATE ==================== */
+let cart = [];
+let activeCategory = 'all';
+let activeAmenities = [];
+let maxPrice = 1000;
+let sortMode = 'default';
+let nameQuery = '';
+let currentRoomId = null;
+
+/* ==================== RENDER ROOMS ==================== */
+function getFilteredRooms() {
+  let list = rooms.filter(r => {
+    if (activeCategory !== 'all' && r.category !== activeCategory) return false;
+    if (r.price > maxPrice) return false;
+    if (activeAmenities.length > 0 && !activeAmenities.every(a => r.amenities.includes(a))) return false;
+    if (nameQuery && !r.name.toLowerCase().includes(nameQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  if (sortMode === 'price-asc') list.sort((a,b)=>a.price-b.price);
+  else if (sortMode === 'price-desc') list.sort((a,b)=>b.price-a.price);
+  else if (sortMode === 'name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (sortMode === 'rating') list.sort((a,b)=>b.rating-a.rating);
+
+  return list;
+}
+
+function renderStars(rating) {
+  let html = '';
+  for (let i=1;i<=5;i++) {
+    html += `<span class="${i<=Math.round(rating)?'star-filled':'star-empty'}">★</span>`;
+  }
+  return html;
+}
+
+function renderRooms() {
+  const list = getFilteredRooms();
+  const grid = document.getElementById('roomGrid');
+  const empty = document.getElementById('emptyState');
+  const count = document.getElementById('roomCount');
+  count.textContent = `${list.length} habitación${list.length!==1?'es':''} disponible${list.length!==1?'s':''}`;
+
+  if (list.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = list.map(room => {
+    const inCart = cart.some(c=>c.id===room.id);
+    return `
+    <div class="room-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
+      <!-- Image -->
+      <div class="relative overflow-hidden h-56">
+        <img src="${room.images[0]}" alt="${room.name}" class="w-full h-full object-cover" loading="lazy"/>
+        ${room.tag ? `<span class="absolute top-3 left-3 badge-gold text-xs font-poppins font-semibold px-3 py-1 rounded-full">${room.tag}</span>` : ''}
+        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-xs font-poppins font-semibold text-charcoal px-2 py-1 rounded-full">${room.category}</div>
+        <!-- Quick-view overlay -->
+        <button onclick="openModal(${room.id})" class="absolute inset-0 bg-charcoal/0 hover:bg-charcoal/30 transition-colors duration-300 flex items-center justify-center group">
+          <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-charcoal font-poppins text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-1">
+            <i data-lucide="expand" class="w-3 h-3"></i> Ver detalles
+          </span>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="p-5 flex flex-col flex-1">
+        <!-- Name + rating -->
+        <div class="flex items-start justify-between mb-1">
+          <h3 class="font-playfair text-lg text-charcoal leading-tight">${room.name}</h3>
+          <div class="text-right shrink-0 ml-2">
+            <div class="text-xs">${renderStars(room.rating)}</div>
+            <div class="font-poppins text-xs text-muted">${room.rating} (${room.reviews})</div>
+          </div>
+        </div>
+
+        <!-- Meta chips -->
+        <div class="flex gap-2 mt-2 mb-3 flex-wrap">
+          <span class="flex items-center gap-1 text-xs font-poppins text-muted bg-gray-50 px-2 py-1 rounded-md">
+            <i data-lucide="maximize-2" class="w-3 h-3 text-gold"></i>${room.size} m²
+          </span>
+          <span class="flex items-center gap-1 text-xs font-poppins text-muted bg-gray-50 px-2 py-1 rounded-md">
+            <i data-lucide="users" class="w-3 h-3 text-gold"></i>${room.capacity} pers.
+          </span>
+          <span class="flex items-center gap-1 text-xs font-poppins text-muted bg-gray-50 px-2 py-1 rounded-md">
+            <i data-lucide="bed-double" class="w-3 h-3 text-gold"></i>${room.beds}
+          </span>
+        </div>
+
+        <!-- Description -->
+        <p class="font-poppins text-xs text-muted leading-relaxed mb-4 line-clamp-2">${room.description}</p>
+
+        <!-- Top amenities -->
+        <div class="flex gap-2 mb-5 flex-wrap">
+          ${room.amenityIcons.slice(0,4).map((icon,i)=>`
+            <span title="${room.amenityLabels[i]}" class="amenity-icon">
+              <i data-lucide="${icon}" class="w-3.5 h-3.5 text-gold"></i>
+            </span>
+          `).join('')}
+          ${room.amenityIcons.length > 4 ? `<span class="amenity-icon font-poppins text-xs text-gold font-semibold px-2">+${room.amenityIcons.length-4}</span>` : ''}
+        </div>
+
+        <!-- Price + CTA -->
+        <div class="flex items-end justify-between mt-auto">
+          <div>
+            <div class="font-poppins text-xs text-muted">Desde</div>
+            <div class="font-dm text-2xl text-gold-light">\$${room.price}</div>
+            <div class="font-poppins text-xs text-muted">por noche</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openModal(${room.id})" class="p-2.5 border border-gray-200 rounded-xl hover:border-gold transition-colors" title="Ver detalles">
+              <i data-lucide="info" class="w-4 h-4 text-muted"></i>
+            </button>
+            <button onclick="addToCart(${room.id})" class="px-4 py-2.5 rounded-xl font-poppins text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5
+              ${inCart ? 'bg-gold-pale text-gold border border-gold' : 'bg-charcoal hover:bg-gold text-white'}">
+              <i data-lucide="${inCart ? 'check' : 'plus'}" class="w-4 h-4"></i>
+              ${inCart ? 'Agregado' : 'Agregar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+/* ==================== FILTERS ==================== */
+function filterPill(btn, cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('categorySearch').value = cat === 'all' ? 'all' : cat;
+  renderRooms();
+  document.getElementById('rooms').scrollIntoView({behavior:'smooth'});
+}
+
+function filterByCategory(val) {
+  activeCategory = val;
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${val}'`) || (val==='all' && b.getAttribute('onclick').includes("'all'")));
+  });
+  renderRooms();
+}
+
+function filterPrice(val) {
+  maxPrice = parseInt(val);
+  document.getElementById('priceLabel').textContent = `$0 – $${val}`;
+  renderRooms();
+}
+
+function sortRooms(val) {
+  sortMode = val;
+  renderRooms();
+}
+
+function filterName(val) {
+  nameQuery = val;
+  renderRooms();
+}
+
+function toggleAmenity(btn, amenity) {
+  if (activeAmenities.includes(amenity)) {
+    activeAmenities = activeAmenities.filter(a=>a!==amenity);
+    btn.classList.remove('border-gold','text-gold','bg-gold-pale');
+  } else {
+    activeAmenities.push(amenity);
+    btn.classList.add('border-gold','text-gold','bg-gold-pale');
+  }
+  renderRooms();
+}
+
+function resetFilters() {
+  activeCategory = 'all';
+  activeAmenities = [];
+  maxPrice = 1000;
+  sortMode = 'default';
+  nameQuery = '';
+  document.getElementById('priceRange').value = 1000;
+  document.getElementById('priceLabel').textContent = '$0 – $1000';
+  document.getElementById('nameSearch').value = '';
+  document.getElementById('categorySearch').value = 'all';
+  document.querySelectorAll('.filter-pill').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.querySelectorAll('.amenity-chip').forEach(b => b.classList.remove('border-gold','text-gold','bg-gold-pale'));
+  renderRooms();
+}
+
+function applySearch() {
+  renderRooms();
+  document.getElementById('rooms').scrollIntoView({behavior:'smooth'});
+}
+
+/* ==================== CART ==================== */
+function addToCart(id) {
+  const room = rooms.find(r=>r.id===id);
+  if (!room) return;
+  if (cart.some(c=>c.id===id)) {
+    removeFromCart(id);
+    return;
+  }
+  cart.push({...room, qty:1});
+  updateCart();
+  showToast(`"${room.name}" agregada al carrito`);
+  renderRooms();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c=>c.id!==id);
+  updateCart();
+  renderRooms();
+}
+
+function updateCart() {
+  const count = cart.length;
+  const badge = document.getElementById('cartBadge');
+  const floatBadge = document.getElementById('floatBadge');
+
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove('hidden');
+    floatBadge.textContent = count;
+    floatBadge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+    floatBadge.classList.add('hidden');
+  }
+
+  const subtotal = cart.reduce((s,r)=>s+r.price,0);
+  const tax = Math.round(subtotal * 0.12);
+  const total = subtotal + tax;
+
+  document.getElementById('cartSubtotal').textContent = `$${subtotal}`;
+  document.getElementById('cartTax').textContent = `$${tax}`;
+  document.getElementById('cartTotal').textContent = `$${total}`;
+
+  const itemsEl = document.getElementById('cartItems');
+  const emptyEl = document.getElementById('cartEmpty');
+
+  if (count === 0) {
+    itemsEl.classList.add('hidden');
+    emptyEl.classList.remove('hidden');
+    document.getElementById('checkoutBtn').disabled = true;
+  } else {
+    itemsEl.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
+    document.getElementById('checkoutBtn').disabled = false;
+
+    itemsEl.innerHTML = cart.map(r => `
+      <div class="flex gap-3 p-3 bg-cream rounded-xl border border-gray-100">
+        <img src="${r.images[0]}" alt="${r.name}" class="w-16 h-16 object-cover rounded-lg shrink-0"/>
+        <div class="flex-1 min-w-0">
+          <div class="font-playfair text-sm text-charcoal leading-snug mb-0.5 truncate">${r.name}</div>
+          <div class="font-cormorant italic text-xs text-muted">${r.category} · ${r.beds}</div>
+          <div class="font-dm text-base text-gold-light mt-1">$${r.price}<span class="font-poppins text-xs text-muted">/noche</span></div>
+        </div>
+        <button onclick="removeFromCart(${r.id})" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors self-start">
+          <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
+        </button>
+      </div>
+    `).join('');
+
+    lucide.createIcons();
+  }
+
+  // update dates summary
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  const g = document.getElementById('guests').value;
+  document.getElementById('cartDates').textContent = ci && co ? `${formatDate(ci)} → ${formatDate(co)}` : 'Selecciona fechas en el buscador';
+  document.getElementById('cartGuests').textContent = g ? document.getElementById('guests').options[document.getElementById('guests').selectedIndex].text : '— huéspedes';
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${day} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function openCart() {
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  updateCart();
+}
+
+function closeCart() {
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ==================== CHECKOUT ==================== */
+function checkout() {
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  if (!ci || !co) {
+    showToast('Por favor selecciona las fechas primero');
+    return;
+  }
+  if (cart.length === 0) return;
+
+  showToast('¡Solicitud enviada! Te contactaremos pronto.');
+  setTimeout(()=>{
+    cart = [];
+    updateCart();
+    closeCart();
+    renderRooms();
+  }, 1500);
+}
+
+/* ==================== MODAL ==================== */
+let currentImgIndex = 0;
+
+function openModal(id) {
+  const room = rooms.find(r=>r.id===id);
+  if (!room) return;
+  currentRoomId = id;
+  currentImgIndex = 0;
+
+  document.getElementById('modalContent').innerHTML = buildModalHTML(room);
+  document.getElementById('roomModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+}
+
+function buildModalHTML(room) {
+  const inCart = cart.some(c=>c.id===room.id);
+  return `
+  <!-- Modal header image -->
+  <div class="relative h-72 overflow-hidden rounded-t-3xl">
+    <img id="modalMainImg" src="${room.images[0]}" alt="${room.name}" class="w-full h-full object-cover transition-opacity duration-300"/>
+    ${room.tag ? `<span class="absolute top-4 left-4 badge-gold text-xs font-poppins font-semibold px-3 py-1 rounded-full">${room.tag}</span>` : ''}
+    <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors">
+      <i data-lucide="x" class="w-4 h-4 text-charcoal"></i>
+    </button>
+    <!-- Image nav -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      ${room.images.map((img,i)=>`
+        <button onclick="changeModalImg(${i},'${img}')" id="imgDot${i}" class="w-2 h-2 rounded-full transition-all ${i===0?'bg-white scale-125':'bg-white/50'}"></button>
+      `).join('')}
+    </div>
+    <button onclick="changeModalImg(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white transition-colors">
+      <i data-lucide="chevron-left" class="w-4 h-4 text-charcoal"></i>
+    </button>
+    <button onclick="changeModalImg(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white transition-colors">
+      <i data-lucide="chevron-right" class="w-4 h-4 text-charcoal"></i>
+    </button>
+  </div>
+
+  <!-- Thumbnails -->
+  <div class="flex gap-2 px-6 pt-3">
+    ${room.images.map((img,i)=>`
+      <img src="${img}" onclick="changeModalImg(${i},'${img}')" class="w-16 h-12 object-cover rounded-lg cursor-pointer border-2 transition-all ${i===0?'border-gold':'border-transparent hover:border-gold/50'}"/>
+    `).join('')}
+  </div>
+
+  <!-- Content -->
+  <div class="px-6 py-5">
+    <div class="flex items-start justify-between mb-2">
+      <div>
+        <p class="font-cormorant italic text-gold text-sm tracking-widest">${room.category}</p>
+        <h2 class="font-dm text-3xl text-charcoal">${room.name}</h2>
+      </div>
+      <div class="text-right">
+        <div class="text-sm">${renderStars(room.rating)}</div>
+        <div class="font-poppins text-xs text-muted">${room.rating} · ${room.reviews} reseñas</div>
+      </div>
+    </div>
+
+    <!-- Meta -->
+    <div class="flex gap-3 flex-wrap mb-4">
+      <span class="flex items-center gap-1.5 text-sm font-poppins text-muted"><i data-lucide="maximize-2" class="w-4 h-4 text-gold"></i>${room.size} m²</span>
+      <span class="flex items-center gap-1.5 text-sm font-poppins text-muted"><i data-lucide="users" class="w-4 h-4 text-gold"></i>Hasta ${room.capacity} personas</span>
+      <span class="flex items-center gap-1.5 text-sm font-poppins text-muted"><i data-lucide="bed-double" class="w-4 h-4 text-gold"></i>${room.beds}</span>
+    </div>
+
+    <p class="font-poppins text-sm text-muted leading-relaxed mb-5">${room.description}</p>
+
+    <!-- Amenities grid -->
+    <h4 class="font-playfair text-base text-charcoal mb-3">Incluye</h4>
+    <div class="grid grid-cols-2 gap-2 mb-6">
+      ${room.amenityLabels.map((label,i)=>`
+        <div class="flex items-center gap-2 text-sm font-poppins text-charcoal">
+          <span class="amenity-icon shrink-0"><i data-lucide="${room.amenityIcons[i]}" class="w-3.5 h-3.5 text-gold"></i></span>
+          ${label}
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Price + CTA -->
+    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div>
+        <div class="font-poppins text-xs text-muted">Precio por noche</div>
+        <div class="font-dm text-4xl text-gold-light">\$${room.price}</div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeModal()" class="px-5 py-3 border border-gray-200 rounded-xl font-poppins text-sm text-muted hover:border-gold transition-colors">Cerrar</button>
+        <button onclick="addToCart(${room.id}); closeModal();" class="px-6 py-3 rounded-xl font-poppins text-sm font-semibold transition-colors duration-300 flex items-center gap-2
+          ${inCart ? 'bg-gold-pale text-gold border border-gold' : 'bg-charcoal hover:bg-gold text-white'}">
+          <i data-lucide="${inCart?'check':'plus'}" class="w-4 h-4"></i>
+          ${inCart ? 'Quitar del carrito' : 'Agregar al carrito'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function changeModalImg(indexOrDir, src) {
+  const room = rooms.find(r=>r.id===currentRoomId);
+  if (!room) return;
+
+  if (typeof indexOrDir === 'number' && src) {
+    currentImgIndex = indexOrDir;
+  } else {
+    currentImgIndex = (currentImgIndex + indexOrDir + room.images.length) % room.images.length;
+  }
+
+  const imgEl = document.getElementById('modalMainImg');
+  imgEl.style.opacity = 0;
+  setTimeout(()=>{
+    imgEl.src = room.images[currentImgIndex];
+    imgEl.style.opacity = 1;
+  }, 150);
+
+  room.images.forEach((_,i)=>{
+    const dot = document.getElementById(`imgDot${i}`);
+    if (dot) dot.className = `w-2 h-2 rounded-full transition-all ${i===currentImgIndex?'bg-white scale-125':'bg-white/50'}`;
+  });
+}
+
+function closeModal() {
+  document.getElementById('roomModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ==================== TOAST ==================== */
+let toastTimer;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 3000);
+}
+
+/* ==================== NAVBAR SCROLL ==================== */
+window.addEventListener('scroll', ()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ==================== DEFAULT DATES ==================== */
+function setDefaultDates() {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const fmt = d => d.toISOString().split('T')[0];
+  document.getElementById('checkIn').value = fmt(today);
+  document.getElementById('checkOut').value = fmt(tomorrow);
+}
+
+/* ==================== INIT ==================== */
+setDefaultDates();
+renderRooms();
+lucide.createIcons();
+</script>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="bg-charcoal text-white py-14 px-6 mt-8">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-gold text-2xl" style="font-family:'DM Serif Display'">✦</span>
+        <div>
+          <div class="font-dm text-xl tracking-wide">Grand Palacio</div>
+          <div class="font-cormorant italic text-xs text-gray-400 tracking-widest">Hotel & Suites</div>
+        </div>
+      </div>
+      <p class="font-poppins text-xs text-gray-400 leading-relaxed">Excelencia en hospitalidad desde 2012. Tu descanso, nuestra pasión.</p>
+    </div>
+    <div>
+      <h4 class="font-playfair text-sm mb-4 text-gray-300">El hotel</h4>
+      <ul class="space-y-2 font-poppins text-xs text-gray-400">
+        <li><a href="#" class="hover:text-gold-light transition-colors">Nuestra historia</a></li>
+        <li><a href="#" class="hover:text-gold-light transition-colors">Habitaciones</a></li>
+        <li><a href="#" class="hover:text-gold-light transition-colors">Restaurante</a></li>
+        <li><a href="#" class="hover:text-gold-light transition-colors">Spa & Wellness</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-playfair text-sm mb-4 text-gray-300">Reservas</h4>
+      <ul class="space-y-2 font-poppins text-xs text-gray-400">
+        <li><a href="#" class="hover:text-gold-light transition-colors">Política de cancelación</a></li>
+        <li><a href="#" class="hover:text-gold-light transition-colors">Términos y condiciones</a></li>
+        <li><a href="#" class="hover:text-gold-light transition-colors">Preguntas frecuentes</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-playfair text-sm mb-4 text-gray-300">Contacto</h4>
+      <ul class="space-y-2 font-poppins text-xs text-gray-400">
+        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-3 h-3 text-gold"></i>+1 800 PALACIO</li>
+        <li class="flex items-center gap-2"><i data-lucide="mail" class="w-3 h-3 text-gold"></i>reservas@grandpalacio.com</li>
+        <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3 h-3 text-gold"></i>Av. del Mar 500, Cancún</li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-2">
+    <p class="font-poppins text-xs text-gray-500">© 2024 Grand Palacio Hotel & Suites. Todos los derechos reservados.</p>
+    <div class="flex gap-4">
+      <a href="#" class="font-cormorant italic text-xs text-gray-500 hover:text-gold-light transition-colors">Privacidad</a>
+      <a href="#" class="font-cormorant italic text-xs text-gray-500 hover:text-gold-light transition-colors">Cookies</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+/* =========================================================
+   RESTO · Design tokens
+   Paleta: carbón de brasa + cobre + verde salvia + rojo ají
+   Tipos: Oswald (display/condensada, look de comanda impresa),
+          Inter (cuerpo), JetBrains Mono (precios, horas, folios)
+   ========================================================= */
+:root{
+  --carbon-950:#161311;
+  --carbon-900:#1C1815;
+  --carbon-800:#26211D;
+  --carbon-700:#332C26;
+  --cream:#F6F1E4;
+  --paper:#FBF8F0;
+  --copper:#C97A3D;
+  --copper-dark:#A65F2A;
+  --ember:#B5432E;
+  --sage:#6E8F63;
+  --sage-dark:#516C48;
+  --ink:#2A231D;
+  --ink-soft:#6B5F53;
+  --line:rgba(42,35,29,.12);
+  --line-dark:rgba(246,241,228,.12);
+  --shadow: 0 8px 24px rgba(22,19,17,.18);
+}
+
+*{box-sizing:border-box}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--cream);
+  -webkit-font-smoothing:antialiased;
+}
+.f-display{font-family:'Oswald',sans-serif; letter-spacing:.02em; text-transform:uppercase;}
+.f-mono{font-family:'JetBrains Mono',monospace;}
+
+/* Topbar común a las 4 pantallas */
+.resto-topbar{
+  background:var(--carbon-950);
+  color:var(--cream);
+  border-bottom:3px solid var(--copper);
+}
+.resto-topbar a.nav-link{
+  color:rgba(246,241,228,.55);
+  transition:color .15s;
+}
+.resto-topbar a.nav-link:hover,.resto-topbar a.nav-link.active{
+  color:var(--cream);
+}
+.resto-topbar a.nav-link.active{
+  border-bottom:2px solid var(--copper);
+}
+
+/* Motivo "comanda": borde perforado superior */
+.ticket-edge{
+  position:relative;
+}
+.ticket-edge::before{
+  content:"";
+  position:absolute; top:-1px; left:0; right:0; height:8px;
+  background-image:radial-gradient(circle at 8px 4px, var(--cream) 4px, transparent 4.5px);
+  background-size:16px 8px;
+  background-repeat:repeat-x;
+}
+
+.badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;
+  letter-spacing:.03em;
+  padding:2px 8px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.badge-pendiente{background:rgba(181,67,46,.12); color:var(--ember);}
+.badge-preparacion{background:rgba(201,122,61,.14); color:var(--copper-dark);}
+.badge-listo{background:rgba(110,143,99,.16); color:var(--sage-dark);}
+.badge-entregado{background:rgba(42,35,29,.08); color:var(--ink-soft);}
+
+.btn-copper{
+  background:var(--copper);
+  color:var(--cream);
+  transition:background .15s, transform .1s;
+}
+.btn-copper:hover{background:var(--copper-dark);}
+.btn-copper:active{transform:scale(.98);}
+
+.card-hover{transition:transform .15s, box-shadow .15s;}
+.card-hover:hover{transform:translateY(-2px); box-shadow:var(--shadow);}
+
+::-webkit-scrollbar{height:8px; width:8px;}
+::-webkit-scrollbar-thumb{background:var(--copper); border-radius:99px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+.kanban-col{
+  background:var(--carbon-900);
+  border-top:4px solid var(--copper);
+}
+.kanban-col.col-preparacion{border-top-color:var(--copper);}
+.kanban-col.col-listo{border-top-color:var(--sage);}
+.kanban-col.col-pendiente{border-top-color:var(--ember);}
+.kanban-col.col-entregado{border-top-color:var(--ink-soft);}
+
+.dragging{opacity:.4;}
+.drop-hover{outline:2px dashed var(--copper); outline-offset:-4px;}

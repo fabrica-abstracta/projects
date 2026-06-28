@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starbucks · Ops Console</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          sb: {
+            dark: '#16241F',
+            green: '#00704A',
+            greendeep: '#0B4A33',
+            cream: '#F6F2E8',
+            card: '#FFFFFF',
+            gold: '#C9A24B',
+            clay: '#A6433C',
+            ink: '#20231F',
+            mist: '#8C9089',
+          }
+        },
+        fontFamily: {
+          display: ['Space Grotesk', 'sans-serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['IBM Plex Mono', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+
+<!-- Lucide icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- Alpine.js -->
+<script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
+
+<style>
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #D8D2C4; border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  [x-cloak] { display: none !important; }
+
+  .nav-item { position: relative; }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 18px; border-radius: 3px; background: #C9A24B;
+  }
+
+  .stamp {
+    transform: rotate(-9deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+
+<body class="bg-sb-cream text-sb-ink font-sans antialiased" x-data="opsApp()" x-init="init()" @keydown.escape.window="closeTop()">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="hidden md:flex w-64 shrink-0 bg-sb-dark text-sb-cream flex-col">
+      <div class="px-6 py-6 flex items-center gap-3 border-b border-white/10">
+        <svg width="38" height="38" viewBox="0 0 38 38" class="shrink-0">
+          <circle cx="19" cy="19" r="17.5" fill="#00704A" stroke="#C9A24B" stroke-width="1.5"/>
+          <circle cx="19" cy="19" r="12.5" fill="none" stroke="#F6F2E8" stroke-width="1"/>
+          <path d="M13 21c2-5 4-6 6-6s4 1 6 6c-2 2-4 3-6 3s-4-1-6-3z" fill="#F6F2E8"/>
+          <path d="M19 15v-3" stroke="#F6F2E8" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <p class="font-display font-semibold text-[15px] leading-none">Starbucks</p>
+          <p class="text-[10px] uppercase tracking-[0.18em] text-sb-gold mt-1">Ops Console</p>
+        </div>
+      </div>
+
+      <nav class="flex-1 px-6 py-6 space-y-1">
+        <button @click="go('pagos')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
+          :class="page==='pagos' ? 'active bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'">
+          <i data-lucide="credit-card" class="w-4 h-4"></i> Pagos
+          <span x-show="pendingPayments>0" class="ml-auto text-[11px] font-mono bg-sb-gold text-sb-dark rounded-full px-1.5 py-0.5" x-text="pendingPayments"></span>
+        </button>
+        <button @click="go('suscripciones')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
+          :class="page==='suscripciones' ? 'active bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'">
+          <i data-lucide="repeat" class="w-4 h-4"></i> Suscripciones
+          <span x-show="trialSubs>0" class="ml-auto text-[11px] font-mono bg-sb-gold text-sb-dark rounded-full px-1.5 py-0.5" x-text="trialSubs"></span>
+        </button>
+        <button @click="go('tickets')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
+          :class="page==='tickets' ? 'active bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'">
+          <i data-lucide="life-buoy" class="w-4 h-4"></i> Tickets
+          <span x-show="openTickets>0" class="ml-auto text-[11px] font-mono bg-sb-gold text-sb-dark rounded-full px-1.5 py-0.5" x-text="openTickets"></span>
+        </button>
+      </nav>
+
+      <div class="px-6 py-5 border-t border-white/10 text-[11px] text-white/35 font-mono">
+        MVP interno · build 0.1
+      </div>
+    </aside>
+
+    <!-- Mobile top nav -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-sb-dark text-white flex justify-around py-2 border-t border-white/10">
+      <button @click="go('pagos')" class="flex flex-col items-center gap-0.5 text-[11px] px-3 py-1" :class="page==='pagos' ? 'text-sb-gold' : 'text-white/50'">
+        <i data-lucide="credit-card" class="w-4 h-4"></i>Pagos
+      </button>
+      <button @click="go('suscripciones')" class="flex flex-col items-center gap-0.5 text-[11px] px-3 py-1" :class="page==='suscripciones' ? 'text-sb-gold' : 'text-white/50'">
+        <i data-lucide="repeat" class="w-4 h-4"></i>Suscrip.
+      </button>
+      <button @click="go('tickets')" class="flex flex-col items-center gap-0.5 text-[11px] px-3 py-1" :class="page==='tickets' ? 'text-sb-gold' : 'text-white/50'">
+        <i data-lucide="life-buoy" class="w-4 h-4"></i>Tickets
+      </button>
+    </div>
+
+    <!-- ============ MAIN ============ -->
+    <div class="flex-1 flex flex-col overflow-hidden pb-14 md:pb-0">
+
+      <!-- Header -->
+      <header class="bg-white border-b border-sb-mist/15 px-5 md:px-10 py-5 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-[0.16em] font-mono text-sb-green font-semibold" x-text="breadcrumb()"></p>
+          <h1 class="font-display font-semibold text-2xl text-sb-ink mt-0.5" x-text="pageTitle()"></h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="hidden sm:inline-flex items-center gap-2 text-xs font-mono text-sb-mist bg-sb-cream rounded-full px-3 py-1.5 border border-sb-mist/20" x-text="headerChip()"></span>
+          <div class="w-9 h-9 rounded-full bg-sb-green text-white grid place-items-center text-xs font-semibold">OP</div>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto px-5 md:px-10 py-8">
+
+        <!-- ===================================================== -->
+        <!-- PAGOS -->
+        <!-- ===================================================== -->
+        <section x-show="page==='pagos'" x-cloak>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 border-t-4 border-t-sb-green p-5 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div>
+                <label class="text-xs text-sb-mist font-medium">App</label>
+                <select x-model="pf.app" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/40">
+                  <option value="">Todas las apps</option>
+                  <template x-for="a in apps" :key="a"><option :value="a" x-text="a"></option></template>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Estado</label>
+                <select x-model="pf.status" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/40">
+                  <option value="">Todos los estados</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Rechazado">Rechazado</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Desde</label>
+                <input type="date" x-model="pf.from" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/40">
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Hasta</label>
+                <input type="date" x-model="pf.to" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/40">
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Buscar persona</label>
+                <input type="text" x-model="pf.q" placeholder="Nombre o correo" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/40">
+              </div>
+            </div>
+            <button @click="pf={app:'',status:'',from:'',to:'',q:''}" class="mt-3 text-xs text-sb-mist hover:text-sb-clay font-medium inline-flex items-center gap-1">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i> Limpiar filtros
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-xs uppercase tracking-wide text-sb-mist border-b border-sb-mist/15">
+                    <th class="px-5 py-3 font-medium">Cliente</th>
+                    <th class="px-5 py-3 font-medium">App</th>
+                    <th class="px-5 py-3 font-medium">Monto</th>
+                    <th class="px-5 py-3 font-medium">Fecha</th>
+                    <th class="px-5 py-3 font-medium">Estado</th>
+                    <th class="px-5 py-3 font-medium text-right">Comprobante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="p in filteredPayments()" :key="p.id">
+                    <tr class="border-b border-sb-mist/10 hover:bg-sb-cream/60">
+                      <td class="px-5 py-3.5">
+                        <p class="font-medium text-sb-ink" x-text="p.name"></p>
+                        <p class="text-xs text-sb-mist" x-text="p.email"></p>
+                      </td>
+                      <td class="px-5 py-3.5 text-sb-mist" x-text="p.app"></td>
+                      <td class="px-5 py-3.5 font-mono font-medium" x-text="money(p.amount)"></td>
+                      <td class="px-5 py-3.5 font-mono text-sb-mist" x-text="fmtDate(p.date)"></td>
+                      <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1" :class="badge(p.status)">
+                          <span class="w-1.5 h-1.5 rounded-full" :class="dot(p.status)"></span> <span x-text="p.status"></span>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5 text-right">
+                        <button @click="openReceipt(p)" class="inline-flex items-center gap-1.5 text-xs font-medium text-sb-green hover:text-sb-greendeep border border-sb-green/30 hover:border-sb-green rounded-full px-3 py-1.5">
+                          <i data-lucide="image" class="w-3.5 h-3.5"></i> Ver foto
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div x-show="filteredPayments().length===0" class="py-14 text-center">
+              <p class="text-sm text-sb-mist">No hay pagos con estos filtros. Ajusta el rango de fechas o el estado.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- SUSCRIPCIONES -->
+        <!-- ===================================================== -->
+        <section x-show="page==='suscripciones'" x-cloak>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 border-t-4 border-t-sb-gold p-5 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-1">
+                <label class="text-xs text-sb-mist font-medium">Buscar persona</label>
+                <input type="text" x-model="sf.q" placeholder="Nombre o correo" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-gold/40">
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Vigente desde</label>
+                <input type="date" x-model="sf.from" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-gold/40">
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Vigente hasta</label>
+                <input type="date" x-model="sf.to" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-gold/40">
+              </div>
+            </div>
+            <button @click="sf={q:'',from:'',to:''}" class="mt-3 text-xs text-sb-mist hover:text-sb-clay font-medium inline-flex items-center gap-1">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i> Limpiar filtros
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-xs uppercase tracking-wide text-sb-mist border-b border-sb-mist/15">
+                    <th class="px-5 py-3 font-medium">Cliente</th>
+                    <th class="px-5 py-3 font-medium">Inicio</th>
+                    <th class="px-5 py-3 font-medium">Fin</th>
+                    <th class="px-5 py-3 font-medium">Estado</th>
+                    <th class="px-5 py-3 font-medium text-right">Periodo de prueba</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="s in filteredSubs()" :key="s.id">
+                    <tr class="border-b border-sb-mist/10 hover:bg-sb-cream/60">
+                      <td class="px-5 py-3.5">
+                        <p class="font-medium text-sb-ink" x-text="s.name"></p>
+                        <p class="text-xs text-sb-mist" x-text="s.email"></p>
+                      </td>
+                      <td class="px-5 py-3.5 font-mono text-sb-mist" x-text="fmtDate(s.start)"></td>
+                      <td class="px-5 py-3.5 font-mono text-sb-mist" x-text="fmtDate(s.end)"></td>
+                      <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1" :class="badge(s.status)">
+                          <span class="w-1.5 h-1.5 rounded-full" :class="dot(s.status)"></span> <span x-text="s.status"></span>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5 text-right">
+                        <button @click="openTrial(s)" class="inline-flex items-center gap-1.5 text-xs font-medium text-sb-gold hover:text-sb-ink border border-sb-gold/40 hover:border-sb-gold rounded-full px-3 py-1.5">
+                          <i data-lucide="hourglass" class="w-3.5 h-3.5"></i> Otorgar prueba
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div x-show="filteredSubs().length===0" class="py-14 text-center">
+              <p class="text-sm text-sb-mist">No encontramos suscripciones con estos filtros.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- TICKETS -->
+        <!-- ===================================================== -->
+        <section x-show="page==='tickets'" x-cloak>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 border-t-4 border-t-sb-ink p-5 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="text-xs text-sb-mist font-medium">Buscar persona o ticket</label>
+                <input type="text" x-model="tf.q" placeholder="Título o nombre" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-ink/20">
+              </div>
+              <div>
+                <label class="text-xs text-sb-mist font-medium">Estado</label>
+                <select x-model="tf.status" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sb-ink/20">
+                  <option value="">Todos los estados</option>
+                  <option value="Abierto">Abierto</option>
+                  <option value="En revisión">En revisión</option>
+                  <option value="Cerrado">Cerrado</option>
+                </select>
+              </div>
+            </div>
+            <button @click="tf={status:'',q:''}" class="mt-3 text-xs text-sb-mist hover:text-sb-clay font-medium inline-flex items-center gap-1">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i> Limpiar filtros
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-sb-mist/15 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-xs uppercase tracking-wide text-sb-mist border-b border-sb-mist/15">
+                    <th class="px-5 py-3 font-medium">Cliente</th>
+                    <th class="px-5 py-3 font-medium">Ticket</th>
+                    <th class="px-5 py-3 font-medium">App</th>
+                    <th class="px-5 py-3 font-medium">Fecha</th>
+                    <th class="px-5 py-3 font-medium">Estado</th>
+                    <th class="px-5 py-3 font-medium text-center">Detalle</th>
+                    <th class="px-5 py-3 font-medium text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="t in filteredTickets()" :key="t.id">
+                    <tr class="border-b border-sb-mist/10 hover:bg-sb-cream/60">
+                      <td class="px-5 py-3.5">
+                        <p class="font-medium text-sb-ink" x-text="t.user"></p>
+                        <p class="text-xs text-sb-mist font-mono">Ticket #<span x-text="t.id"></span></p>
+                      </td>
+                      <td class="px-5 py-3.5 max-w-[200px]">
+                        <p class="text-sb-ink truncate" x-text="t.title"></p>
+                      </td>
+                      <td class="px-5 py-3.5 text-sb-mist" x-text="t.app"></td>
+                      <td class="px-5 py-3.5 font-mono text-sb-mist" x-text="fmtDate(t.date)"></td>
+                      <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1" :class="badge(t.status)">
+                          <span class="w-1.5 h-1.5 rounded-full" :class="dot(t.status)"></span> <span x-text="t.status"></span>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5 text-center">
+                        <button @click="openTicket(t)" class="inline-flex items-center gap-1.5 text-xs font-medium text-sb-ink hover:text-sb-green border border-sb-mist/25 hover:border-sb-green rounded-full px-3 py-1.5">
+                          <i data-lucide="eye" class="w-3.5 h-3.5"></i> Ver
+                        </button>
+                      </td>
+                      <td class="px-5 py-3.5 text-right">
+                        <template x-if="t.status!=='Cerrado'">
+                          <div class="inline-flex gap-1.5">
+                            <button @click="respondTo(t)" class="inline-flex items-center gap-1.5 text-xs font-medium text-sb-green hover:text-sb-greendeep border border-sb-green/30 hover:border-sb-green rounded-full px-3 py-1.5">
+                              <i data-lucide="reply" class="w-3.5 h-3.5"></i> Responder
+                            </button>
+                            <button @click="quickComplete(t)" class="inline-flex items-center gap-1.5 text-xs font-medium text-sb-mist hover:text-sb-ink border border-sb-mist/25 hover:border-sb-ink/40 rounded-full px-3 py-1.5">
+                              <i data-lucide="check" class="w-3.5 h-3.5"></i> Completar
+                            </button>
+                          </div>
+                        </template>
+                        <span x-show="t.status==='Cerrado'" class="inline-flex items-center gap-1 text-xs text-sb-mist font-medium">
+                          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Completado
+                        </span>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div x-show="filteredTickets().length===0" class="py-14 text-center">
+              <p class="text-sm text-sb-mist">No hay tickets que calcen con esta búsqueda.</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: VER COMPROBANTE ============ -->
+  <div x-show="showReceipt" x-cloak class="fixed inset-0 z-40 grid place-items-center bg-black/40 backdrop-blur-sm p-4" @click.self="showReceipt=false"
+       x-transition.opacity>
+    <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden grid md:grid-cols-2" x-show="showReceipt" x-transition.scale.origin.center>
+      <div class="relative bg-sb-ink">
+        <img :src="'https://picsum.photos/seed/' + (selectedPayment?.photoSeed||'x') + '/480/620'" class="w-full h-72 md:h-full object-cover" loading="lazy" alt="Foto del comprobante de pago">
+        <div x-show="justDecided" class="absolute inset-0 grid place-items-center" x-transition.scale>
+          <div class="stamp rounded-full border-4 px-6 py-5 text-center"
+               :class="justDecided==='Aprobado' ? 'border-sb-green text-sb-green bg-white/90' : 'border-sb-clay text-sb-clay bg-white/90'">
+            <i :data-lucide="justDecided==='Aprobado' ? 'check' : 'x'" class="w-6 h-6 mx-auto mb-1"></i>
+            <p class="font-display font-bold uppercase text-sm tracking-wide" x-text="justDecided"></p>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 flex flex-col">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-sb-mist font-mono">Pago #<span x-text="selectedPayment?.id"></span></p>
+            <h3 class="font-display font-semibold text-lg mt-1" x-text="selectedPayment?.name"></h3>
+            <p class="text-sm text-sb-mist" x-text="selectedPayment?.email"></p>
+          </div>
+          <button @click="showReceipt=false" class="text-sb-mist hover:text-sb-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-y-3 mt-5 text-sm">
+          <dt class="text-sb-mist">App</dt><dd class="font-medium" x-text="selectedPayment?.app"></dd>
+          <dt class="text-sb-mist">Monto</dt><dd class="font-mono font-medium" x-text="money(selectedPayment?.amount)"></dd>
+          <dt class="text-sb-mist">Fecha</dt><dd class="font-mono" x-text="fmtDate(selectedPayment?.date)"></dd>
+          <dt class="text-sb-mist">Estado</dt>
+          <dd>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1" :class="badge(selectedPayment?.status)">
+              <span class="w-1.5 h-1.5 rounded-full" :class="dot(selectedPayment?.status)"></span> <span x-text="selectedPayment?.status"></span>
+            </span>
+          </dd>
+        </dl>
+
+        <div x-show="selectedPayment?.note" class="mt-4 bg-sb-clay/5 border border-sb-clay/20 rounded-lg p-3 text-sm text-sb-clay">
+          <p class="text-xs uppercase font-medium tracking-wide mb-1">Motivo de rechazo</p>
+          <p x-text="selectedPayment?.note"></p>
+        </div>
+
+        <div class="mt-auto pt-6 flex gap-2">
+          <button @click="approve()" class="flex-1 bg-sb-green hover:bg-sb-greendeep text-white text-sm font-medium rounded-lg py-2.5 inline-flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Aprobar pago
+          </button>
+          <button @click="askReject()" class="flex-1 border border-sb-clay text-sb-clay hover:bg-sb-clay/5 text-sm font-medium rounded-lg py-2.5 inline-flex items-center justify-center gap-2">
+            <i data-lucide="x" class="w-4 h-4"></i> Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: MOTIVO DE RECHAZO ============ -->
+  <div x-show="showReject" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop-blur-sm p-4" @click.self="showReject=false" x-transition.opacity>
+    <div class="bg-white rounded-2xl max-w-md w-full p-6" x-show="showReject" x-transition.scale.origin.center>
+      <div class="flex items-start justify-between mb-1">
+        <h3 class="font-display font-semibold text-lg">Rechazar pago</h3>
+        <button @click="showReject=false" class="text-sb-mist hover:text-sb-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-sm text-sb-mist mb-4">Escribe el motivo. La persona verá esta nota junto a su pago.</p>
+      <textarea x-model="rejectNote" rows="4" placeholder="Ej: El comprobante no coincide con el monto reportado."
+        class="w-full rounded-lg border border-sb-mist/25 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sb-clay/30"></textarea>
+      <div class="flex gap-2 mt-4">
+        <button @click="showReject=false" class="flex-1 text-sm font-medium text-sb-mist border border-sb-mist/25 rounded-lg py-2.5">Cancelar</button>
+        <button @click="confirmReject()" :disabled="!rejectNote.trim()" :class="rejectNote.trim() ? 'bg-sb-clay hover:bg-sb-clay/90' : 'bg-sb-clay/40 cursor-not-allowed'"
+          class="flex-1 text-white text-sm font-medium rounded-lg py-2.5">Confirmar rechazo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: OTORGAR PRUEBA ============ -->
+  <div x-show="showTrial" x-cloak class="fixed inset-0 z-40 grid place-items-center bg-black/40 backdrop-blur-sm p-4" @click.self="showTrial=false" x-transition.opacity>
+    <div class="bg-white rounded-2xl max-w-md w-full p-6" x-show="showTrial" x-transition.scale.origin.center>
+      <div class="flex items-start justify-between mb-1">
+        <h3 class="font-display font-semibold text-lg">Otorgar periodo de prueba</h3>
+        <button @click="showTrial=false" class="text-sb-mist hover:text-sb-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-sm text-sb-mist mb-4">Para <span class="font-medium text-sb-ink" x-text="selectedSub?.name"></span> · empieza hoy.</p>
+
+      <label class="text-xs text-sb-mist font-medium">Días de prueba</label>
+      <input type="number" min="1" max="365" x-model.number="trialDays" class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sb-gold/40">
+
+      <div class="flex gap-2 mt-3">
+        <template x-for="n in [7,15,30,60]" :key="n">
+          <button @click="trialDays=n" class="text-xs font-medium px-3 py-1.5 rounded-full border"
+            :class="trialDays===n ? 'bg-sb-gold text-sb-ink border-sb-gold' : 'border-sb-mist/25 text-sb-mist hover:border-sb-gold'"
+            x-text="n + ' días'"></button>
+        </template>
+      </div>
+
+      <p class="text-xs text-sb-mist mt-4 bg-sb-cream rounded-lg px-3 py-2.5">
+        Nueva vigencia: <span class="font-mono font-medium text-sb-ink" x-text="fmtDate(todayPlus(0)) + ' → ' + fmtDate(todayPlus(trialDays))"></span>
+      </p>
+
+      <div class="flex gap-2 mt-5">
+        <button @click="showTrial=false" class="flex-1 text-sm font-medium text-sb-mist border border-sb-mist/25 rounded-lg py-2.5">Cancelar</button>
+        <button @click="applyTrial()" class="flex-1 bg-sb-gold hover:bg-sb-gold/90 text-sb-ink text-sm font-medium rounded-lg py-2.5">Activar prueba</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: DETALLE DE TICKET ============ -->
+  <div x-show="showTicket" x-cloak class="fixed inset-0 z-40 grid place-items-center bg-black/40 backdrop-blur-sm p-4" @click.self="showTicket=false" x-transition.opacity>
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto" x-show="showTicket" x-transition.scale.origin.center>
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-sb-mist font-mono">Ticket #<span x-text="selectedTicket?.id"></span></p>
+          <h3 class="font-display font-semibold text-lg mt-1" x-text="selectedTicket?.title"></h3>
+          <p class="text-sm text-sb-mist mt-0.5" x-text="selectedTicket?.user + ' · ' + selectedTicket?.app + ' · ' + fmtDate(selectedTicket?.date)"></p>
+        </div>
+        <button @click="showTicket=false" class="text-sb-mist hover:text-sb-ink shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 mt-3" :class="badge(selectedTicket?.status)">
+        <span class="w-1.5 h-1.5 rounded-full" :class="dot(selectedTicket?.status)"></span> <span x-text="selectedTicket?.status"></span>
+      </span>
+
+      <p class="text-sm text-sb-ink/80 mt-4 leading-relaxed" x-text="selectedTicket?.description"></p>
+
+      <img x-show="selectedTicket?.photoSeed" :src="'https://picsum.photos/seed/' + (selectedTicket?.photoSeed||'x') + '/600/340'"
+        class="w-full h-44 object-cover rounded-lg mt-4" loading="lazy" alt="Foto adjunta del ticket">
+      <p x-show="!selectedTicket?.photoSeed" class="text-xs text-sb-mist mt-4 bg-sb-cream rounded-lg px-3 py-2.5">Sin foto adjunta.</p>
+
+      <button @click="showTicket=false" class="w-full mt-6 border border-sb-mist/25 text-sb-ink text-sm font-medium rounded-lg py-2.5 hover:bg-sb-cream">
+        Cerrar
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: RESPONDER TICKET ============ -->
+  <div x-show="showRespond" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop-blur-sm p-4" @click.self="showRespond=false" x-transition.opacity>
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 max-h-[85vh] overflow-y-auto" x-show="showRespond" x-transition.scale.origin.center>
+      <div class="flex items-start justify-between mb-1">
+        <h3 class="font-display font-semibold text-lg">Responder</h3>
+        <button @click="showRespond=false" class="text-sb-mist hover:text-sb-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-sm text-sb-mist" x-text="selectedTicket?.title"></p>
+
+      <div class="mt-4" x-show="(selectedTicket?.notes||[]).length>0">
+        <p class="text-xs uppercase tracking-wide text-sb-mist font-medium mb-2">Historial</p>
+        <div class="space-y-2 max-h-36 overflow-y-auto">
+          <template x-for="(n, i) in selectedTicket?.notes || []" :key="i">
+            <div class="bg-sb-cream rounded-lg px-3 py-2 text-sm">
+              <div class="flex justify-between text-xs text-sb-mist font-mono mb-1">
+                <span x-text="n.author"></span><span x-text="fmtDate(n.date)"></span>
+              </div>
+              <p x-text="n.text"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <label class="text-xs text-sb-mist font-medium mt-4 block">Tu respuesta</label>
+      <textarea x-model="respondNote" rows="4" placeholder="Escribe tu respuesta..."
+        class="mt-1 w-full rounded-lg border border-sb-mist/25 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sb-green/30"></textarea>
+      <div class="flex gap-2 mt-4">
+        <button @click="sendNote(false)" :disabled="!respondNote.trim()"
+          class="flex-1 text-sm font-medium rounded-lg py-2.5 border" :class="respondNote.trim() ? 'border-sb-mist/25 text-sb-ink hover:bg-sb-cream' : 'border-sb-mist/15 text-sb-mist/40 cursor-not-allowed'">
+          Dejar nota
+        </button>
+        <button @click="sendNote(true)" :disabled="!respondNote.trim()"
+          :class="respondNote.trim() ? 'bg-sb-green hover:bg-sb-greendeep' : 'bg-sb-green/40 cursor-not-allowed'"
+          class="flex-1 text-white text-sm font-medium rounded-lg py-2.5">
+          Completar ticket
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOAST ============ -->
+  <div x-show="toastOpen" x-cloak x-transition class="fixed bottom-5 md:bottom-6 right-1/2 translate-x-1/2 md:right-6 md:translate-x-0 z-50 bg-sb-ink text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+    <i data-lucide="check-circle-2" class="w-4 h-4 text-sb-gold"></i> <span x-text="toastMsg"></span>
+  </div>
+
+<script>
+function opsApp() {
+  return {
+    page: 'pagos',
+    apps: ['Café Go', 'Reserve Club', 'Siren Rewards', 'Partner App'],
+
+    payments: [
+      {id:1, name:'Mariana Castillo', email:'mariana.castillo@gmail.com', app:'Café Go', amount:129.90, date:'2026-06-18', status:'Pendiente', photoSeed:'rec1', note:''},
+      {id:2, name:'Jorge Quispe', email:'jorge.quispe@gmail.com', app:'Reserve Club', amount:349.00, date:'2026-06-17', status:'Pendiente', photoSeed:'rec2', note:''},
+      {id:3, name:'Lucía Fernández', email:'lucia.fernandez@gmail.com', app:'Siren Rewards', amount:79.50, date:'2026-06-15', status:'Aprobado', photoSeed:'rec3', note:''},
+      {id:4, name:'Renzo Salazar', email:'renzo.salazar@gmail.com', app:'Partner App', amount:210.00, date:'2026-06-14', status:'Rechazado', photoSeed:'rec4', note:'El comprobante no coincide con el monto reportado.'},
+      {id:5, name:'Camila Ríos', email:'camila.rios@gmail.com', app:'Café Go', amount:59.90, date:'2026-06-12', status:'Pendiente', photoSeed:'rec5', note:''},
+      {id:6, name:'Diego Paredes', email:'diego.paredes@gmail.com', app:'Reserve Club', amount:480.00, date:'2026-06-10', status:'Aprobado', photoSeed:'rec6', note:''},
+      {id:7, name:'Valeria Núñez', email:'valeria.nunez@gmail.com', app:'Siren Rewards', amount:99.00, date:'2026-06-08', status:'Pendiente', photoSeed:'rec7', note:''},
+      {id:8, name:'Andrés Torres', email:'andres.torres@gmail.com', app:'Partner App', amount:150.00, date:'2026-06-05', status:'Rechazado', photoSeed:'rec8', note:'Foto borrosa, se solicitó reenviar.'},
+    ],
+
+    subscriptions: [
+      {id:1, name:'Mariana Castillo', email:'mariana.castillo@gmail.com', start:'2026-05-01', end:'2026-07-01', status:'Activa'},
+      {id:2, name:'Jorge Quispe', email:'jorge.quispe@gmail.com', start:'2026-06-10', end:'2026-06-25', status:'Prueba'},
+      {id:3, name:'Lucía Fernández', email:'lucia.fernandez@gmail.com', start:'2026-03-01', end:'2026-06-01', status:'Vencida'},
+      {id:4, name:'Renzo Salazar', email:'renzo.salazar@gmail.com', start:'2026-06-01', end:'2026-12-01', status:'Activa'},
+      {id:5, name:'Camila Ríos', email:'camila.rios@gmail.com', start:'2026-06-15', end:'2026-06-22', status:'Prueba'},
+      {id:6, name:'Diego Paredes', email:'diego.paredes@gmail.com', start:'2026-01-10', end:'2026-04-10', status:'Vencida'},
+    ],
+
+    tickets: [
+      {id:101, title:'No puedo canjear mis estrellas', user:'Mariana Castillo', app:'Siren Rewards', status:'Abierto', date:'2026-06-18', description:'Intenté canjear 150 estrellas por una bebida y la app me marca error 502.', photoSeed:'tic1', notes:[]},
+      {id:102, title:'Cobro duplicado en la suscripción', user:'Jorge Quispe', app:'Reserve Club', status:'En revisión', date:'2026-06-16', description:'Me llegaron dos cargos el mismo día por el plan mensual.', photoSeed:'tic2', notes:[{author:'Soporte', text:'Estamos revisando con el área de pagos.', date:'2026-06-17'}]},
+      {id:103, title:'La foto del comprobante no carga', user:'Camila Ríos', app:'Café Go', status:'Cerrado', date:'2026-06-10', description:'Subí la foto tres veces y no se guarda en mi perfil.', photoSeed:null, notes:[{author:'Soporte', text:'Se resolvió actualizando la app a la última versión.', date:'2026-06-11'}]},
+      {id:104, title:'Quiero cambiar mi correo registrado', user:'Andrés Torres', app:'Partner App', status:'Abierto', date:'2026-06-13', description:'Necesito actualizar el correo porque ya no tengo acceso al anterior.', photoSeed:null, notes:[]},
+    ],
+
+    // filtros
+    pf: {app:'', status:'', from:'', to:'', q:''},
+    sf: {q:'', from:'', to:''},
+    tf: {status:'', q:''},
+
+    // modales
+    showReceipt:false, selectedPayment:null, justDecided:null,
+    showReject:false, rejectNote:'',
+    showTrial:false, selectedSub:null, trialDays:30,
+    showTicket:false, selectedTicket:null,
+    showRespond:false, respondNote:'',
+    toastOpen:false, toastMsg:'',
+
+    init() {
+      window.addEventListener('hashchange', () => this.setPageFromHash());
+      this.setPageFromHash();
+      this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+      this.$watch('page', () => this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }));
+      setInterval(() => { if (window.lucide) lucide.createIcons(); }, 400);
+    },
+    setPageFromHash(){
+      const h = location.hash.replace('#','') || 'pagos';
+      this.page = ['pagos','suscripciones','tickets'].includes(h) ? h : 'pagos';
+    },
+    go(p){ location.hash = p; },
+
+    breadcrumb(){
+      return { pagos:'Monitoreo de pagos', suscripciones:'Gestión de cuentas', tickets:'Soporte al cliente' }[this.page];
+    },
+    pageTitle(){
+      return { pagos:'Pagos', suscripciones:'Suscripciones', tickets:'Tickets' }[this.page];
+    },
+    headerChip(){
+      if(this.page==='pagos') return this.pendingPayments + ' pendientes de revisión';
+      if(this.page==='suscripciones') return this.trialSubs + ' en periodo de prueba';
+      return this.openTickets + ' tickets abiertos';
+    },
+
+    get pendingPayments(){ return this.payments.filter(p=>p.status==='Pendiente').length; },
+    get trialSubs(){ return this.subscriptions.filter(s=>s.status==='Prueba').length; },
+    get openTickets(){ return this.tickets.filter(t=>t.status!=='Cerrado').length; },
+
+    filteredPayments(){
+      return this.payments.filter(p=>{
+        if(this.pf.app && p.app!==this.pf.app) return false;
+        if(this.pf.status && p.status!==this.pf.status) return false;
+        if(this.pf.from && p.date < this.pf.from) return false;
+        if(this.pf.to && p.date > this.pf.to) return false;
+        if(this.pf.q){
+          const q=this.pf.q.toLowerCase();
+          if(!p.name.toLowerCase().includes(q) && !p.email.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      }).sort((a,b)=> b.date.localeCompare(a.date));
+    },
+    filteredSubs(){
+      return this.subscriptions.filter(s=>{
+        if(this.sf.q){
+          const q=this.sf.q.toLowerCase();
+          if(!s.name.toLowerCase().includes(q) && !s.email.toLowerCase().includes(q)) return false;
+        }
+        if(this.sf.from && s.end < this.sf.from) return false;
+        if(this.sf.to && s.start > this.sf.to) return false;
+        return true;
+      });
+    },
+    filteredTickets(){
+      return this.tickets.filter(t=>{
+        if(this.tf.status && t.status!==this.tf.status) return false;
+        if(this.tf.q){
+          const q=this.tf.q.toLowerCase();
+          if(!t.title.toLowerCase().includes(q) && !t.user.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      }).sort((a,b)=> b.date.localeCompare(a.date));
+    },
+
+    money(n){ return n==null ? '' : 'S/ ' + Number(n).toFixed(2); },
+    fmtDate(d){
+      if(!d) return '—';
+      return new Date(d+'T00:00:00').toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+    },
+    todayPlus(days){
+      const d = new Date(); d.setDate(d.getDate()+Number(days||0));
+      return d.toISOString().slice(0,10);
+    },
+
+    badge(status){
+      const map = {
+        'Pendiente':'bg-amber-50 text-amber-700 ring-amber-200',
+        'Aprobado':'bg-emerald-50 text-emerald-700 ring-emerald-200',
+        'Rechazado':'bg-rose-50 text-rose-700 ring-rose-200',
+        'Activa':'bg-emerald-50 text-emerald-700 ring-emerald-200',
+        'Prueba':'bg-amber-50 text-amber-700 ring-amber-200',
+        'Vencida':'bg-stone-100 text-stone-500 ring-stone-200',
+        'Abierto':'bg-amber-50 text-amber-700 ring-amber-200',
+        'En revisión':'bg-sky-50 text-sky-700 ring-sky-200',
+        'Cerrado':'bg-stone-100 text-stone-500 ring-stone-200',
+      };
+      return map[status] || 'bg-stone-100 text-stone-600 ring-stone-200';
+    },
+    dot(status){
+      const map = {
+        'Pendiente':'bg-amber-500','Aprobado':'bg-emerald-600','Rechazado':'bg-rose-600',
+        'Activa':'bg-emerald-600','Prueba':'bg-amber-500','Vencida':'bg-stone-400',
+        'Abierto':'bg-amber-500','En revisión':'bg-sky-500','Cerrado':'bg-stone-400',
+      };
+      return map[status] || 'bg-stone-400';
+    },
+
+    // ---- Pagos ----
+    openReceipt(p){ this.selectedPayment=p; this.justDecided=null; this.showReceipt=true; },
+    approve(){
+      this.selectedPayment.status='Aprobado'; this.selectedPayment.note='';
+      this.justDecided='Aprobado'; this.toast('Pago aprobado');
+      setTimeout(()=>{ this.showReceipt=false; }, 900);
+    },
+    askReject(){ this.rejectNote=''; this.showReject=true; },
+    confirmReject(){
+      if(!this.rejectNote.trim()) return;
+      this.selectedPayment.status='Rechazado'; this.selectedPayment.note=this.rejectNote;
+      this.showReject=false; this.justDecided='Rechazado'; this.toast('Pago rechazado');
+      setTimeout(()=>{ this.showReceipt=false; }, 900);
+    },
+
+    // ---- Suscripciones ----
+    openTrial(s){ this.selectedSub=s; this.trialDays=30; this.showTrial=true; },
+    applyTrial(){
+      this.selectedSub.start = this.todayPlus(0);
+      this.selectedSub.end = this.todayPlus(this.trialDays);
+      this.selectedSub.status = 'Prueba';
+      this.showTrial=false;
+      this.toast('Prueba de ' + this.trialDays + ' días activada');
+    },
+
+    // ---- Tickets ----
+    openTicket(t){ this.selectedTicket=t; this.showTicket=true; },
+    openRespond(){ this.respondNote=''; this.showRespond=true; },
+    respondTo(t){ this.selectedTicket=t; this.openRespond(); },
+    quickComplete(t){ t.status='Cerrado'; this.toast('Ticket marcado como completado'); },
+    sendNote(closeIt){
+      if(!this.respondNote.trim()) return;
+      this.selectedTicket.notes.push({author:'Tú', text:this.respondNote, date:this.todayPlus(0)});
+      if(closeIt) this.selectedTicket.status='Cerrado';
+      else if(this.selectedTicket.status==='Abierto') this.selectedTicket.status='En revisión';
+      this.showRespond=false;
+      this.toast(closeIt ? 'Ticket cerrado' : 'Nota agregada');
+    },
+
+    closeTop(){
+      if(this.showReject){ this.showReject=false; return; }
+      if(this.showRespond){ this.showRespond=false; return; }
+      if(this.showReceipt){ this.showReceipt=false; return; }
+      if(this.showTrial){ this.showTrial=false; return; }
+      if(this.showTicket){ this.showTicket=false; return; }
+    },
+
+    toast(msg){
+      this.toastMsg=msg; this.toastOpen=true;
+      clearTimeout(this._t);
+      this._t = setTimeout(()=>{ this.toastOpen=false; }, 2400);
+    },
+  }
+}
+</script>
+</body>
+</html>

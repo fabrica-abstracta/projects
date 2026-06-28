@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comanda — Cocina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js"></script>
+<style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="kitchen-bg min-h-screen font-sans" x-data="cocinaApp()" x-init="init()">
+
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-[#1C1917] text-[#FAF6ED] border-b border-white/10">
+  <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="w-8 h-8 rounded-full border border-[#FAF6ED]/25 flex items-center justify-center hover:bg-[#FAF6ED]/10 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <div class="font-mono text-[10px] tracking-widest text-[#E85D2C]">MÓDULO 03</div>
+        <h1 class="font-display text-lg font-bold leading-none">Cocina — Tablero en vivo</h1>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="font-mono text-xs text-[#FAF6ED]/40" x-text="relojTexto"></span>
+      <select x-model="localId" class="focus-ring bg-[#FAF6ED]/10 border border-[#FAF6ED]/25 rounded px-3 py-1.5 text-sm font-medium">
+        <template x-for="l in db.locales" :key="l.id">
+          <option :value="l.id" x-text="l.nombre"></option>
+        </template>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1600px] mx-auto px-4 md:px-6 py-6">
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+    <!-- Columna: NUEVO -->
+    <section>
+      <div class="flex items-center justify-between mb-3 px-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#E85D2C]"></span>
+          <h2 class="font-display font-bold text-[#FAF6ED]">Nuevo</h2>
+        </div>
+        <span class="font-mono text-xs text-[#FAF6ED]/40" x-text="col('nuevo').length"></span>
+      </div>
+      <div class="space-y-3 min-h-[200px]">
+        <template x-for="ped in col('nuevo')" :key="ped.id">
+          <div class="ticket p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-sm font-bold" x-text="ped.id"></span>
+              <span class="badge" :class="badgeClass(ped.origen)" x-text="origenLabel(ped)"></span>
+            </div>
+            <div class="font-mono text-[10px] text-[#3A342C]/50 mb-3" x-text="fmtHoraRelativa(ped.hora)"></div>
+            <ul class="space-y-1.5 mb-4">
+              <template x-for="(it,i) in ped.items" :key="i">
+                <li class="text-sm">
+                  <span class="font-semibold" x-text="it.cant+'× '+nombreProd(it.prodId)"></span>
+                  <div x-show="it.nota" class="text-xs text-[#C44A1F] italic" x-text="'— '+it.nota"></div>
+                </li>
+              </template>
+            </ul>
+            <button @click="avanzar(ped)" class="btn-ember w-full rounded py-2 text-xs font-bold flex items-center justify-center gap-1.5 focus-ring">
+              Empezar a preparar <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </template>
+        <div x-show="col('nuevo').length===0" class="ticket p-6 text-center font-mono text-xs text-[#3A342C]/40">Sin pedidos nuevos.</div>
+      </div>
+    </section>
+
+    <!-- Columna: PREPARANDO -->
+    <section>
+      <div class="flex items-center justify-between mb-3 px-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#46647A]"></span>
+          <h2 class="font-display font-bold text-[#FAF6ED]">En preparación</h2>
+        </div>
+        <span class="font-mono text-xs text-[#FAF6ED]/40" x-text="col('preparando').length"></span>
+      </div>
+      <div class="space-y-3 min-h-[200px]">
+        <template x-for="ped in col('preparando')" :key="ped.id">
+          <div class="ticket p-4 border-l-[3px]" style="border-left-color:#46647A">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-sm font-bold" x-text="ped.id"></span>
+              <span class="badge" :class="badgeClass(ped.origen)" x-text="origenLabel(ped)"></span>
+            </div>
+            <div class="font-mono text-[10px] text-[#3A342C]/50 mb-3" x-text="fmtHoraRelativa(ped.hora)"></div>
+            <ul class="space-y-1.5 mb-4">
+              <template x-for="(it,i) in ped.items" :key="i">
+                <li class="text-sm">
+                  <span class="font-semibold" x-text="it.cant+'× '+nombreProd(it.prodId)"></span>
+                  <div x-show="it.nota" class="text-xs text-[#C44A1F] italic" x-text="'— '+it.nota"></div>
+                </li>
+              </template>
+            </ul>
+            <div class="flex gap-2">
+              <button @click="retroceder(ped)" class="w-10 rounded border border-[#DDD3BE] hover:bg-[#E9E1CC] flex items-center justify-center focus-ring">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+              </button>
+              <button @click="avanzar(ped)" class="btn-sage flex-1 rounded py-2 text-xs font-bold flex items-center justify-center gap-1.5 focus-ring">
+                Marcar listo <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </template>
+        <div x-show="col('preparando').length===0" class="ticket p-6 text-center font-mono text-xs text-[#3A342C]/40">Nada en preparación.</div>
+      </div>
+    </section>
+
+    <!-- Columna: LISTO -->
+    <section>
+      <div class="flex items-center justify-between mb-3 px-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#6F8F63]"></span>
+          <h2 class="font-display font-bold text-[#FAF6ED]">Listo</h2>
+        </div>
+        <span class="font-mono text-xs text-[#FAF6ED]/40" x-text="col('listo').length"></span>
+      </div>
+      <div class="space-y-3 min-h-[200px]">
+        <template x-for="ped in col('listo')" :key="ped.id">
+          <div class="ticket p-4 opacity-80">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-sm font-bold" x-text="ped.id"></span>
+              <span class="badge" :class="badgeClass(ped.origen)" x-text="origenLabel(ped)"></span>
+            </div>
+            <ul class="space-y-1 mb-3">
+              <template x-for="(it,i) in ped.items" :key="i">
+                <li class="text-sm text-[#3A342C]/70" x-text="it.cant+'× '+nombreProd(it.prodId)"></li>
+              </template>
+            </ul>
+            <button @click="entregar(ped)" class="w-full rounded py-2 text-xs font-bold border border-[#DDD3BE] hover:bg-[#E9E1CC] flex items-center justify-center gap-1.5 focus-ring">
+              <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Entregado
+            </button>
+          </div>
+        </template>
+        <div x-show="col('listo').length===0" class="ticket p-6 text-center font-mono text-xs text-[#3A342C]/40">Nada listo por ahora.</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+function cocinaApp(){
+  return {
+    db:{locales:[],mesas:[],productos:[],pedidos:[]},
+    localId:'L1',
+    relojTexto:'',
+    init(){
+      this.db = loadDB();
+      this.localId = this.db.locales[0].id;
+      lucide.createIcons();
+      this.tick();
+      setInterval(()=>this.tick(), 15000);
+    },
+    tick(){
+      this.relojTexto = new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+      this.db = loadDB(); // refresca por si el POS creó pedidos en otra pestaña
+      this.$nextTick(()=>lucide.createIcons());
+    },
+    col(estado){
+      return this.db.pedidos
+        .filter(p=>p.localId===this.localId && p.estado===estado)
+        .sort((a,b)=>a.hora-b.hora);
+    },
+    nombreProd(id){ const p=this.db.productos.find(x=>x.id===id); return p?p.nombre:id; },
+    origenLabel(ped){
+      if(ped.origen==='online') return 'ONLINE · '+ (ped.cliente||'');
+      if(ped.origen==='llevar') return 'LLEVAR · '+ (ped.cliente||'');
+      const m = this.db.mesas.find(x=>x.id===ped.mesaId);
+      return 'MESA '+(m?m.numero:'—');
+    },
+    badgeClass(origen){
+      return origen==='online' ? 'badge-online' : origen==='llevar' ? 'badge-llevar' : 'badge-local';
+    },
+    avanzar(ped){
+      const orden=['nuevo','preparando','listo'];
+      const i=orden.indexOf(ped.estado);
+      if(i<orden.length-1){ ped.estado=orden[i+1]; saveDB(this.db); this.$nextTick(()=>lucide.createIcons()); }
+    },
+    retroceder(ped){
+      const orden=['nuevo','preparando','listo'];
+      const i=orden.indexOf(ped.estado);
+      if(i>0){ ped.estado=orden[i-1]; saveDB(this.db); this.$nextTick(()=>lucide.createIcons()); }
+    },
+    entregar(ped){
+      this.db.pedidos = this.db.pedidos.filter(p=>p.id!==ped.id);
+      saveDB(this.db);
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded', ()=> lucide.createIcons());
+</script>
+</body>
+</html>

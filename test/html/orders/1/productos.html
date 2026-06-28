@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTO · Productos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen pb-20">
+
+<header class="resto-topbar sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[var(--copper)] flex items-center justify-center">
+        <i class="fa-solid fa-fire text-[var(--carbon-950)] text-sm"></i>
+      </div>
+      <span class="f-display text-lg tracking-widest">RESTO</span>
+    </div>
+    <nav class="flex items-center gap-6 text-sm f-display tracking-wide">
+      <a href="index.html" class="nav-link pb-1">Panel</a>
+      <a href="productos.html" class="nav-link active pb-1">Productos</a>
+      <a href="pos.html" class="nav-link pb-1">Punto de Venta</a>
+      <a href="cocina.html" class="nav-link pb-1">Cocina</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-10">
+  <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+    <div>
+      <p class="f-mono text-xs text-[var(--copper-dark)] tracking-widest mb-1" id="local-label">LOCAL</p>
+      <h1 class="f-display text-3xl">Productos &amp; stock del día</h1>
+      <p class="text-[var(--ink-soft)] mt-1 max-w-xl">Marca el interruptor cuando un producto se agote para que desaparezca del punto de venta al instante. El stock se reinicia cada nuevo día.</p>
+    </div>
+    <button onclick="abrirModal()" class="btn-copper rounded-lg px-5 py-3 f-display text-sm tracking-wide flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Nuevo producto
+    </button>
+  </div>
+
+  <!-- Filtros de categoría -->
+  <div class="flex gap-2 flex-wrap mb-6" id="filtros-cat"></div>
+
+  <div id="productos-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+</main>
+
+<!-- Modal crear/editar producto -->
+<div id="modal" class="fixed inset-0 bg-[var(--carbon-950)]/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-[var(--paper)] rounded-2xl w-full max-w-lg p-6 md:p-8 ticket-edge">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="f-display text-xl" id="modal-titulo">Nuevo producto</h2>
+      <button onclick="cerrarModal()" class="text-[var(--ink-soft)] hover:text-[var(--ink)]"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="form-producto" class="space-y-4">
+      <input type="hidden" id="p-id">
+      <div>
+        <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">NOMBRE</label>
+        <input required id="p-nombre" type="text" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="Ej: Ceviche Clásico">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">CATEGORÍA</label>
+          <select id="p-categoria" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]">
+            <option>Entradas</option><option>Fondos</option><option>Bebidas</option><option>Postres</option>
+          </select>
+        </div>
+        <div>
+          <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">PRECIO (S/)</label>
+          <input required id="p-precio" type="number" min="0" step="0.5" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="0.00">
+        </div>
+      </div>
+      <div>
+        <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">DESCRIPCIÓN</label>
+        <textarea id="p-descripcion" rows="2" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="Ingredientes o detalle que verá el mesero..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">ÍCONO (emoji)</label>
+          <input id="p-emoji" type="text" maxlength="2" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="🍽️">
+        </div>
+        <div>
+          <label class="f-mono text-xs text-[var(--ink-soft)] tracking-wide">STOCK DE HOY</label>
+          <input id="p-stock" type="number" min="0" class="w-full mt-1 border border-[var(--line)] rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--copper)]" placeholder="0">
+        </div>
+      </div>
+      <label class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="p-activo" checked class="w-4 h-4 accent-[var(--copper)]">
+        <span class="text-sm">Disponible hoy</span>
+      </label>
+      <div class="flex justify-between items-center pt-3">
+        <button type="button" id="btn-eliminar" onclick="eliminarProducto()" class="hidden text-[var(--ember)] text-sm f-display tracking-wide"><i class="fa-solid fa-trash mr-1"></i>Eliminar</button>
+        <div class="flex gap-3 ml-auto">
+          <button type="button" onclick="cerrarModal()" class="px-4 py-2 rounded-lg border border-[var(--line)] text-sm f-display">Cancelar</button>
+          <button type="submit" class="btn-copper px-5 py-2 rounded-lg text-sm f-display">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  let filtroActual = 'Todas';
+
+  function render(){
+    const localId = RESTO_DB.getLocalActivo();
+    const locales = RESTO_DB.getLocales();
+    const loc = locales.find(l => l.id === localId);
+    document.getElementById('local-label').textContent = loc ? loc.nombre.toUpperCase() : '';
+
+    let productos = RESTO_DB.getProductos(localId);
+    const cats = ['Todas', ...new Set(productos.map(p => p.categoria))];
+    document.getElementById('filtros-cat').innerHTML = cats.map(c => `
+      <button onclick="filtrar('${c}')" class="px-4 py-1.5 rounded-full text-sm f-display tracking-wide border transition ${filtroActual===c ? 'bg-[var(--carbon-950)] text-[var(--cream)] border-[var(--carbon-950)]' : 'border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--copper)]'}">${c}</button>
+    `).join('');
+
+    if(filtroActual !== 'Todas') productos = productos.filter(p => p.categoria === filtroActual);
+
+    const grid = document.getElementById('productos-grid');
+    if(productos.length === 0){
+      grid.innerHTML = `<div class="col-span-full text-center py-16 text-[var(--ink-soft)]">
+        <i class="fa-solid fa-plate-wheat text-3xl mb-3"></i>
+        <p class="f-display">Aún no hay productos en esta categoría</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = productos.map(p => `
+      <div class="card-hover rounded-xl bg-white border border-[var(--line)] overflow-hidden ${!p.activoHoy ? 'opacity-60' : ''}">
+        <div class="p-5 pb-3">
+          <div class="flex items-start justify-between">
+            <span class="text-3xl">${p.emoji || '🍽️'}</span>
+            <label class="relative inline-flex items-center cursor-pointer" title="Disponible hoy">
+              <input type="checkbox" class="sr-only peer" ${p.activoHoy ? 'checked':''} onchange="toggle('${p.id}')">
+              <div class="w-10 h-6 bg-[var(--line)] peer-checked:bg-[var(--sage)] rounded-full transition relative">
+                <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-4" style="transform:translateX(${p.activoHoy?'16px':'0'})"></div>
+              </div>
+            </label>
+          </div>
+          <h3 class="f-display text-base mt-2">${p.nombre}</h3>
+          <p class="text-xs text-[var(--ink-soft)] mt-1 line-clamp-2">${p.descripcion || ''}</p>
+        </div>
+        <div class="flex items-center justify-between px-5 py-3 border-t border-[var(--line)] bg-[var(--paper)]">
+          <span class="f-mono font-semibold">S/ ${Number(p.precio).toFixed(2)}</span>
+          <span class="badge ${p.stockHoy > 5 ? 'badge-listo' : p.stockHoy > 0 ? 'badge-preparacion' : 'badge-pendiente'}">
+            <i class="fa-solid fa-box"></i> ${p.stockHoy > 0 ? p.stockHoy + ' und.' : 'AGOTADO'}
+          </span>
+        </div>
+        <button onclick='editar(${JSON.stringify(p).replace(/'/g,"&apos;")})' class="w-full py-2 text-xs f-display tracking-wide text-[var(--copper-dark)] hover:bg-[var(--paper)] border-t border-[var(--line)]">
+          <i class="fa-solid fa-pen mr-1"></i> EDITAR
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function filtrar(c){ filtroActual = c; render(); }
+  function toggle(id){ RESTO_DB.toggleStock(id); render(); }
+
+  function abrirModal(){
+    document.getElementById('form-producto').reset();
+    document.getElementById('p-id').value = '';
+    document.getElementById('modal-titulo').textContent = 'Nuevo producto';
+    document.getElementById('btn-eliminar').classList.add('hidden');
+    document.getElementById('p-activo').checked = true;
+    document.getElementById('modal').classList.remove('hidden');
+    document.getElementById('modal').classList.add('flex');
+  }
+  function editar(p){
+    document.getElementById('p-id').value = p.id;
+    document.getElementById('p-nombre').value = p.nombre;
+    document.getElementById('p-categoria').value = p.categoria;
+    document.getElementById('p-precio').value = p.precio;
+    document.getElementById('p-descripcion').value = p.descripcion || '';
+    document.getElementById('p-emoji').value = p.emoji || '';
+    document.getElementById('p-stock').value = p.stockHoy;
+    document.getElementById('p-activo').checked = p.activoHoy;
+    document.getElementById('modal-titulo').textContent = 'Editar producto';
+    document.getElementById('btn-eliminar').classList.remove('hidden');
+    document.getElementById('modal').classList.remove('hidden');
+    document.getElementById('modal').classList.add('flex');
+  }
+  function cerrarModal(){
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('modal').classList.remove('flex');
+  }
+  function eliminarProducto(){
+    const id = document.getElementById('p-id').value;
+    if(id && confirm('¿Eliminar este producto definitivamente?')){
+      RESTO_DB.deleteProducto(id);
+      cerrarModal(); render();
+    }
+  }
+
+  document.getElementById('form-producto').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = document.getElementById('p-id').value;
+    const prod = {
+      id: id || undefined,
+      localId: RESTO_DB.getLocalActivo(),
+      nombre: document.getElementById('p-nombre').value,
+      categoria: document.getElementById('p-categoria').value,
+      precio: parseFloat(document.getElementById('p-precio').value),
+      descripcion: document.getElementById('p-descripcion').value,
+      emoji: document.getElementById('p-emoji').value || '🍽️',
+      stockHoy: parseInt(document.getElementById('p-stock').value) || 0,
+      activoHoy: document.getElementById('p-activo').checked,
+    };
+    if(!prod.id) prod.id = 'P' + Date.now();
+    RESTO_DB.saveProducto(prod);
+    cerrarModal(); render();
+  });
+
+  render();
+</script>
+</body>
+</html>

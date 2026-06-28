@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luna — Tu ciclo, tu mundo</title>
+
+<!-- CDNs -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<style>
+/* ===== TOKENS ===== */
+:root {
+  --rose-deep:   #8B3A62;
+  --rose-mid:    #C4607E;
+  --coral:       #E8788A;
+  --lilac:       #C9A8D4;
+  --lilac-light: #EDE0F5;
+  --cream:       #FFF8F0;
+  --bg:          #FDF0F5;
+  --white:       #FFFFFF;
+  --text:        #2D1B2E;
+  --text-muted:  #8E7492;
+  --border:      #EDD8E8;
+  --success:     #5BAD8C;
+  --warning:     #E8A45A;
+  --info:        #6BA3C8;
+  --sidebar-w:   260px;
+  --header-h:    64px;
+  --radius:      16px;
+  --radius-sm:   10px;
+  --shadow:      0 4px 24px rgba(139,58,98,0.10);
+  --shadow-lg:   0 8px 40px rgba(139,58,98,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 200;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 2px 0 20px rgba(139,58,98,0.07);
+}
+
+.sidebar-brand {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-brand .logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-brand .logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--rose-deep), var(--coral));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff;
+}
+.sidebar-brand .logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--rose-deep);
+  letter-spacing: -0.5px;
+}
+.sidebar-brand .logo-sub {
+  font-size: 10px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-top: 1px;
+}
+
+/* Cycle ring in sidebar */
+.sidebar-cycle {
+  margin: 20px 16px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.cycle-ring-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.cycle-ring-wrap canvas { display: block; }
+.cycle-ring-label {
+  position: absolute; text-align: center;
+}
+.cycle-ring-label .day-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; color: var(--rose-deep);
+  line-height: 1;
+}
+.cycle-ring-label .day-txt {
+  font-size: 10px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.cycle-phase-badge {
+  margin-top: 10px;
+  display: inline-block;
+  background: linear-gradient(90deg, var(--lilac-light), #fce4ec);
+  color: var(--rose-deep);
+  font-size: 11px; font-weight: 600;
+  padding: 4px 12px; border-radius: 20px;
+  letter-spacing: .5px;
+}
+
+.sidebar-nav { flex: 1; padding: 10px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); padding: 10px 12px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: var(--radius-sm);
+  cursor: pointer; margin-bottom: 2px;
+  font-size: 14px; font-weight: 500; color: var(--text);
+  transition: all .2s;
+  position: relative;
+}
+.nav-item:hover { background: var(--lilac-light); color: var(--rose-deep); }
+.nav-item.active {
+  background: linear-gradient(90deg, var(--lilac-light), #fce4ec);
+  color: var(--rose-deep); font-weight: 600;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 20%; height: 60%;
+  width: 3px; background: var(--rose-deep);
+  border-radius: 0 3px 3px 0;
+}
+.nav-item .nav-icon { width: 20px; text-align: center; font-size: 15px; }
+.nav-badge {
+  margin-left: auto; background: var(--coral);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 20px;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--bg); cursor: pointer;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--lilac), var(--coral));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: #fff; font-weight: 600;
+}
+.user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.user-role { font-size: 11px; color: var(--text-muted); }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  position: fixed; top: 0;
+  left: var(--sidebar-w); right: 0;
+  height: var(--header-h);
+  background: rgba(253,240,245,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 32px; gap: 16px;
+  z-index: 100;
+}
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 600; color: var(--rose-deep);
+  flex: 1;
+}
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.topbar-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--white); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+  transition: all .2s; font-size: 15px;
+  position: relative;
+}
+.topbar-btn:hover { background: var(--lilac-light); color: var(--rose-deep); }
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; background: var(--coral);
+  border-radius: 50%; border: 2px solid var(--white);
+}
+
+/* ===== MAIN ===== */
+.main {
+  margin-left: var(--sidebar-w);
+  padding-top: var(--header-h);
+  min-height: 100vh;
+}
+.page { display: none; padding: 32px; }
+.page.active { display: block; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 20px 24px 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 600; color: var(--text);
+}
+.card-body { padding: 20px 24px 24px; }
+
+/* ===== GRID ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+
+/* ===== STAT CARDS ===== */
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  display: flex; align-items: flex-start; gap: 14px;
+  box-shadow: var(--shadow);
+}
+.stat-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.stat-icon.rose { background: #fce4ec; color: var(--rose-deep); }
+.stat-icon.lilac { background: var(--lilac-light); color: #7B2D8B; }
+.stat-icon.coral { background: #FFE0E6; color: var(--coral); }
+.stat-icon.green { background: #E8F5E9; color: var(--success); }
+.stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700; color: var(--text);
+  line-height: 1;
+}
+.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.stat-trend { font-size: 11px; margin-top: 6px; }
+.stat-trend.up { color: var(--success); }
+.stat-trend.info { color: var(--info); }
+
+/* ===== PHASE TIMELINE ===== */
+.phase-timeline {
+  display: flex; gap: 0; border-radius: var(--radius);
+  overflow: hidden; height: 12px; margin: 12px 0 8px;
+}
+.phase-seg {
+  height: 100%; transition: flex .3s;
+  position: relative;
+}
+.phase-seg:first-child { border-radius: 6px 0 0 6px; }
+.phase-seg:last-child { border-radius: 0 6px 6px 0; }
+
+.phase-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text-muted);
+}
+
+/* ===== SYMPTOM PILLS ===== */
+.pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--white); color: var(--text-muted);
+  transition: all .2s;
+}
+.pill:hover { border-color: var(--lilac); color: var(--rose-deep); }
+.pill.selected {
+  background: linear-gradient(90deg, var(--lilac-light), #fce4ec);
+  border-color: var(--lilac);
+  color: var(--rose-deep); font-weight: 600;
+}
+
+/* ===== MOOD SELECTOR ===== */
+.mood-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.mood-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--white); border: 1.5px solid var(--border);
+  cursor: pointer; font-size: 22px; transition: all .2s;
+  min-width: 60px;
+}
+.mood-btn span { font-size: 10px; color: var(--text-muted); }
+.mood-btn:hover, .mood-btn.active {
+  border-color: var(--lilac);
+  background: var(--lilac-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201,168,212,.3);
+}
+
+/* ===== FLOW SELECTOR ===== */
+.flow-row { display: flex; gap: 10px; }
+.flow-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  padding: 14px; border-radius: var(--radius-sm);
+  background: var(--white); border: 1.5px solid var(--border);
+  cursor: pointer; transition: all .2s;
+}
+.flow-dot { border-radius: 50%; }
+.flow-btn:hover, .flow-btn.active {
+  border-color: var(--coral);
+  background: #FFF0F3;
+}
+.flow-btn span { font-size: 11px; color: var(--text-muted); }
+
+/* ===== INTIMACY SECTION ===== */
+.intimacy-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--bg); border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  margin-bottom: 12px; cursor: pointer;
+}
+.toggle-switch {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: var(--border); position: relative; transition: background .2s;
+}
+.toggle-switch.on { background: var(--rose-deep); }
+.toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: left .2s;
+}
+.toggle-switch.on .toggle-knob { left: 23px; }
+
+/* ===== NOTES TEXTAREA ===== */
+.notes-field {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif; font-size: 14px;
+  color: var(--text); background: var(--white);
+  resize: vertical; min-height: 80px;
+  transition: border-color .2s;
+}
+.notes-field:focus { outline: none; border-color: var(--lilac); }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 22px; border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all .2s; border: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--rose-deep), var(--rose-mid));
+  color: white;
+  box-shadow: 0 4px 14px rgba(139,58,98,.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139,58,98,.4); }
+.btn-secondary {
+  background: var(--white); color: var(--rose-deep);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: var(--lilac-light); border-color: var(--lilac); }
+.btn-ghost { background: none; color: var(--text-muted); border: none; padding: 8px; }
+.btn-danger { background: #FFF0F0; color: #C0392B; border: 1.5px solid #FFCDD2; }
+.btn-success { background: #E8F5E9; color: var(--success); border: 1.5px solid #C8E6C9; }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+
+/* ===== CALENDAR PAGE ===== */
+#calendar-fc {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.fc .fc-toolbar-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--rose-deep); font-size: 20px;
+}
+.fc .fc-button-primary {
+  background: var(--rose-deep) !important;
+  border-color: var(--rose-deep) !important;
+  border-radius: 8px !important;
+}
+.fc .fc-daygrid-day-number { color: var(--text); font-weight: 500; }
+.fc .fc-day-today { background: #fce4ec !important; }
+.fc .fc-event { border-radius: 6px !important; font-size: 11px !important; }
+
+.legend-row {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted);
+}
+.legend-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+}
+
+/* ===== ALERTS / CONTACTS ===== */
+.contact-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: var(--bg); margin-bottom: 8px;
+  border: 1px solid var(--border);
+  transition: all .2s;
+}
+.contact-card:hover { border-color: var(--lilac); background: var(--lilac-light); }
+.contact-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.contact-name { font-size: 14px; font-weight: 600; }
+.contact-rel { font-size: 12px; color: var(--text-muted); }
+.contact-actions { margin-left: auto; display: flex; gap: 6px; }
+
+.alert-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 18px; border-radius: var(--radius-sm);
+  margin-bottom: 10px; border-left: 4px solid;
+}
+.alert-card.ovulation { border-color: var(--lilac); background: var(--lilac-light); }
+.alert-card.period { border-color: var(--coral); background: #FFE0E6; }
+.alert-card.mood { border-color: var(--warning); background: #FFF8E1; }
+.alert-card.intimate { border-color: var(--info); background: #E3F2FD; }
+.alert-icon { font-size: 22px; flex-shrink: 0; padding-top: 2px; }
+.alert-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.alert-desc { font-size: 12px; color: var(--text-muted); }
+.alert-time { font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+
+.notif-trigger {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom: 10px;
+  cursor: pointer; transition: all .2s;
+}
+.notif-trigger:hover { border-color: var(--lilac); }
+.notif-icon { font-size: 20px; }
+.notif-info { flex: 1; }
+.notif-title { font-size: 14px; font-weight: 600; }
+.notif-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ===== MODALS ===== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,27,46,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUpModal .3s cubic-bezier(.4,0,.2,1);
+}
+.modal-lg { max-width: 680px; }
+.modal-sm { max-width: 380px; }
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 24px 28px 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700; color: var(--rose-deep);
+}
+.modal-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 14px; transition: all .2s;
+  flex-shrink: 0; margin-left: 12px;
+}
+.modal-close:hover { background: var(--border); color: var(--text); }
+.modal-body { padding: 20px 28px; }
+.modal-footer {
+  padding: 0 28px 24px;
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+
+/* ===== FORM ===== */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text); margin-bottom: 6px;
+}
+.form-label span { color: var(--text-muted); font-weight: 400; }
+.form-input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text);
+  background: var(--white); transition: border-color .2s;
+}
+.form-input:focus { outline: none; border-color: var(--lilac); }
+.form-select {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text);
+  background: var(--white); cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238E7492' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ===== SECTION HEADER ===== */
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; color: var(--text);
+}
+.section-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== PROFILE ===== */
+.profile-banner {
+  background: linear-gradient(135deg, var(--rose-deep) 0%, var(--coral) 60%, var(--lilac) 100%);
+  padding: 36px 32px;
+  border-radius: var(--radius);
+  color: white; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 24px;
+}
+.profile-avatar-lg {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  border: 3px solid rgba(255,255,255,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.profile-name { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; }
+.profile-meta { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed; bottom: 28px; right: 28px;
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 9999;
+}
+.toast {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: var(--radius-sm);
+  background: var(--white); box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border); min-width: 280px;
+  animation: slideInToast .3s ease;
+  font-size: 13px; font-weight: 500;
+}
+@keyframes slideInToast {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.toast-icon { font-size: 18px; }
+.toast-msg { flex: 1; }
+.toast-close { cursor: pointer; color: var(--text-muted); font-size: 12px; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ===== NOTIFICATION PANEL (sliding) ===== */
+.notif-panel {
+  position: fixed; top: 0; right: -360px;
+  width: 360px; height: 100vh;
+  background: var(--white);
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 30px rgba(139,58,98,0.15);
+  z-index: 300;
+  transition: right .35s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+.notif-panel.open { right: 0; }
+.notif-panel-hd {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700; color: var(--rose-deep);
+}
+.notif-list { flex: 1; overflow-y: auto; padding: 16px; }
+.notif-item {
+  display: flex; gap: 12px; padding: 14px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  margin-bottom: 10px; background: var(--bg);
+  cursor: pointer; transition: all .2s;
+}
+.notif-item:hover { border-color: var(--lilac); }
+.notif-item-icon { font-size: 20px; flex-shrink: 0; }
+.notif-item-body { flex: 1; }
+.notif-item-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.notif-item-desc { font-size: 12px; color: var(--text-muted); }
+.notif-item-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+.notif-item.unread { border-color: var(--lilac); background: var(--lilac-light); }
+
+/* ===== CHART WRAPPER ===== */
+.chart-wrap { position: relative; height: 200px; }
+
+/* ===== SEPARATORS ===== */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* Tab component */
+.tabs { display: flex; gap: 4px; background: var(--bg); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; }
+.tab {
+  flex: 1; padding: 9px; text-align: center; border-radius: 8px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  color: var(--text-muted); transition: all .2s;
+}
+.tab.active { background: var(--white); color: var(--rose-deep); font-weight: 600; box-shadow: 0 2px 8px rgba(139,58,98,.1); }
+
+.badge {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-ovulation { background: var(--lilac-light); color: #7B2D8B; }
+.badge-period { background: #FFE0E6; color: #C0392B; }
+.badge-fertile { background: #E8F5E9; color: var(--success); }
+.badge-luteal { background: #FFF8E1; color: #E65100; }
+
+/* Progress bar */
+.progress-bar { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">
+      <div class="logo-icon">🌙</div>
+      <div>
+        <div class="logo-text">Luna</div>
+        <div class="logo-sub">Tu ciclo, tu mundo</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-cycle">
+    <div class="cycle-ring-wrap">
+      <canvas id="cycleRingCanvas" width="110" height="110"></canvas>
+      <div class="cycle-ring-label">
+        <div class="day-num">14</div>
+        <div class="day-txt">día</div>
+      </div>
+    </div>
+    <div class="cycle-phase-badge">🌸 Ovulación</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Ciclo de 28 días · Próximo periodo en 14 días</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <span class="nav-icon"><i class="fa fa-home"></i></span> Inicio
+    </div>
+    <div class="nav-item" onclick="navigate('calendar')">
+      <span class="nav-icon"><i class="fa fa-calendar"></i></span> Calendario
+    </div>
+    <div class="nav-item" onclick="navigate('registro')">
+      <span class="nav-icon"><i class="fa fa-edit"></i></span> Registrar hoy
+    </div>
+    <div class="nav-item" onclick="navigate('historial')">
+      <span class="nav-icon"><i class="fa fa-chart-line"></i></span> Historial
+    </div>
+
+    <div class="nav-section-label">Alertas</div>
+    <div class="nav-item" onclick="navigate('alertas')">
+      <span class="nav-icon"><i class="fa fa-bell"></i></span> Alertas & Notif.
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="navigate('contactos')">
+      <span class="nav-icon"><i class="fa fa-users"></i></span> Contactos
+    </div>
+
+    <div class="nav-section-label">Cuenta</div>
+    <div class="nav-item" onclick="navigate('perfil')">
+      <span class="nav-icon"><i class="fa fa-user"></i></span> Mi perfil
+    </div>
+    <div class="nav-item" onclick="navigate('configuracion')">
+      <span class="nav-icon"><i class="fa fa-cog"></i></span> Configuración
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card" onclick="navigate('perfil')">
+      <div class="user-avatar">S</div>
+      <div>
+        <div class="user-name">Sofía García</div>
+        <div class="user-role">Plan Personal</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar-title" id="topbarTitle">Inicio</div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="openModal('modalRegistro')" title="Registrar hoy">
+      <i class="fa fa-plus"></i>
+    </button>
+    <div class="topbar-btn" onclick="toggleNotifPanel()" style="position:relative">
+      <i class="fa fa-bell"></i>
+      <div class="notif-dot"></div>
+    </div>
+    <div class="topbar-btn" onclick="navigate('perfil')">
+      <i class="fa fa-user"></i>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PAGES ===== -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Buenos días, Sofía 🌸</div>
+        <div class="section-sub">Hoy es día 14 de tu ciclo · Viernes 20 de junio</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modalRegistro')">
+        <i class="fa fa-plus"></i> Registrar hoy
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-4" style="margin-bottom:20px;">
+      <div class="stat-card">
+        <div class="stat-icon rose"><i class="fa fa-tint"></i></div>
+        <div>
+          <div class="stat-value">14</div>
+          <div class="stat-label">Día del ciclo</div>
+          <div class="stat-trend info"><i class="fa fa-circle-check"></i> Ovulación hoy</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon lilac"><i class="fa fa-calendar-days"></i></div>
+        <div>
+          <div class="stat-value">28</div>
+          <div class="stat-label">Duración promedio</div>
+          <div class="stat-trend up"><i class="fa fa-arrow-up"></i> Regular</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon coral"><i class="fa fa-heart"></i></div>
+        <div>
+          <div class="stat-value">5</div>
+          <div class="stat-label">Días de periodo</div>
+          <div class="stat-trend info">Próximo: 20 jun</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fa fa-seedling"></i></div>
+        <div>
+          <div class="stat-value">6</div>
+          <div class="stat-label">Días fértiles</div>
+          <div class="stat-trend up"><i class="fa fa-circle"></i> Ventana activa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px;">
+      <!-- Phase card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Fase actual del ciclo</span>
+          <span class="badge badge-ovulation">🌸 Ovulación</span>
+        </div>
+        <div class="card-body">
+          <div class="phase-timeline">
+            <div class="phase-seg" style="flex:5;background:#E8788A;" title="Menstruación"></div>
+            <div class="phase-seg" style="flex:9;background:#C9A8D4;" title="Folicular"></div>
+            <div class="phase-seg" style="flex:5;background:#8B3A62;box-shadow:inset 0 0 0 2px #fff;" title="Ovulación"></div>
+            <div class="phase-seg" style="flex:9;background:#F5CBA7;" title="Lútea"></div>
+          </div>
+          <div class="phase-labels">
+            <span>Menstruación</span>
+            <span>Folicular</span>
+            <span style="color:var(--rose-deep);font-weight:600;">● Ovulación</span>
+            <span>Lútea</span>
+          </div>
+          <hr class="divider">
+          <div style="font-size:13px;line-height:1.7;color:var(--text-muted);">
+            🌡️ Temperatura corporal ligeramente elevada<br>
+            💧 Mayor flujo cervical<br>
+            ⚡ Pico de energía y libido<br>
+            💜 Momento de máxima fertilidad
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's log summary -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Registro de hoy</span>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('modalRegistro')"><i class="fa fa-plus"></i> Editar</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:28px;">😊</span>
+            <div>
+              <div style="font-size:14px;font-weight:600;">Ánimo: Feliz</div>
+              <div style="font-size:12px;color:var(--text-muted);">Registrado hoy 08:30</div>
+            </div>
+          </div>
+          <div class="pill-group" style="margin-bottom:14px;">
+            <div class="pill selected">💧 Flujo ligero</div>
+            <div class="pill selected">💪 Energía alta</div>
+            <div class="pill selected">😴 Dormí bien</div>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);padding:10px 14px;background:var(--bg);border-radius:8px;">
+            📝 "Me siento muy bien hoy, energía al tope. Café con amigas por la tarde."
+          </div>
+          <hr class="divider">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-muted);">Intimidad</span>
+            <span style="font-size:13px;font-weight:600;color:var(--rose-deep);">💜 Registrada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Próximas alertas -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Próximas alertas</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('alertas')">Ver todas</button>
+        </div>
+        <div class="card-body" style="padding-top:14px;">
+          <div class="alert-card ovulation">
+            <div class="alert-icon">🌸</div>
+            <div>
+              <div class="alert-title">Ovulación hoy</div>
+              <div class="alert-desc">Tu ventana fértil está activa. Se notificó a 3 contactos.</div>
+            </div>
+          </div>
+          <div class="alert-card period">
+            <div class="alert-icon">🩸</div>
+            <div>
+              <div class="alert-title">Periodo en 14 días</div>
+              <div class="alert-desc">Estimado: 4 de julio. Duración esperada: 5 días.</div>
+            </div>
+          </div>
+          <div class="alert-card mood">
+            <div class="alert-icon">🌙</div>
+            <div>
+              <div class="alert-title">Fase lútea pronto</div>
+              <div class="alert-desc">En 3 días. Cuídate extra, posibles cambios de ánimo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tendencia de ánimo -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Ánimo últimos 7 días</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap">
+            <canvas id="moodChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div class="page" id="page-calendar">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Calendario del ciclo</div>
+        <div class="section-sub">Visualiza tu ciclo mes a mes</div>
+      </div>
+    </div>
+
+    <div class="legend-row" style="margin-bottom:16px;">
+      <div class="legend-item"><div class="legend-dot" style="background:#E8788A;"></div> Menstruación</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C9A8D4;"></div> Folicular</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8B3A62;"></div> Ovulación</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F5CBA7;"></div> Lútea</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5BAD8C;"></div> Fértil</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6BA3C8;"></div> Intimidad</div>
+    </div>
+
+    <div id="calendar-fc"></div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div class="page" id="page-registro">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Registrar hoy</div>
+        <div class="section-sub">Viernes 20 de junio · Día 14</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Formulario principal -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Flujo menstrual -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🩸 Flujo menstrual</span></div>
+          <div class="card-body">
+            <div class="flow-row">
+              <div class="flow-btn" onclick="selectFlow(this)">
+                <div class="flow-dot" style="width:12px;height:12px;background:#FFCDD2;"></div>
+                <span>Nada</span>
+              </div>
+              <div class="flow-btn" onclick="selectFlow(this)">
+                <div class="flow-dot" style="width:16px;height:16px;background:#EF9A9A;"></div>
+                <span>Ligero</span>
+              </div>
+              <div class="flow-btn active" onclick="selectFlow(this)">
+                <div class="flow-dot" style="width:20px;height:20px;background:#E57373;"></div>
+                <span>Moderado</span>
+              </div>
+              <div class="flow-btn" onclick="selectFlow(this)">
+                <div class="flow-dot" style="width:24px;height:24px;background:#C62828;"></div>
+                <span>Abundante</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ánimo -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">😊 Estado de ánimo</span></div>
+          <div class="card-body">
+            <div class="mood-row">
+              <div class="mood-btn" onclick="selectMood(this)">😢<span>Triste</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">😠<span>Irritada</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">😐<span>Neutral</span></div>
+              <div class="mood-btn active" onclick="selectMood(this)">😊<span>Bien</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">😄<span>Genial</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">😴<span>Cansada</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">😰<span>Ansiosa</span></div>
+              <div class="mood-btn" onclick="selectMood(this)">💜<span>Romántica</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Síntomas físicos -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌡️ Síntomas físicos</span></div>
+          <div class="card-body">
+            <div class="pill-group">
+              <div class="pill" onclick="togglePill(this)">😔 Cólicos</div>
+              <div class="pill selected" onclick="togglePill(this)">💪 Energía alta</div>
+              <div class="pill" onclick="togglePill(this)">🤕 Dolor de cabeza</div>
+              <div class="pill" onclick="togglePill(this)">🎈 Hinchazón</div>
+              <div class="pill" onclick="togglePill(this)">💊 Náuseas</div>
+              <div class="pill selected" onclick="togglePill(this)">😴 Dormí bien</div>
+              <div class="pill" onclick="togglePill(this)">🍫 Antojos</div>
+              <div class="pill" onclick="togglePill(this)">🌡️ Fiebre baja</div>
+              <div class="pill" onclick="togglePill(this)">💆 Sensibilidad</div>
+              <div class="pill" onclick="togglePill(this)">🏃 Activa</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Temperatura basal -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🌡️ Temperatura basal</span></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Temperatura °C</label>
+              <input class="form-input" type="number" step="0.1" value="36.8" placeholder="36.5"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Flujo cervical</label>
+              <select class="form-select">
+                <option>Seco</option>
+                <option>Pegajoso</option>
+                <option selected>Cremoso</option>
+                <option>Acuoso / Elástico</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Intimidad -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">💜 Intimidad</span></div>
+          <div class="card-body">
+            <div class="intimacy-toggle" onclick="toggleIntimacy(this)">
+              <div>
+                <div style="font-size:14px;font-weight:600;">Actividad íntima hoy</div>
+                <div style="font-size:12px;color:var(--text-muted);">Registrar de forma privada</div>
+              </div>
+              <div class="toggle-switch on">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+            <div id="intimacyDetail">
+              <div class="form-group">
+                <label class="form-label">Protección utilizada</label>
+                <select class="form-select">
+                  <option>Sin protección</option>
+                  <option selected>Condón</option>
+                  <option>Pastillas anticonceptivas</option>
+                  <option>DIU</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Notas <span>(privado)</span></label>
+                <textarea class="notes-field" placeholder="Solo tú verás esto...">Momento especial, todo bien 💜</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notas del día -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📝 Notas del día</span></div>
+          <div class="card-body">
+            <textarea class="notes-field" style="min-height:120px;" placeholder="¿Cómo te sientes hoy? Escribe lo que quieras recordar...">Me siento muy bien hoy, energía al tope. Café con amigas por la tarde.</textarea>
+            <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
+              <button class="btn btn-secondary"><i class="fa fa-times"></i> Cancelar</button>
+              <button class="btn btn-primary" onclick="saveRegistro()"><i class="fa fa-save"></i> Guardar registro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="page" id="page-historial">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Historial & Análisis</div>
+        <div class="section-sub">Últimos 3 ciclos registrados</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'tabCiclos')">Ciclos</div>
+      <div class="tab" onclick="switchTab(this,'tabSintomas')">Síntomas</div>
+      <div class="tab" onclick="switchTab(this,'tabIntimidad')">Intimidad</div>
+      <div class="tab" onclick="switchTab(this,'tabAnimo')">Ánimo</div>
+    </div>
+
+    <div id="tabCiclos">
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Duración de ciclos</span></div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="cycleChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Días de periodo</span></div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="periodChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <!-- Ciclo list -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Registro de ciclos</span></div>
+        <div class="card-body">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);">
+                <th style="padding:10px;text-align:left;color:var(--text-muted);font-weight:600;">Inicio</th>
+                <th style="padding:10px;text-align:left;color:var(--text-muted);font-weight:600;">Duración ciclo</th>
+                <th style="padding:10px;text-align:left;color:var(--text-muted);font-weight:600;">Días periodo</th>
+                <th style="padding:10px;text-align:left;color:var(--text-muted);font-weight:600;">Ovulación</th>
+                <th style="padding:10px;text-align:left;color:var(--text-muted);font-weight:600;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:12px 10px;">7 Jun 2025</td>
+                <td style="padding:12px 10px;">28 días</td>
+                <td style="padding:12px 10px;">5 días</td>
+                <td style="padding:12px 10px;">20 Jun</td>
+                <td style="padding:12px 10px;"><span class="badge badge-ovulation">En curso</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:12px 10px;">10 May 2025</td>
+                <td style="padding:12px 10px;">28 días</td>
+                <td style="padding:12px 10px;">4 días</td>
+                <td style="padding:12px 10px;">23 May</td>
+                <td style="padding:12px 10px;"><span class="badge badge-fertile">Completo</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:12px 10px;">12 Abr 2025</td>
+                <td style="padding:12px 10px;">29 días</td>
+                <td style="padding:12px 10px;">5 días</td>
+                <td style="padding:12px 10px;">25 Abr</td>
+                <td style="padding:12px 10px;"><span class="badge badge-fertile">Completo</span></td>
+              </tr>
+              <tr>
+                <td style="padding:12px 10px;">14 Mar 2025</td>
+                <td style="padding:12px 10px;">27 días</td>
+                <td style="padding:12px 10px;">6 días</td>
+                <td style="padding:12px 10px;">27 Mar</td>
+                <td style="padding:12px 10px;"><span class="badge badge-fertile">Completo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabSintomas" style="display:none;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Síntomas más frecuentes</span></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+                <span>💪 Energía alta</span><span style="color:var(--text-muted);">82%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:82%;background:var(--success);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+                <span>😴 Buena noche de sueño</span><span style="color:var(--text-muted);">75%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--lilac);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+                <span>😔 Cólicos</span><span style="color:var(--text-muted);">45%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:45%;background:var(--coral);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+                <span>🍫 Antojos</span><span style="color:var(--text-muted);">38%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:38%;background:var(--warning);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+                <span>🤕 Dolor de cabeza</span><span style="color:var(--text-muted);">22%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:22%;background:var(--info);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabIntimidad" style="display:none;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Actividad íntima por fase</span></div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas id="intimacyChart"></canvas></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+            <div style="padding:14px;background:var(--bg);border-radius:var(--radius-sm);text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:var(--rose-deep);">12</div>
+              <div style="font-size:12px;color:var(--text-muted);">veces en 3 ciclos</div>
+            </div>
+            <div style="padding:14px;background:var(--bg);border-radius:var(--radius-sm);text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:var(--lilac);">83%</div>
+              <div style="font-size:12px;color:var(--text-muted);">con protección</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabAnimo" style="display:none;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Ánimo por día del ciclo</span></div>
+        <div class="card-body">
+          <div class="chart-wrap" style="height:240px;"><canvas id="moodHistoryChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="page" id="page-alertas">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Alertas & Notificaciones</div>
+        <div class="section-sub">Configura qué y a quién notificar</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Notificaciones activas -->
+      <div>
+        <div style="margin-bottom:14px;font-size:15px;font-weight:600;color:var(--text);">Notificaciones activas</div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">🌸</div>
+          <div class="notif-info">
+            <div class="notif-title">Ovulación</div>
+            <div class="notif-sub">Notifica a tus contactos cuando estás ovulando</div>
+          </div>
+          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">🩸</div>
+          <div class="notif-info">
+            <div class="notif-title">Inicio de periodo</div>
+            <div class="notif-sub">Avisa cuando comienza tu periodo</div>
+          </div>
+          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">😔</div>
+          <div class="notif-info">
+            <div class="notif-title">Días difíciles</div>
+            <div class="notif-sub">Si estás triste o irritada, notifica a tu lista de apoyo</div>
+          </div>
+          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">🌙</div>
+          <div class="notif-info">
+            <div class="notif-title">Fase premenstrual</div>
+            <div class="notif-sub">5 días antes del periodo</div>
+          </div>
+          <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">💜</div>
+          <div class="notif-info">
+            <div class="notif-title">Días fértiles</div>
+            <div class="notif-sub">Ventana de fertilidad activa</div>
+          </div>
+          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="notif-trigger">
+          <div class="notif-icon">📅</div>
+          <div class="notif-info">
+            <div class="notif-title">Recordatorio diario</div>
+            <div class="notif-sub">Recuerda registrar tus síntomas cada día</div>
+          </div>
+          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+
+      <!-- Historial de alertas enviadas -->
+      <div>
+        <div style="margin-bottom:14px;font-size:15px;font-weight:600;color:var(--text);">Alertas recientes enviadas</div>
+
+        <div class="alert-card ovulation">
+          <div class="alert-icon">🌸</div>
+          <div style="flex:1;">
+            <div class="alert-title">Ovulación notificada</div>
+            <div class="alert-desc">Enviada a Mamá, Carlos, Ana Gómez</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Hoy · 08:00</div>
+          </div>
+        </div>
+
+        <div class="alert-card mood">
+          <div class="alert-icon">😔</div>
+          <div style="flex:1;">
+            <div class="alert-title">Día difícil notificado</div>
+            <div class="alert-desc">Enviada a Mamá, Carlos</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Hace 2 días</div>
+          </div>
+        </div>
+
+        <div class="alert-card period">
+          <div class="alert-icon">🩸</div>
+          <div style="flex:1;">
+            <div class="alert-title">Inicio de periodo</div>
+            <div class="alert-desc">Enviada a Mamá, Ana Gómez</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Hace 14 días</div>
+          </div>
+        </div>
+
+        <div class="alert-card intimate">
+          <div class="alert-icon">💜</div>
+          <div style="flex:1;">
+            <div class="alert-title">Días fértiles notificados</div>
+            <div class="alert-desc">Enviada a Carlos</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Hace 14 días</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACTOS -->
+  <div class="page" id="page-contactos">
+    <div class="section-hd">
+      <div>
+        <div class="section-title">Lista de contactos</div>
+        <div class="section-sub">A quienes se les notifica automáticamente</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modalContacto')">
+        <i class="fa fa-plus"></i> Agregar contacto
+      </button>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div style="margin-bottom:10px;font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Apoyo cercano</div>
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:linear-gradient(135deg,#E8788A,#C4607E);">M</div>
+          <div>
+            <div class="contact-name">Mamá</div>
+            <div class="contact-rel">👩 Familia · +51 999 000 001</div>
+          </div>
+          <div class="contact-actions">
+            <span class="badge badge-ovulation" style="font-size:10px;">Ovulación</span>
+            <span class="badge badge-period" style="font-size:10px;">Periodo</span>
+            <span style="background:#FFF8E1;color:#E65100;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;">Tristeza</span>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:linear-gradient(135deg,#6BA3C8,#4A90C8);">C</div>
+          <div>
+            <div class="contact-name">Carlos (pareja)</div>
+            <div class="contact-rel">💑 Pareja · +51 999 000 002</div>
+          </div>
+          <div class="contact-actions">
+            <span class="badge badge-ovulation" style="font-size:10px;">Ovulación</span>
+            <span class="badge badge-fertile" style="font-size:10px;">Fértil</span>
+            <span style="background:#FFF8E1;color:#E65100;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;">Tristeza</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="margin-bottom:10px;font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Amigas & otros</div>
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:linear-gradient(135deg,#C9A8D4,#9C66B8);">A</div>
+          <div>
+            <div class="contact-name">Ana Gómez</div>
+            <div class="contact-rel">👭 Amiga · +51 999 000 003</div>
+          </div>
+          <div class="contact-actions">
+            <span class="badge badge-period" style="font-size:10px;">Periodo</span>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:linear-gradient(135deg,#5BAD8C,#3D8B68);">L</div>
+          <div>
+            <div class="contact-name">Dra. Laura Méndez</div>
+            <div class="contact-rel">👩‍⚕️ Médica · +51 999 000 004</div>
+          </div>
+          <div class="contact-actions">
+            <span class="badge" style="background:#E8F5E9;color:var(--success);font-size:10px;">Solo emergencias</span>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px dashed var(--border);text-align:center;cursor:pointer;" onclick="openModal('modalContacto')">
+          <div style="color:var(--text-muted);font-size:13px;"><i class="fa fa-plus" style="margin-right:6px;"></i>Agregar nuevo contacto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="page" id="page-perfil">
+    <div class="profile-banner">
+      <div class="profile-avatar-lg">S</div>
+      <div>
+        <div class="profile-name">Sofía García</div>
+        <div class="profile-meta">📍 Lima, Perú · Miembro desde enero 2025</div>
+        <div style="display:flex;gap:10px;margin-top:12px;">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.4);" onclick="openModal('modalPerfil')">
+            <i class="fa fa-edit"></i> Editar perfil
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Información del ciclo</span></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);">
+              <span style="font-size:13px;color:var(--text-muted);">Duración promedio del ciclo</span>
+              <span style="font-size:14px;font-weight:600;">28 días</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);">
+              <span style="font-size:13px;color:var(--text-muted);">Duración promedio del periodo</span>
+              <span style="font-size:14px;font-weight:600;">5 días</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);">
+              <span style="font-size:13px;color:var(--text-muted);">Último periodo</span>
+              <span style="font-size:14px;font-weight:600;">7 de junio</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--text-muted);">Método anticonceptivo</span>
+              <span style="font-size:14px;font-weight:600;">Condón</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Estadísticas generales</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div style="text-align:center;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+              <div style="font-size:28px;font-weight:700;color:var(--rose-deep);font-family:'Playfair Display',serif;">6</div>
+              <div style="font-size:12px;color:var(--text-muted);">meses registrados</div>
+            </div>
+            <div style="text-align:center;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+              <div style="font-size:28px;font-weight:700;color:var(--lilac);font-family:'Playfair Display',serif;">142</div>
+              <div style="font-size:12px;color:var(--text-muted);">días con registro</div>
+            </div>
+            <div style="text-align:center;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+              <div style="font-size:28px;font-weight:700;color:var(--success);font-family:'Playfair Display',serif;">94%</div>
+              <div style="font-size:12px;color:var(--text-muted);">constancia</div>
+            </div>
+            <div style="text-align:center;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+              <div style="font-size:28px;font-weight:700;color:var(--coral);font-family:'Playfair Display',serif;">4</div>
+              <div style="font-size:12px;color:var(--text-muted);">contactos activos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div class="page" id="page-configuracion">
+    <div class="section-hd"><div class="section-title">Configuración</div></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Ciclo y predicción</span></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Duración estimada del ciclo</label>
+            <input class="form-input" type="number" value="28">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duración estimada del periodo</label>
+            <input class="form-input" type="number" value="5">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Hora de recordatorio diario</label>
+            <input class="form-input" type="time" value="08:00">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Privacidad</span></div>
+        <div class="card-body">
+          <div class="notif-trigger" style="margin-bottom:10px;">
+            <div class="notif-info"><div class="notif-title">PIN de acceso</div><div class="notif-sub">Protege la app con un PIN</div></div>
+            <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+          </div>
+          <div class="notif-trigger" style="margin-bottom:10px;">
+            <div class="notif-info"><div class="notif-title">Ocultar detalles de intimidad</div><div class="notif-sub">Solo tú los verás</div></div>
+            <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+          </div>
+          <div class="notif-trigger">
+            <div class="notif-info"><div class="notif-title">Modo discreta</div><div class="notif-sub">Icono neutro en el teléfono</div></div>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== NOTIFICATION PANEL ===== -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-hd">
+    <div class="notif-panel-title">Notificaciones</div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleNotifPanel()"><i class="fa fa-times"></i></button>
+  </div>
+  <div class="notif-list">
+    <div class="notif-item unread">
+      <div class="notif-item-icon">🌸</div>
+      <div class="notif-item-body">
+        <div class="notif-item-title">¡Estás ovulando hoy!</div>
+        <div class="notif-item-desc">Se notificó a tus 3 contactos principales</div>
+        <div class="notif-item-time">Hoy · 08:00</div>
+      </div>
+    </div>
+    <div class="notif-item unread">
+      <div class="notif-item-icon">💜</div>
+      <div class="notif-item-body">
+        <div class="notif-item-title">Ventana fértil activa</div>
+        <div class="notif-item-desc">Días 12-16 de tu ciclo son los más fértiles</div>
+        <div class="notif-item-time">Hoy · 07:00</div>
+      </div>
+    </div>
+    <div class="notif-item unread">
+      <div class="notif-item-icon">📝</div>
+      <div class="notif-item-body">
+        <div class="notif-item-title">Recuerda registrar hoy</div>
+        <div class="notif-item-desc">Lleva tu seguimiento al día</div>
+        <div class="notif-item-time">Hoy · 09:00</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-item-icon">🩸</div>
+      <div class="notif-item-body">
+        <div class="notif-item-title">Periodo estimado: 4 Jul</div>
+        <div class="notif-item-desc">Quedan 14 días para tu próximo periodo</div>
+        <div class="notif-item-time">Ayer · 08:00</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-item-icon">😔</div>
+      <div class="notif-item-body">
+        <div class="notif-item-title">Día difícil detectado</div>
+        <div class="notif-item-desc">Tu ánimo estaba bajo. Se avisó a Mamá y Carlos</div>
+        <div class="notif-item-time">Hace 2 días</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Modal: Registro rápido -->
+<div class="modal-overlay" id="modalRegistro">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Registrar hoy 🌸</div>
+        <div class="modal-sub">Viernes 20 de junio · Día 14 del ciclo</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalRegistro')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div>
+          <div class="form-group">
+            <label class="form-label">🩸 Flujo menstrual</label>
+            <select class="form-select">
+              <option>Sin flujo</option>
+              <option>Ligero</option>
+              <option selected>Moderado</option>
+              <option>Abundante</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🌡️ Temperatura basal °C</label>
+            <input class="form-input" type="number" step="0.1" value="36.8">
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">💧 Flujo cervical</label>
+            <select class="form-select">
+              <option>Seco</option>
+              <option>Pegajoso</option>
+              <option selected>Cremoso / Elástico</option>
+              <option>Acuoso</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">💊 Tomé anticonceptivos</label>
+            <select class="form-select">
+              <option selected>Sí</option>
+              <option>No</option>
+              <option>No aplica</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">😊 ¿Cómo te sientes hoy?</label>
+        <div class="mood-row">
+          <div class="mood-btn" onclick="selectMood(this)">😢<span>Triste</span></div>
+          <div class="mood-btn" onclick="selectMood(this)">😠<span>Irritada</span></div>
+          <div class="mood-btn" onclick="selectMood(this)">😐<span>Neutral</span></div>
+          <div class="mood-btn active" onclick="selectMood(this)">😊<span>Bien</span></div>
+          <div class="mood-btn" onclick="selectMood(this)">😄<span>Genial</span></div>
+          <div class="mood-btn" onclick="selectMood(this)">😴<span>Cansada</span></div>
+          <div class="mood-btn" onclick="selectMood(this)">💜<span>Romántica</span></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🌡️ Síntomas físicos <span>(selecciona los que apliquen)</span></label>
+        <div class="pill-group">
+          <div class="pill" onclick="togglePill(this)">😔 Cólicos</div>
+          <div class="pill selected" onclick="togglePill(this)">💪 Energía alta</div>
+          <div class="pill" onclick="togglePill(this)">🤕 Cabeza</div>
+          <div class="pill" onclick="togglePill(this)">🎈 Hinchazón</div>
+          <div class="pill" onclick="togglePill(this)">💊 Náuseas</div>
+          <div class="pill selected" onclick="togglePill(this)">😴 Dormí bien</div>
+          <div class="pill" onclick="togglePill(this)">🍫 Antojos</div>
+          <div class="pill" onclick="togglePill(this)">🏃 Activa</div>
+        </div>
+      </div>
+
+      <div class="intimacy-toggle" onclick="toggleIntimacy(this)" style="margin-bottom:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">💜 Hubo actividad íntima</div>
+          <div style="font-size:12px;color:var(--text-muted);">Solo tú puedes ver esto</div>
+        </div>
+        <div class="toggle-switch on"><div class="toggle-knob"></div></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">📝 Notas <span>(opcional)</span></label>
+        <textarea class="notes-field" placeholder="¿Algo que quieras recordar de hoy?">Me siento muy bien hoy, energía al tope.</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalRegistro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAndClose('modalRegistro')"><i class="fa fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Agregar Contacto -->
+<div class="modal-overlay" id="modalContacto">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Agregar contacto</div>
+        <div class="modal-sub">¿A quién quieres notificar?</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalContacto')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input class="form-input" placeholder="Ej: Mamá">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Relación</label>
+          <select class="form-select">
+            <option>Familia</option>
+            <option>Pareja</option>
+            <option>Amiga/o</option>
+            <option>Médica/o</option>
+            <option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono / WhatsApp</label>
+        <input class="form-input" placeholder="+51 999 000 000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">¿Cuándo notificarle? <span>(selecciona las alertas)</span></label>
+        <div class="pill-group">
+          <div class="pill selected" onclick="togglePill(this)">🌸 Ovulación</div>
+          <div class="pill selected" onclick="togglePill(this)">🩸 Periodo</div>
+          <div class="pill" onclick="togglePill(this)">💜 Días fértiles</div>
+          <div class="pill selected" onclick="togglePill(this)">😔 Días difíciles</div>
+          <div class="pill" onclick="togglePill(this)">🌙 Pre-menstrual</div>
+          <div class="pill" onclick="togglePill(this)">🆘 Solo emergencias</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Mensaje personalizado <span>(opcional)</span></label>
+        <textarea class="notes-field" placeholder="Ej: Hola mamá, hoy estoy ovulando. Por favor tenme paciencia esta semana 🌸"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalContacto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAndClose('modalContacto')"><i class="fa fa-user-plus"></i> Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar Perfil -->
+<div class="modal-overlay" id="modalPerfil">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Editar perfil</div>
+        <div class="modal-sub">Información personal y del ciclo</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalPerfil')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input class="form-input" value="Sofía">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input class="form-input" value="García">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-input" type="email" value="sofia@email.com">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha de nacimiento</label>
+          <input class="form-input" type="date" value="1998-03-15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">País</label>
+          <select class="form-select">
+            <option selected>Perú</option>
+            <option>México</option>
+            <option>Colombia</option>
+            <option>Argentina</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duración del ciclo (días)</label>
+          <input class="form-input" type="number" value="28">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duración del periodo (días)</label>
+          <input class="form-input" type="number" value="5">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Método anticonceptivo</label>
+        <select class="form-select">
+          <option>Ninguno</option>
+          <option selected>Condón</option>
+          <option>Pastillas</option>
+          <option>DIU (hormonal)</option>
+          <option>DIU (cobre)</option>
+          <option>Implante</option>
+          <option>Inyección</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalPerfil')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAndClose('modalPerfil')"><i class="fa fa-save"></i> Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle de evento del calendario -->
+<div class="modal-overlay" id="modalEvento">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="eventoTitle">Evento</div>
+        <div class="modal-sub" id="eventoDate"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalEvento')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="eventoBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalEvento')">Cerrar</button>
+      <button class="btn btn-primary" onclick="closeModal('modalEvento');openModal('modalRegistro')"><i class="fa fa-edit"></i> Editar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== NAVIGATION =====
+const pages = {
+  'dashboard': 'Inicio',
+  'calendar': 'Calendario',
+  'registro': 'Registrar hoy',
+  'historial': 'Historial & Análisis',
+  'alertas': 'Alertas & Notificaciones',
+  'contactos': 'Contactos',
+  'perfil': 'Mi perfil',
+  'configuracion': 'Configuración'
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + page + "'")) {
+      n.classList.add('active');
+    }
+  });
+
+  document.getElementById('topbarTitle').textContent = pages[page] || page;
+
+  if (page === 'calendar') initCalendar();
+  if (page === 'historial') initHistorialCharts();
+}
+
+// ===== CYCLE RING (sidebar) =====
+function drawCycleRing() {
+  const canvas = document.getElementById('cycleRingCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 55, cy = 55, r = 44, day = 14, total = 28;
+  const phases = [
+    { days: 5, color: '#E8788A' },
+    { days: 9, color: '#C9A8D4' },
+    { days: 5, color: '#8B3A62' },
+    { days: 9, color: '#F5CBA7' }
+  ];
+  ctx.clearRect(0, 0, 110, 110);
+  // Track
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#EDD8E8'; ctx.lineWidth = 10; ctx.stroke();
+  // Segments
+  let startAngle = -Math.PI / 2;
+  phases.forEach(ph => {
+    const sweep = (ph.days / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, startAngle + sweep);
+    ctx.strokeStyle = ph.color; ctx.lineWidth = 10;
+    ctx.lineCap = 'round'; ctx.stroke();
+    startAngle += sweep;
+  });
+  // Day marker
+  const dayAngle = -Math.PI / 2 + (day / total) * 2 * Math.PI;
+  const mx = cx + r * Math.cos(dayAngle), my = cy + r * Math.sin(dayAngle);
+  ctx.beginPath(); ctx.arc(mx, my, 7, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = '#8B3A62'; ctx.lineWidth = 3; ctx.stroke();
+}
+drawCycleRing();
+
+// ===== CALENDAR =====
+let calendarInit = false;
+function initCalendar() {
+  if (calendarInit) return;
+  calendarInit = true;
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
+
+  const events = [
+    // Periodo
+    { title: '🩸 Periodo', start: `${y}-${String(m+1).padStart(2,'0')}-07`, end: `${y}-${String(m+1).padStart(2,'0')}-12`, color: '#E8788A', allDay: true },
+    // Fértil
+    { title: '🌿 Fértil', start: `${y}-${String(m+1).padStart(2,'0')}-18`, end: `${y}-${String(m+1).padStart(2,'0')}-23`, color: '#5BAD8C', allDay: true },
+    // Ovulación
+    { title: '🌸 Ovulación', start: `${y}-${String(m+1).padStart(2,'0')}-20`, color: '#8B3A62', allDay: true },
+    // Intimidad
+    { title: '💜 Intimidad', start: `${y}-${String(m+1).padStart(2,'0')}-14`, color: '#6BA3C8', allDay: true },
+    { title: '💜 Intimidad', start: `${y}-${String(m+1).padStart(2,'0')}-20`, color: '#6BA3C8', allDay: true },
+    // Síntoma
+    { title: '😔 Cólicos', start: `${y}-${String(m+1).padStart(2,'0')}-08`, color: '#F5A623', allDay: true },
+    // Próximo periodo
+    { title: '🩸 Periodo', start: `${y}-${String(m+2).padStart(2,'0')}-04`, end: `${y}-${String(m+2).padStart(2,'0')}-09`, color: '#E8788A', allDay: true },
+  ];
+
+  const cal = new FullCalendar.Calendar(document.getElementById('calendar-fc'), {
+    initialView: 'dayGridMonth',
+    locale: 'es',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+    events,
+    eventClick(info) {
+      document.getElementById('eventoTitle').textContent = info.event.title;
+      document.getElementById('eventoDate').textContent = info.event.startStr;
+      document.getElementById('eventoBody').innerHTML = `
+        <div style="padding:10px;background:var(--bg);border-radius:var(--radius-sm);">
+          <div style="font-size:13px;color:var(--text-muted);">Toca "Editar registro" para añadir o modificar los datos de este día.</div>
+        </div>`;
+      openModal('modalEvento');
+    },
+    height: 620,
+    fixedWeekCount: false,
+  });
+  cal.render();
+}
+
+// ===== CHARTS =====
+function initDashboardCharts() {
+  const ctx = document.getElementById('moodChart');
+  if (!ctx || ctx._chartInit) return;
+  ctx._chartInit = true;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+      datasets: [{
+        label: 'Ánimo',
+        data: [3, 4, 2, 3, 5, 4, 5],
+        borderColor: '#8B3A62',
+        backgroundColor: 'rgba(139,58,98,0.08)',
+        tension: 0.4, fill: true,
+        pointBackgroundColor: '#8B3A62', pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 6, ticks: { stepSize: 1, callback: v => ['','😢','😔','😐','😊','😄','🌟'][v] || '' }, grid: { color: '#EDD8E8' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function initHistorialCharts() {
+  const cc = document.getElementById('cycleChart');
+  if (cc && !cc._chartInit) {
+    cc._chartInit = true;
+    new Chart(cc, {
+      type: 'bar',
+      data: {
+        labels: ['Mar','Abr','May','Jun'],
+        datasets: [{ label: 'Días', data: [27,29,28,28], backgroundColor: '#C9A8D4', borderRadius: 8 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{min:24,max:32,grid:{color:'#EDD8E8'}}, x:{grid:{display:false}} } }
+    });
+  }
+  const pc = document.getElementById('periodChart');
+  if (pc && !pc._chartInit) {
+    pc._chartInit = true;
+    new Chart(pc, {
+      type: 'bar',
+      data: {
+        labels: ['Mar','Abr','May','Jun'],
+        datasets: [{ label: 'Días', data: [6,5,4,5], backgroundColor: '#E8788A', borderRadius: 8 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{min:0,max:8,grid:{color:'#EDD8E8'}}, x:{grid:{display:false}} } }
+    });
+  }
+  const ic = document.getElementById('intimacyChart');
+  if (ic && !ic._chartInit) {
+    ic._chartInit = true;
+    new Chart(ic, {
+      type: 'doughnut',
+      data: {
+        labels: ['Folicular','Ovulación','Lútea','Menstruación'],
+        datasets: [{ data: [5,4,2,1], backgroundColor: ['#C9A8D4','#8B3A62','#F5CBA7','#E8788A'], borderWidth: 0 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
+    });
+  }
+  const mh = document.getElementById('moodHistoryChart');
+  if (mh && !mh._chartInit) {
+    mh._chartInit = true;
+    new Chart(mh, {
+      type: 'line',
+      data: {
+        labels: Array.from({length:28},(_,i)=>i+1),
+        datasets: [{
+          label: 'Ánimo',
+          data: [2,2,3,2,3,3,4,4,4,5,5,5,4,5,5,5,4,4,3,3,3,2,2,2,3,3,4,4],
+          borderColor: '#8B3A62',
+          backgroundColor: 'rgba(139,58,98,0.08)',
+          tension: 0.4, fill: true, pointRadius: 3,
+          pointBackgroundColor: '#8B3A62'
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          y:{min:1,max:6,ticks:{callback:v=>['','😢','😔','😐','😊','😄'][v]||''},grid:{color:'#EDD8E8'}},
+          x:{title:{display:true,text:'Día del ciclo'},grid:{display:false}}
+        }
+      }
+    });
+  }
+}
+
+// Init dashboard charts on load
+window.addEventListener('load', () => {
+  setTimeout(initDashboardCharts, 200);
+});
+
+// ===== MODALS =====
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ===== NOTIF PANEL =====
+function toggleNotifPanel() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+
+// ===== INTERACTIONS =====
+function togglePill(el) {
+  el.classList.toggle('selected');
+}
+function selectMood(el) {
+  el.closest('.mood-row').querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectFlow(el) {
+  el.closest('.flow-row').querySelectorAll('.flow-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleIntimacy(el) {
+  const sw = el.querySelector('.toggle-switch');
+  sw.classList.toggle('on');
+  const detail = document.getElementById('intimacyDetail');
+  if (detail) detail.style.display = sw.classList.contains('on') ? 'block' : 'none';
+}
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+  showToast(el.classList.contains('on') ? '✅ Activado' : '⚫ Desactivado', 'Preferencia guardada');
+}
+
+// ===== TABS =====
+function switchTab(el, tabId) {
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['tabCiclos','tabSintomas','tabIntimidad','tabAnimo'].forEach(t => {
+    const el2 = document.getElementById(t);
+    if (el2) el2.style.display = t === tabId ? 'block' : 'none';
+  });
+  if (tabId === 'tabSintomas' || tabId === 'tabIntimidad' || tabId === 'tabAnimo') {
+    setTimeout(initHistorialCharts, 100);
+  }
+}
+
+// ===== SAVE & TOAST =====
+function saveRegistro() {
+  showToast('🌸 Registro guardado', 'Tu día quedó anotado correctamente');
+}
+function saveAndClose(modalId) {
+  closeModal(modalId);
+  const msgs = {
+    'modalRegistro': ['🌸 Registro guardado', 'Tu día quedó anotado correctamente'],
+    'modalContacto': ['👤 Contacto agregado', 'Recibirá tus alertas automáticas'],
+    'modalPerfil': ['✅ Perfil actualizado', 'Los cambios se guardaron'],
+  };
+  const [title, sub] = msgs[modalId] || ['✅ Guardado', 'Los cambios se guardaron'];
+  showToast(title, sub);
+}
+
+function showToast(title, sub) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <div class="toast-icon">🌸</div>
+    <div class="toast-msg">
+      <div style="font-weight:600;font-size:13px;">${title}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${sub}</div>
+    </div>
+    <div class="toast-close" onclick="this.parentElement.remove()"><i class="fa fa-times"></i></div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ===== KEYBOARD ESC =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "basic",
+    "name": "Básico",
+    "description": "Para gimnasios pequeños que recién están ordenando su operación.",
+    "price": 49,
+    "popular": false,
+    "features": [
+      "Clientes y membresías",
+      "Asistencias básicas",
+      "Ventas simples",
+      "1 usuario administrador"
+    ]
+  },
+  {
+    "id": "pro",
+    "name": "Pro",
+    "description": "Para gimnasios que ya manejan caja, equipo e inventario.",
+    "price": 99,
+    "popular": true,
+    "features": [
+      "Todo lo del plan básico",
+      "Productos e inventario",
+      "Usuarios y permisos",
+      "Soporte incluido"
+    ]
+  },
+  {
+    "id": "enterprise",
+    "name": "Empresa",
+    "description": "Para cadenas, sedes múltiples o gimnasios con mayor volumen.",
+    "price": 199,
+    "popular": false,
+    "features": [
+      "Mayor límite de usuarios",
+      "Más capacidad de clientes",
+      "Soporte prioritario",
+      "Configuración avanzada"
+    ]
+  }
+]

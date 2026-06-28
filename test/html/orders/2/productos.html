@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comanda — Productos &amp; Stock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js"></script>
+</head>
+<body class="paper-grain min-h-screen font-sans" x-data="productosApp()" x-init="init()">
+
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-[#1C1917] text-[#FAF6ED] border-b border-black/30">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="w-8 h-8 rounded-full border border-[#FAF6ED]/25 flex items-center justify-center hover:bg-[#FAF6ED]/10 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <div class="font-mono text-[10px] tracking-widest text-[#E85D2C]">MÓDULO 01</div>
+        <h1 class="font-display text-lg font-bold leading-none">Productos &amp; Stock</h1>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="font-mono text-[10px] text-[#FAF6ED]/50 tracking-widest">LOCAL</label>
+      <select x-model="localId" class="focus-ring bg-[#FAF6ED]/10 border border-[#FAF6ED]/25 rounded px-3 py-1.5 text-sm font-medium">
+        <template x-for="l in db.locales" :key="l.id">
+          <option :value="l.id" x-text="l.nombre"></option>
+        </template>
+      </select>
+      <button @click="openNew()" class="btn-ember rounded px-3.5 py-1.5 text-sm font-semibold flex items-center gap-1.5 focus-ring">
+        <i data-lucide="plus" class="w-4 h-4"></i> Nuevo producto
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <!-- Barra de resumen -->
+  <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div class="flex items-center gap-2 flex-wrap">
+      <button @click="catFiltro='todas'" :class="catFiltro==='todas' ? 'btn-ember' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="rounded-full px-3.5 py-1.5 text-xs font-semibold font-mono tracking-wide focus-ring">TODAS</button>
+      <template x-for="c in db.categorias" :key="c">
+        <button @click="catFiltro=c" :class="catFiltro===c ? 'btn-ember' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="rounded-full px-3.5 py-1.5 text-xs font-semibold font-mono tracking-wide focus-ring" x-text="c.toUpperCase()"></button>
+      </template>
+    </div>
+    <div class="font-mono text-xs text-[#3A342C]/60" x-text="`Hoy es ${DIAS[hoyIdx]} · ${productosFiltrados.filter(p=>p.stockPorLocal[localId][hoyIdx]).length} de ${productosFiltrados.length} disponibles`"></div>
+  </div>
+
+  <!-- Tabla de productos -->
+  <div class="ticket overflow-hidden">
+    <div class="overflow-x-auto scrollbar-thin">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-[#DDD3BE] text-left font-mono text-[10px] tracking-widest text-[#3A342C]/60">
+          <th class="px-5 py-3 font-medium">PRODUCTO</th>
+          <th class="px-5 py-3 font-medium">CATEGORÍA</th>
+          <th class="px-5 py-3 font-medium text-right">PRECIO</th>
+          <th class="px-5 py-3 font-medium">STOCK ESTA SEMANA (L→D)</th>
+          <th class="px-5 py-3 font-medium text-right">ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template x-for="p in productosFiltrados" :key="p.id">
+          <tr class="border-b border-[#DDD3BE]/70 last:border-0 hover:bg-[#F1EBDD]/60 align-top">
+            <td class="px-5 py-4">
+              <div class="font-semibold text-[#1C1917]" x-text="p.nombre"></div>
+              <div class="text-xs text-[#3A342C]/60 mt-0.5 max-w-xs" x-text="p.desc"></div>
+            </td>
+            <td class="px-5 py-4">
+              <span class="badge badge-llevar" x-text="p.categoria"></span>
+            </td>
+            <td class="px-5 py-4 text-right font-mono font-semibold" x-text="'S/ '+p.precio.toFixed(2)"></td>
+            <td class="px-5 py-4">
+              <div class="flex items-center gap-1.5">
+                <template x-for="(d,i) in DIAS" :key="i">
+                  <button
+                    @click="toggleStock(p,i)"
+                    :class="p.stockPorLocal[localId][i] ? 'stock-day active' : 'stock-day'"
+                    :title="d + (p.stockPorLocal[localId][i] ? ': disponible' : ': agotado')"
+                    class="focus-ring">
+                    <span x-text="d[0]"></span>
+                  </button>
+                </template>
+              </div>
+            </td>
+            <td class="px-5 py-4 text-right whitespace-nowrap">
+              <button @click="openEdit(p)" class="w-8 h-8 inline-flex items-center justify-center rounded border border-[#DDD3BE] hover:bg-[#E9E1CC] focus-ring mr-1.5">
+                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+              </button>
+              <button @click="eliminar(p)" class="w-8 h-8 inline-flex items-center justify-center rounded border border-[#DDD3BE] hover:bg-[#E85D2C]/10 hover:border-[#E85D2C]/40 focus-ring">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-[#C44A1F]"></i>
+              </button>
+            </td>
+          </tr>
+        </template>
+        <tr x-show="productosFiltrados.length===0">
+          <td colspan="5" class="px-5 py-12 text-center text-[#3A342C]/50 font-mono text-xs">No hay productos en esta categoría todavía.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <p class="font-mono text-[11px] text-[#3A342C]/45 mt-4">Toca un círculo del día para activar o desactivar el stock de ese producto en <span x-text="db.locales.find(l=>l.id===localId)?.nombre"></span>. El punto de venta y la cocina solo muestran lo activo hoy.</p>
+
+</main>
+
+<!-- Modal nuevo / editar producto -->
+<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(28,25,23,.6)" @keydown.escape.window="modalOpen=false">
+  <div class="ticket w-full max-w-lg p-6" @click.outside="modalOpen=false" x-show="modalOpen" x-transition>
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-display text-xl font-bold" x-text="editing ? 'Editar producto' : 'Nuevo producto'"></h3>
+      <button @click="modalOpen=false" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#E9E1CC] focus-ring"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 block mb-1">NOMBRE</label>
+        <input x-model="form.nombre" type="text" class="focus-ring w-full border border-[#DDD3BE] rounded px-3 py-2 text-sm bg-white" placeholder="Ej. Lomo Saltado">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 block mb-1">CATEGORÍA</label>
+          <select x-model="form.categoria" class="focus-ring w-full border border-[#DDD3BE] rounded px-3 py-2 text-sm bg-white">
+            <template x-for="c in db.categorias" :key="c"><option :value="c" x-text="c"></option></template>
+          </select>
+        </div>
+        <div>
+          <label class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 block mb-1">PRECIO (S/)</label>
+          <input x-model.number="form.precio" type="number" min="0" step="0.5" class="focus-ring w-full border border-[#DDD3BE] rounded px-3 py-2 text-sm bg-white">
+        </div>
+      </div>
+      <div>
+        <label class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 block mb-1">DESCRIPCIÓN</label>
+        <textarea x-model="form.desc" rows="2" class="focus-ring w-full border border-[#DDD3BE] rounded px-3 py-2 text-sm bg-white resize-none" placeholder="Ingredientes, presentación..."></textarea>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button @click="modalOpen=false" class="px-4 py-2 rounded text-sm font-semibold border border-[#DDD3BE] hover:bg-[#E9E1CC] focus-ring">Cancelar</button>
+      <button @click="guardar()" class="btn-ember rounded px-4 py-2 text-sm font-semibold focus-ring">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function productosApp(){
+  return {
+    db:{locales:[],categorias:[],productos:[]},
+    localId:'L1',
+    catFiltro:'todas',
+    modalOpen:false,
+    editing:null,
+    form:{nombre:'',categoria:'Entradas',precio:0,desc:''},
+    DIAS, hoyIdx:(new Date().getDay()+6)%7,
+    init(){
+      this.db = loadDB();
+      this.localId = this.db.locales[0].id;
+      this.$watch('localId', ()=>{});
+      lucide.createIcons();
+      this.$nextTick(()=>lucide.createIcons());
+    },
+    get productosFiltrados(){
+      return this.db.productos.filter(p => this.catFiltro==='todas' || p.categoria===this.catFiltro);
+    },
+    toggleStock(p, i){
+      p.stockPorLocal[this.localId][i] = p.stockPorLocal[this.localId][i] ? 0 : 1;
+      saveDB(this.db);
+    },
+    openNew(){
+      this.editing=null;
+      this.form={nombre:'',categoria:this.db.categorias[0],precio:0,desc:''};
+      this.modalOpen=true;
+      this.$nextTick(()=>lucide.createIcons());
+    },
+    openEdit(p){
+      this.editing=p;
+      this.form={nombre:p.nombre,categoria:p.categoria,precio:p.precio,desc:p.desc};
+      this.modalOpen=true;
+      this.$nextTick(()=>lucide.createIcons());
+    },
+    guardar(){
+      if(!this.form.nombre.trim()) return;
+      if(this.editing){
+        Object.assign(this.editing, this.form);
+      } else {
+        const stockPorLocal={};
+        this.db.locales.forEach(l=> stockPorLocal[l.id] = [1,1,1,1,1,1,1]);
+        this.db.productos.push({ id:'P'+Date.now(), ...this.form, stockPorLocal });
+      }
+      saveDB(this.db);
+      this.modalOpen=false;
+    },
+    eliminar(p){
+      if(!confirm('¿Eliminar "'+p.nombre+'" del catálogo?')) return;
+      this.db.productos = this.db.productos.filter(x=>x.id!==p.id);
+      saveDB(this.db);
+    }
+  }
+}
+document.addEventListener('alpine:init', ()=>{});
+window.addEventListener('DOMContentLoaded', ()=> lucide.createIcons());
+</script>
+</body>
+</html>

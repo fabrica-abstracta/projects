@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Premios</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { cream:'#FDF6EC', caramel:'#C8872A', choco:'#3B1F0E', blush:'#F2C4C4', rose:'#E8929A', gold:'#F0C060' } } }
+}
+</script>
+<style>
+body { background-color: #FDF6EC; font-family: 'Georgia', serif; }
+.sidebar-link:hover { background: rgba(200,135,42,0.15); }
+</style>
+</head>
+<body x-data="app()" class="flex min-h-screen">
+
+<aside :class="sidebarOpen ? 'w-64' : 'w-16'" class="bg-choco text-cream flex flex-col transition-all duration-300 min-h-screen fixed z-20">
+  <div class="flex items-center justify-between p-4 border-b border-yellow-900">
+    <span x-show="sidebarOpen" class="text-gold font-bold text-lg tracking-wide">🍰 SweetStamp</span>
+    <button @click="sidebarOpen = !sidebarOpen" class="text-gold hover:text-white transition">
+      <i :class="sidebarOpen ? 'fa-solid fa-angles-left' : 'fa-solid fa-angles-right'"></i>
+    </button>
+  </div>
+  <nav class="flex-1 py-4 space-y-1">
+    <a href="index.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-house w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Dashboard</span></a>
+    <a href="clientes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-users w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Clientes & Cartillas</span></a>
+    <a href="premios.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gold rounded mx-2 bg-yellow-900/30"><i class="fa-solid fa-gift w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm font-medium">Premios</span></a>
+    <a href="juegos.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2"><i class="fa-solid fa-dice w-5 text-center"></i><span x-show="sidebarOpen" class="text-sm">Juegos</span></a>
+  </nav>
+</aside>
+
+<div :class="sidebarOpen ? 'ml-64' : 'ml-16'" class="flex-1 transition-all duration-300">
+  <header class="bg-white shadow-sm px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+    <div>
+      <h1 class="text-2xl font-bold text-choco">Mantenedor de Premios</h1>
+      <p class="text-sm text-gray-500">Gestiona premios para cartillas completadas y juegos</p>
+    </div>
+    <button @click="modalPremio=true; premioEdicion=null" class="bg-caramel text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-yellow-700 transition flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Nuevo Premio
+    </button>
+  </header>
+
+  <main class="p-8">
+    <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-xl p-5 shadow border-l-4 border-caramel">
+        <p class="text-xs text-gray-500 uppercase">Premios Activos</p>
+        <p class="text-3xl font-bold text-choco mt-1" x-text="premios.filter(p=>p.activo).length"></p>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow border-l-4 border-green-500">
+        <p class="text-xs text-gray-500 uppercase">Total Entregados</p>
+        <p class="text-3xl font-bold text-choco mt-1" x-text="premios.reduce((a,p)=>a+p.entregados,0)"></p>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow border-l-4 border-rose">
+        <p class="text-xs text-gray-500 uppercase">Para Juegos</p>
+        <p class="text-3xl font-bold text-choco mt-1" x-text="premios.filter(p=>p.tipo==='juego').length"></p>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow border-l-4 border-gold">
+        <p class="text-xs text-gray-500 uppercase">Para Cartilla</p>
+        <p class="text-3xl font-bold text-choco mt-1" x-text="premios.filter(p=>p.tipo==='cartilla').length"></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <div class="col-span-2">
+        <div class="flex gap-2 mb-4">
+          <button @click="filtro='todos'" :class="filtro==='todos' ? 'bg-choco text-white' : 'bg-white text-gray-600'" class="px-4 py-1.5 rounded-full text-sm transition border">Todos</button>
+          <button @click="filtro='cartilla'" :class="filtro==='cartilla' ? 'bg-choco text-white' : 'bg-white text-gray-600'" class="px-4 py-1.5 rounded-full text-sm transition border">Cartilla</button>
+          <button @click="filtro='juego'" :class="filtro==='juego' ? 'bg-choco text-white' : 'bg-white text-gray-600'" class="px-4 py-1.5 rounded-full text-sm transition border">Juegos</button>
+        </div>
+
+        <div class="space-y-3">
+          <template x-for="p in premiosFiltrados" :key="p.id">
+            <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between border border-gray-100 hover:shadow-md transition">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-cream">
+                  <span x-text="p.emoji"></span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-choco" x-text="p.nombre"></h3>
+                  <p class="text-xs text-gray-500" x-text="p.descripcion"></p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span :class="p.tipo==='cartilla' ? 'bg-yellow-100 text-yellow-700' : 'bg-purple-100 text-purple-700'" class="text-xs px-2 py-0.5 rounded-full" x-text="p.tipo==='cartilla' ? '📋 Cartilla' : '🎲 Juego'"></span>
+                    <span :class="p.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'" class="text-xs px-2 py-0.5 rounded-full" x-text="p.activo ? 'Activo' : 'Inactivo'"></span>
+                    <span class="text-xs text-gray-400" x-text="'Entregados: ' + p.entregados"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="text-right mr-4">
+                  <p class="text-lg font-bold text-caramel" x-text="'$' + p.valor.toLocaleString()"></p>
+                  <p class="text-xs text-gray-400">valor aprox.</p>
+                </div>
+                <button @click="toggleActivo(p)" :class="p.activo ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'" class="px-3 py-1.5 rounded-lg text-xs transition" x-text="p.activo ? 'Desactivar' : 'Activar'"></button>
+                <button @click="editarPremio(p)" class="bg-caramel/10 text-caramel px-3 py-1.5 rounded-lg text-xs hover:bg-caramel hover:text-white transition"><i class="fa-solid fa-pen"></i></button>
+                <button @click="eliminarPremio(p)" class="bg-red-50 text-red-400 px-3 py-1.5 rounded-lg text-xs hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl shadow p-5">
+          <h3 class="font-bold text-choco mb-4 text-sm uppercase tracking-wide">Entregas por Premio</h3>
+          <canvas id="chartPremios" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+          <h3 class="font-bold text-choco mb-3 text-sm uppercase tracking-wide">Top Ganadores</h3>
+          <div class="space-y-2">
+            <template x-for="g in [
+              {n:'Camilo Herrera', p:'Torta Familiar', d:'Hoy 10:18'},
+              {n:'Valentina Rojas', p:'Café + Pastel', d:'Ayer 14:30'},
+              {n:'Rodrigo Fuentes', p:'Descuento 50%', d:'22 Jun'},
+              {n:'Andrea Vidal', p:'Torta Familiar', d:'20 Jun'},
+            ]" :key="g.n">
+              <div class="flex items-center justify-between text-sm">
+                <div>
+                  <p class="font-medium text-choco" x-text="g.n"></p>
+                  <p class="text-xs text-caramel" x-text="g.p"></p>
+                </div>
+                <span class="text-xs text-gray-400" x-text="g.d"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div x-show="modalPremio" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="modalPremio=false">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <h2 class="text-xl font-bold text-choco mb-4" x-text="premioEdicion ? 'Editar Premio' : 'Nuevo Premio'"></h2>
+    <div class="space-y-3">
+      <input x-model="form.nombre" type="text" placeholder="Nombre del premio" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-caramel focus:outline-none">
+      <input x-model="form.descripcion" type="text" placeholder="Descripción breve" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-caramel focus:outline-none">
+      <div class="grid grid-cols-2 gap-3">
+        <input x-model="form.emoji" type="text" placeholder="Emoji 🎂" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-caramel focus:outline-none">
+        <input x-model="form.valor" type="number" placeholder="Valor ($)" class="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-caramel focus:outline-none">
+      </div>
+      <select x-model="form.tipo" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-caramel focus:outline-none">
+        <option value="cartilla">📋 Para Cartilla Completada</option>
+        <option value="juego">🎲 Para Juegos</option>
+      </select>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button @click="guardarPremio()" class="flex-1 bg-caramel text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-yellow-700 transition">Guardar Premio</button>
+      <button @click="modalPremio=false" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-200 transition">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    sidebarOpen: true,
+    filtro: 'todos',
+    modalPremio: false,
+    premioEdicion: null,
+    form: { nombre:'', descripcion:'', emoji:'🎁', valor:0, tipo:'cartilla' },
+    premios: [
+      {id:1, nombre:'Torta Familiar Entera', descripcion:'Torta de 2kg a elección del cliente', emoji:'🎂', valor:35000, tipo:'cartilla', activo:true, entregados:14},
+      {id:2, nombre:'Café + Pastel del Día', descripcion:'Combo especial para disfrutar en tienda', emoji:'☕', valor:8500, tipo:'cartilla', activo:true, entregados:31},
+      {id:3, nombre:'Descuento 50% Próxima Compra', descripcion:'Válido en cualquier producto hasta $20.000', emoji:'🏷️', valor:10000, tipo:'cartilla', activo:true, entregados:22},
+      {id:4, nombre:'Caja de Alfajores Premium', descripcion:'Caja x12 alfajores de manjar y chocolate', emoji:'🍫', valor:12000, tipo:'juego', activo:true, entregados:8},
+      {id:5, nombre:'Torta de Cumpleaños Personalizada', descripcion:'Diseño personalizado con decoración', emoji:'🎉', valor:45000, tipo:'juego', activo:true, entregados:3},
+      {id:6, nombre:'Docena de Macarons', descripcion:'12 macarons en sabores a elección', emoji:'🌈', valor:18000, tipo:'juego', activo:false, entregados:5},
+      {id:7, nombre:'Taza Personalizada + Galletas', descripcion:'Taza grabada + bolsa de galletas artesanales', emoji:'🫖', valor:15000, tipo:'juego', activo:true, entregados:7},
+    ],
+    get premiosFiltrados() {
+      if (this.filtro === 'todos') return this.premios;
+      return this.premios.filter(p => p.tipo === this.filtro);
+    },
+    toggleActivo(p) {
+      p.activo = !p.activo;
+      Toastify({text: (p.activo ? '✅ Premio activado' : '⏸️ Premio desactivado') + ': ' + p.nombre, duration:2500, style:{background: p.activo ? '#059669' : '#6B7280'}}).showToast();
+    },
+    editarPremio(p) {
+      this.premioEdicion = p;
+      this.form = {...p};
+      this.modalPremio = true;
+    },
+    guardarPremio() {
+      if (!this.form.nombre) { Toastify({text:'⚠️ El nombre es requerido', duration:2000, style:{background:'#D97706'}}).showToast(); return; }
+      if (this.premioEdicion) {
+        Object.assign(this.premioEdicion, this.form);
+        Toastify({text:'✅ Premio actualizado', duration:2500, style:{background:'#059669'}}).showToast();
+      } else {
+        this.premios.unshift({id:Date.now(), ...this.form, activo:true, entregados:0});
+        Toastify({text:'🎁 Nuevo premio creado: ' + this.form.nombre, duration:2500, style:{background:'#C8872A'}}).showToast();
+      }
+      this.modalPremio = false;
+      this.form = {nombre:'', descripcion:'', emoji:'🎁', valor:0, tipo:'cartilla'};
+    },
+    eliminarPremio(p) {
+      Swal.fire({title:'¿Eliminar Premio?', text:'Se eliminará "'+p.nombre+'"', icon:'warning', showCancelButton:true, confirmButtonColor:'#EF4444', confirmButtonText:'Eliminar'})
+      .then(r => { if(r.isConfirmed) { this.premios = this.premios.filter(x=>x.id!==p.id); Toastify({text:'🗑️ Premio eliminado', duration:2000, style:{background:'#EF4444'}}).showToast(); } });
+    },
+    initChart() {
+      const ctx = document.getElementById('chartPremios').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: this.premios.map(p => p.nombre.slice(0,15) + '...'),
+          datasets: [{ data: this.premios.map(p => p.entregados), backgroundColor: ['#C8872A','#F0C060','#E8929A','#3B1F0E','#5B4FCF','#059669','#0891B2'], borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+  }
+}
+document.addEventListener('alpine:init', () => {});
+window.addEventListener('load', () => {
+  const a = document.querySelector('[x-data]')?._x_dataStack?.[0];
+  setTimeout(() => { try { Alpine.store; } catch(e){} }, 500);
+  setTimeout(() => {
+    const ctx = document.getElementById('chartPremios');
+    if(ctx) {
+      const data = [14,31,22,8,3,5,7];
+      const labels = ['Torta Familiar','Café+Pastel','Dscto 50%','Alfajores','T.Cumpleaños','Macarons','Taza'];
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor:['#C8872A','#F0C060','#E8929A','#3B1F0E','#5B4FCF','#059669','#0891B2'], borderWidth:2, borderColor:'#fff' }] },
+        options: { responsive:true, plugins:{ legend:{display:false} } }
+      });
+    }
+  }, 600);
+});
+</script>
+</body>
+</html>

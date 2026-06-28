@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vuelve — Fidelización para negocios reales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        paper: '#FFFFFF',
+        cream: '#FAF7F0',
+        ink: '#15131C',
+        primary: {50:'#EFEDFB',100:'#DAD5F5',200:'#B7AEEA',300:'#9186DC',400:'#7A6FC4',500:'#5949A8',600:'#3D348B',700:'#2F2870',800:'#241F58',900:'#1B1842'},
+        stamp: {50:'#FDECEE',100:'#FBD3D8',200:'#F5A8B0',300:'#EE7E89',400:'#EA5C69',500:'#E63946',600:'#C92A38',700:'#A11E2B'},
+        gold: {50:'#FEF3E2',100:'#FCE2B8',200:'#F8CD86',300:'#F5BB5E',400:'#F2A93B',500:'#E2932A',600:'#C57A1E'}
+      },
+      fontFamily: {
+        display: ['"Big Shoulders Display"','sans-serif'],
+        sans: ['"Plus Jakarta Sans"','ui-sans-serif','system-ui'],
+        mono: ['"Space Mono"','monospace']
+      }
+    }
+  }
+}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<style>
+[x-cloak]{display:none!important}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#FFFFFF;color:#15131C}
+.font-display{font-family:'Big Shoulders Display',sans-serif}
+.font-mono{font-family:'Space Mono',monospace}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#E2DFD6;border-radius:8px}
+.tear-line{position:relative;height:0;border-top:2px dashed #E3E0D6;margin:0 28px}
+.tear-line::before,.tear-line::after{content:'';position:absolute;top:-11px;width:22px;height:22px;border-radius:50%;background:#FFFFFF}
+.tear-line::before{left:-11px}
+.tear-line::after{right:-11px}
+.tear-line-cream::before,.tear-line-cream::after{background:#FAF7F0}
+.ticket-card{position:relative}
+.ticket-card::before,.ticket-card::after{content:'';position:absolute;width:24px;height:24px;border-radius:50%;background:#FFFFFF;top:50%;transform:translateY(-50%);z-index:5}
+.ticket-card::before{left:-12px}
+.ticket-card::after{right:-12px}
+.ticket-cut{border-top:2px dashed #E3E0D6;position:relative}
+.stamp-badge{border:3px dashed #E63946;transform:rotate(-9deg)}
+.wheel-pointer{width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #15131C}
+.no-scrollbar::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body class="antialiased text-ink">
+<div x-data="appData()" x-init="init()" x-cloak>
+
+<section x-show="screen==='landing'" x-cloak>
+
+<header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-full bg-stamp-500 text-white flex items-center justify-center font-display font-black text-base rotate-[-6deg] shadow-md shadow-stamp-200">V</div>
+      <span class="font-display font-extrabold text-2xl tracking-tight">VUELVE</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-9 text-sm font-semibold text-slate-600">
+      <a href="#como-funciona" class="hover:text-ink transition-colors">Cómo funciona</a>
+      <a href="#productos" class="hover:text-ink transition-colors">Programas</a>
+      <a href="#planes" class="hover:text-ink transition-colors">Planes</a>
+      <a href="#faq" class="hover:text-ink transition-colors">Preguntas</a>
+    </nav>
+    <div class="hidden md:flex items-center gap-3">
+      <button @click="irApp('dashboard')" class="px-5 py-2.5 rounded-full bg-ink text-white text-sm font-bold hover:bg-primary-700 transition-colors">Probar el panel</button>
+    </div>
+    <button class="md:hidden" @click="mobileNavOpen=!mobileNavOpen">
+      <i data-lucide="menu" class="w-6 h-6"></i>
+    </button>
+  </div>
+  <div x-show="mobileNavOpen" x-transition class="md:hidden border-t border-slate-100 px-6 py-4 flex flex-col gap-4 text-sm font-semibold text-slate-600 bg-white">
+    <a href="#como-funciona" @click="mobileNavOpen=false">Cómo funciona</a>
+    <a href="#productos" @click="mobileNavOpen=false">Programas</a>
+    <a href="#planes" @click="mobileNavOpen=false">Planes</a>
+    <a href="#faq" @click="mobileNavOpen=false">Preguntas</a>
+    <button @click="irApp('dashboard')" class="px-5 py-2.5 rounded-full bg-ink text-white text-sm font-bold text-center">Probar el panel</button>
+  </div>
+</header>
+
+<section class="max-w-7xl mx-auto px-6 lg:px-10 pt-14 lg:pt-20 pb-16 grid lg:grid-cols-2 gap-12 items-center">
+  <div data-aos="fade-up">
+    <span class="inline-flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-stamp-600 bg-stamp-50 border border-stamp-100 px-3 py-1.5 rounded-full">PROGRAMAS DE FIDELIZACIÓN · SIN DESARROLLAR NADA</span>
+    <h1 class="font-display font-black uppercase leading-[0.95] text-6xl sm:text-7xl lg:text-[5.2rem] mt-6">
+      HAZ QUE<br><span class="text-stamp-500">VUELVAN.</span>
+    </h1>
+    <p class="mt-6 text-lg text-slate-600 max-w-md leading-relaxed">Cartillas de sellos y ruleta de premios en un solo panel. Configura tu programa, registra cada visita en segundos y mira quién vuelve por su premio.</p>
+    <div class="mt-9 flex flex-wrap items-center gap-4">
+      <button @click="irApp('dashboard')" class="px-7 py-3.5 rounded-full bg-stamp-500 text-white font-bold hover:bg-stamp-600 transition-colors shadow-lg shadow-stamp-200 flex items-center gap-2">
+        Probar el panel ahora <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+      <a href="#planes" class="px-7 py-3.5 rounded-full border-2 border-ink font-bold hover:bg-ink hover:text-white transition-colors">Ver planes</a>
+    </div>
+    <div class="mt-10 flex items-center gap-8 font-mono">
+      <div><p class="text-2xl font-bold">+480</p><p class="text-xs text-slate-500">clientes fidelizados</p></div>
+      <div class="w-px h-10 bg-slate-200"></div>
+      <div><p class="text-2xl font-bold">92%</p><p class="text-xs text-slate-500">vuelve antes de 30 días</p></div>
+      <div class="w-px h-10 bg-slate-200"></div>
+      <div><p class="text-2xl font-bold">0</p><p class="text-xs text-slate-500">líneas de código para ti</p></div>
+    </div>
+  </div>
+  <div class="relative" data-aos="fade-up" data-aos-delay="100">
+    <div class="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary-200/60 aspect-[4/5]">
+      <img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1200&q=80" alt="" class="absolute inset-0 w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/0 to-ink/10"></div>
+      <p class="absolute bottom-6 left-6 right-6 text-white font-display font-bold text-xl uppercase leading-tight">Cada visita, un sello.<br>Cada sello, un motivo para volver.</p>
+    </div>
+    <div class="absolute -top-6 -left-6 bg-white rounded-2xl shadow-xl px-5 py-3.5 border border-slate-100 hidden sm:block">
+      <p class="font-mono text-xs text-slate-400">SELLO REGISTRADO</p>
+      <p class="font-bold text-sm flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> María F. · Café de la casa</p>
+    </div>
+    <div class="absolute -bottom-7 -right-4 bg-ink text-white rounded-2xl shadow-xl px-5 py-3.5 hidden sm:block">
+      <p class="font-mono text-xs text-gold-300">GIRO DE RULETA</p>
+      <p class="font-bold text-sm flex items-center gap-2"><i data-lucide="trophy" class="w-4 h-4 text-gold-400"></i> ¡Gran premio para Lucía!</p>
+    </div>
+  </div>
+</section>
+
+<div class="tear-line"></div>
+
+<section class="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+  <p class="text-center text-xs font-mono font-bold tracking-widest text-slate-400 mb-6">NEGOCIOS QUE YA HACEN QUE SUS CLIENTES VUELVAN</p>
+  <div class="flex flex-wrap justify-center gap-3">
+    <span class="px-5 py-2.5 rounded-full border border-slate-200 font-display font-bold text-sm">CAFÉ TOSTADO</span>
+    <span class="px-5 py-2.5 rounded-full border border-slate-200 font-display font-bold text-sm">BARBERÍA CENTRO</span>
+    <span class="px-5 py-2.5 rounded-full border border-slate-200 font-display font-bold text-sm">BOUTIQUE LIMA</span>
+    <span class="px-5 py-2.5 rounded-full border border-slate-200 font-display font-bold text-sm">PET SHOP MANADA</span>
+    <span class="px-5 py-2.5 rounded-full border border-slate-200 font-display font-bold text-sm">GIMNASIO PULSO</span>
+  </div>
+</section>
+
+<section id="como-funciona" class="bg-cream py-20">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="max-w-xl mb-14" data-aos="fade-up">
+      <span class="font-mono text-xs font-bold tracking-widest text-primary-600">CÓMO FUNCIONA</span>
+      <h2 class="font-display font-black uppercase text-4xl sm:text-5xl mt-3">Tres pasos, ningún desarrollo</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="bg-white rounded-2xl p-7 border border-slate-100" data-aos="fade-up">
+        <p class="font-mono text-stamp-500 font-bold text-sm mb-4">N.º 01</p>
+        <h3 class="font-display font-bold text-xl uppercase mb-2">Configura tu programa</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">Elige cartilla de sellos o ruleta de premios, define el premio y listo. Todo desde el panel, sin tarjetas físicas.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 border border-slate-100" data-aos="fade-up" data-aos-delay="100">
+        <p class="font-mono text-stamp-500 font-bold text-sm mb-4">N.º 02</p>
+        <h3 class="font-display font-bold text-xl uppercase mb-2">Registra cada visita</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">Busca al cliente, suma un sello o súmalo como participante de la ruleta. Si no existe, se crea al instante.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 border border-slate-100" data-aos="fade-up" data-aos-delay="200">
+        <p class="font-mono text-stamp-500 font-bold text-sm mb-4">N.º 03</p>
+        <h3 class="font-display font-bold text-xl uppercase mb-2">El cliente vuelve</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">Completa su cartilla o gana en la ruleta. Tú ves todo en el panel: quién vuelve, cuándo y por qué premio.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="productos" class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
+  <div class="max-w-xl mb-14" data-aos="fade-up">
+    <span class="font-mono text-xs font-bold tracking-widest text-primary-600">LOS DOS PROGRAMAS DEL MVP</span>
+    <h2 class="font-display font-black uppercase text-4xl sm:text-5xl mt-3">Sellos o ruleta. Tú decides.</h2>
+  </div>
+  <div class="grid md:grid-cols-2 gap-8">
+    <div class="rounded-3xl border-2 border-ink p-8 flex flex-col" data-aos="fade-up">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-full bg-stamp-50 flex items-center justify-center"><i data-lucide="stamp" class="w-6 h-6 text-stamp-500"></i></div>
+        <h3 class="font-display font-bold text-2xl uppercase">Cartilla de sellos</h3>
+      </div>
+      <div class="grid grid-cols-8 gap-2 mb-6">
+        <template x-for="n in 8" :key="n">
+          <div class="aspect-square rounded-full flex items-center justify-center" :class="n<=5 ? 'bg-stamp-500' : 'border-2 border-dashed border-slate-300'">
+            <i x-show="n<=5" data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+          </div>
+        </template>
+      </div>
+      <p class="text-slate-600 text-sm leading-relaxed mb-6">Define cuántos sellos se necesitan, el premio y una fecha de expiración opcional. Registra sellos en un clic desde la ficha del cliente.</p>
+      <ul class="space-y-2 text-sm font-semibold mb-8">
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-stamp-500"></i> Búsqueda y alta de clientes en el mismo flujo</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-stamp-500"></i> Premio y expiración configurables por programa</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-stamp-500"></i> Aviso visual cuando la cartilla se completa</li>
+      </ul>
+      <button @click="irApp('cartillas')" class="mt-auto self-start px-6 py-3 rounded-full bg-ink text-white font-bold text-sm">Ver demo de cartillas</button>
+    </div>
+    <div class="rounded-3xl border-2 border-ink p-8 flex flex-col" data-aos="fade-up" data-aos-delay="100">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-full bg-gold-50 flex items-center justify-center"><i data-lucide="target" class="w-6 h-6 text-gold-500"></i></div>
+        <h3 class="font-display font-bold text-2xl uppercase">Ruleta de premios</h3>
+      </div>
+      <div class="flex items-center justify-center mb-6">
+        <div class="w-28 h-28 rounded-full" style="background:conic-gradient(from 0deg,#3D348B 0deg 45deg,#E63946 45deg 90deg,#F2A93B 90deg 135deg,#1B7F5C 135deg 180deg,#7B5EA7 180deg 225deg,#D90368 225deg 270deg,#2E86AB 270deg 315deg,#FB8B24 315deg 360deg)"></div>
+      </div>
+      <p class="text-slate-600 text-sm leading-relaxed mb-6">Define premios, cantidad disponible por premio y participantes. La ruleta reparte en orden y salta sola al siguiente premio cuando uno se agota.</p>
+      <ul class="space-y-2 text-sm font-semibold mb-8">
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-500"></i> Stock por premio, nunca prometes lo que no tienes</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-500"></i> Cola de participantes lista para el día del evento</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-500"></i> Historial de resultados con fecha y ganador</li>
+      </ul>
+      <button @click="irApp('ruleta')" class="mt-auto self-start px-6 py-3 rounded-full bg-ink text-white font-bold text-sm">Ver demo de ruleta</button>
+    </div>
+  </div>
+</section>
+
+<section class="relative py-28">
+  <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=80" alt="" class="absolute inset-0 w-full h-full object-cover">
+  <div class="absolute inset-0 bg-ink/75"></div>
+  <div class="relative max-w-3xl mx-auto px-6 text-center text-white" data-aos="fade-up">
+    <i data-lucide="quote" class="w-9 h-9 text-gold-400 mx-auto mb-6"></i>
+    <p class="font-display text-3xl sm:text-4xl font-bold leading-snug">"Antes anotaba los sellos en papelitos que se perdían. Ahora mis clientes ven su avance y los sábados se llenan de gente esperando su turno en la ruleta."</p>
+    <p class="mt-6 font-mono text-sm text-gold-300">RENATA SALCEDO — CAFÉ TOSTADO</p>
+  </div>
+</section>
+
+<section id="planes" class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
+  <div class="text-center max-w-xl mx-auto mb-12" data-aos="fade-up">
+    <span class="font-mono text-xs font-bold tracking-widest text-primary-600">PLANES</span>
+    <h2 class="font-display font-black uppercase text-4xl sm:text-5xl mt-3">Empieza gratis. Crece cuando quieras.</h2>
+    <div class="inline-flex items-center bg-cream rounded-full p-1.5 mt-7 font-mono text-sm font-bold">
+      <button @click="billing='mensual'" class="px-5 py-2 rounded-full transition-colors" :class="billing==='mensual' ? 'bg-ink text-white' : 'text-slate-500'">Mensual</button>
+      <button @click="billing='anual'" class="px-5 py-2 rounded-full transition-colors" :class="billing==='anual' ? 'bg-ink text-white' : 'text-slate-500'">Anual · 2 meses gratis</button>
+    </div>
+  </div>
+  <div class="grid md:grid-cols-3 gap-10 pt-4">
+    <div class="ticket-card bg-white border-2 border-slate-200 rounded-3xl p-8" data-aos="fade-up">
+      <h3 class="font-display font-bold text-xl uppercase">Semilla</h3>
+      <p class="text-sm text-slate-500 mt-1">Para validar tu primer programa</p>
+      <p class="font-display font-black text-5xl mt-6">Gratis</p>
+      <div class="ticket-cut my-7"></div>
+      <ul class="space-y-3 text-sm font-semibold mb-8">
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 1 programa activo</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Hasta 100 clientes</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 1 sucursal</li>
+        <li class="flex items-center gap-2"><i data-lucide="x" class="w-4 h-4 text-slate-300"></i> <span class="text-slate-400">Ruleta de premios</span></li>
+      </ul>
+      <button @click="irApp('dashboard')" class="w-full py-3 rounded-full border-2 border-ink font-bold text-sm">Empezar gratis</button>
+    </div>
+    <div class="ticket-card bg-ink text-white rounded-3xl p-8 relative md:-translate-y-3 shadow-2xl" data-aos="fade-up" data-aos-delay="100">
+      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-stamp-500 text-white text-xs font-mono font-bold px-4 py-1.5 rounded-full">MÁS ELEGIDO</span>
+      <h3 class="font-display font-bold text-xl uppercase">Negocio</h3>
+      <p class="text-sm text-white/60 mt-1">Cartillas + ruleta sin límites</p>
+      <p class="font-display font-black text-5xl mt-6"><span x-text="billing==='anual' ? 'S/890' : 'S/89'"></span><span class="text-base font-sans font-semibold text-white/60" x-text="billing==='anual' ? '/año' : '/mes'"></span></p>
+      <div class="ticket-cut my-7 border-white/15"></div>
+      <ul class="space-y-3 text-sm font-semibold mb-8">
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-400"></i> Cartillas y ruleta ilimitadas</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-400"></i> Clientes ilimitados</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-400"></i> Hasta 3 sucursales</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-gold-400"></i> Soporte por chat</li>
+      </ul>
+      <button @click="irApp('dashboard')" class="w-full py-3 rounded-full bg-stamp-500 font-bold text-sm">Probar Negocio</button>
+    </div>
+    <div class="ticket-card bg-white border-2 border-slate-200 rounded-3xl p-8" data-aos="fade-up" data-aos-delay="200">
+      <h3 class="font-display font-bold text-xl uppercase">Cadena</h3>
+      <p class="text-sm text-slate-500 mt-1">Para redes de varias tiendas</p>
+      <p class="font-display font-black text-5xl mt-6"><span x-text="billing==='anual' ? 'S/2490' : 'S/249'"></span><span class="text-base font-sans font-semibold text-slate-400" x-text="billing==='anual' ? '/año' : '/mes'"></span></p>
+      <div class="ticket-cut my-7"></div>
+      <ul class="space-y-3 text-sm font-semibold mb-8">
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Sucursales ilimitadas</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Roles y permisos de equipo</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Exportar tus datos</li>
+        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Soporte dedicado</li>
+      </ul>
+      <button @click="irApp('dashboard')" class="w-full py-3 rounded-full border-2 border-ink font-bold text-sm">Hablar con ventas</button>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="bg-cream py-20">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <span class="font-mono text-xs font-bold tracking-widest text-primary-600">PREGUNTAS FRECUENTES</span>
+      <h2 class="font-display font-black uppercase text-4xl mt-3">Antes de que preguntes</h2>
+    </div>
+    <div class="space-y-3">
+      <template x-for="(item,idx) in [
+        {q:'¿Necesito tarjetas físicas para los sellos?', r:'No. Cada sello se registra desde el panel al momento de la visita. El cliente puede ver su avance sin que imprimas nada.'},
+        {q:'¿Qué pasa cuando se agota un premio de la ruleta?', r:'El sistema reparte los premios en el orden que definas y salta automáticamente al siguiente cuando el stock de uno se acaba, para que la ruleta nunca prometa algo que ya no tienes.'},
+        {q:'¿Puedo tener varias cartillas o ruletas a la vez?', r:'Sí. Puedes crear distintos programas, por ejemplo uno para café y otro para productos, y activarlos o pausarlos cuando quieras.'},
+        {q:'¿Puedo cancelar cuando quiera?', r:'Sí, no hay contratos forzosos. Cambias o cancelas tu plan desde el panel en cualquier momento.'}
+      ]" :key="idx">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <button @click="faqOpen = faqOpen===idx ? null : idx" class="w-full flex items-center justify-between px-6 py-5 text-left font-bold">
+            <span x-text="item.q"></span>
+            <i data-lucide="chevron-down" class="w-5 h-5 transition-transform shrink-0" :class="faqOpen===idx && 'rotate-180'"></i>
+          </button>
+          <div x-show="faqOpen===idx" x-collapse class="px-6 pb-5 text-slate-600 text-sm leading-relaxed" x-text="item.r"></div>
+        </div>
+      </template>
+    </div>
+  </div>
+</section>
+
+<section class="relative py-28">
+  <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1800&q=80" alt="" class="absolute inset-0 w-full h-full object-cover">
+  <div class="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/70 to-ink/40"></div>
+  <div class="relative max-w-7xl mx-auto px-6 lg:px-10" data-aos="fade-up">
+    <p class="font-mono text-xs font-bold tracking-widest text-gold-300 mb-4">EMPIEZA EN MINUTOS</p>
+    <h2 class="font-display font-black uppercase text-4xl sm:text-6xl text-white max-w-2xl leading-[0.95]">TU PRIMER PROGRAMA<br>PUEDE EMPEZAR HOY.</h2>
+    <button @click="irApp('dashboard')" class="mt-9 px-8 py-4 rounded-full bg-stamp-500 text-white font-bold hover:bg-stamp-600 transition-colors shadow-xl flex items-center gap-2">
+      Probar el panel gratis <i data-lucide="arrow-right" class="w-4 h-4"></i>
+    </button>
+  </div>
+</section>
+
+<footer class="bg-ink text-white/70 py-14">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 grid sm:grid-cols-2 md:grid-cols-4 gap-10">
+    <div>
+      <div class="flex items-center gap-2.5 mb-4">
+        <div class="w-8 h-8 rounded-full bg-stamp-500 text-white flex items-center justify-center font-display font-black text-sm">V</div>
+        <span class="font-display font-extrabold text-xl text-white">VUELVE</span>
+      </div>
+      <p class="text-sm leading-relaxed">Fidelización simple para negocios que no quieren depender de papelitos.</p>
+    </div>
+    <div>
+      <p class="font-bold text-white text-sm mb-4">Producto</p>
+      <ul class="space-y-2 text-sm">
+        <li><a href="#como-funciona" class="hover:text-white">Cómo funciona</a></li>
+        <li><a href="#productos" class="hover:text-white">Programas</a></li>
+        <li><a href="#planes" class="hover:text-white">Planes</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-bold text-white text-sm mb-4">Panel</p>
+      <ul class="space-y-2 text-sm">
+        <li><button @click="irApp('cartillas')" class="hover:text-white">Cartillas</button></li>
+        <li><button @click="irApp('ruleta')" class="hover:text-white">Ruleta</button></li>
+        <li><button @click="irApp('clientes')" class="hover:text-white">Clientes</button></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-bold text-white text-sm mb-4">Contacto</p>
+      <ul class="space-y-2 text-sm">
+        <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> hola@vuelve.app</li>
+        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> +51 999 000 111</li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 mt-10 pt-6 border-t border-white/10 text-xs">© 2026 Vuelve. MVP de producto, datos de ejemplo.</div>
+</footer>
+
+</section>
+
+<section x-show="screen==='app'" x-cloak class="min-h-screen bg-cream flex">
+
+  <aside class="hidden md:flex md:flex-col w-64 bg-white border-r border-slate-100 fixed inset-y-0 left-0 z-30">
+    <div class="h-20 flex items-center gap-2.5 px-6 border-b border-slate-100">
+      <div class="w-9 h-9 rounded-full bg-stamp-500 text-white flex items-center justify-center font-display font-black text-base rotate-[-6deg]">V</div>
+      <span class="font-display font-extrabold text-xl tracking-tight">VUELVE</span>
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-1.5">
+      <button @click="irPagina('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors" :class="appPage==='dashboard' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:bg-slate-50'">
+        <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i> Panel
+      </button>
+      <button @click="irPagina('clientes')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors" :class="appPage==='clientes' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:bg-slate-50'">
+        <i data-lucide="users" class="w-4.5 h-4.5"></i> Clientes
+      </button>
+      <button @click="irPagina('cartillas')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors" :class="appPage==='cartillas' ? 'bg-primary-600 text-white' : 'text-slate-500 hover:bg-slate-50'">
+        <i data-lucide="stamp" class="w-4.5 h-4.5"></i> Cartillas
+      </button>
+      <button @click="irPagina('ruleta')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors" :class="(appPage==='ruleta'||appPage==='ruleta-play') ? 'bg-primary-600 text-white' : 'text-slate-500 hover:bg-slate-50'">
+        <i data-lucide="target" class="w-4.5 h-4.5"></i> Ruleta
+      </button>
+    </nav>
+    <div class="p-4 border-t border-slate-100">
+      <button @click="irLanding()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50">
+        <i data-lucide="arrow-left" class="w-4.5 h-4.5"></i> Volver al sitio
+      </button>
+    </div>
+  </aside>
+
+  <div x-show="mobileSidebarOpen" x-transition.opacity @click="mobileSidebarOpen=false" class="fixed inset-0 bg-ink/50 z-40 md:hidden"></div>
+  <aside x-show="mobileSidebarOpen" x-transition:enter="transition transform duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" class="fixed inset-y-0 left-0 w-64 bg-white z-50 md:hidden flex flex-col">
+    <div class="h-20 flex items-center justify-between px-6 border-b border-slate-100">
+      <span class="font-display font-extrabold text-xl">VUELVE</span>
+      <button @click="mobileSidebarOpen=false"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-1.5">
+      <button @click="irPagina('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold" :class="appPage==='dashboard' ? 'bg-primary-600 text-white' : 'text-slate-500'"><i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i> Panel</button>
+      <button @click="irPagina('clientes')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold" :class="appPage==='clientes' ? 'bg-primary-600 text-white' : 'text-slate-500'"><i data-lucide="users" class="w-4.5 h-4.5"></i> Clientes</button>
+      <button @click="irPagina('cartillas')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold" :class="appPage==='cartillas' ? 'bg-primary-600 text-white' : 'text-slate-500'"><i data-lucide="stamp" class="w-4.5 h-4.5"></i> Cartillas</button>
+      <button @click="irPagina('ruleta')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold" :class="(appPage==='ruleta'||appPage==='ruleta-play') ? 'bg-primary-600 text-white' : 'text-slate-500'"><i data-lucide="target" class="w-4.5 h-4.5"></i> Ruleta</button>
+    </nav>
+    <div class="p-4 border-t border-slate-100">
+      <button @click="irLanding()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-500"><i data-lucide="arrow-left" class="w-4.5 h-4.5"></i> Volver al sitio</button>
+    </div>
+  </aside>
+
+  <div class="flex-1 md:ml-64 min-h-screen flex flex-col">
+
+    <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-20">
+      <div class="flex items-center gap-4">
+        <button class="md:hidden" @click="mobileSidebarOpen=true"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <h1 class="font-display font-bold text-2xl uppercase tracking-tight" x-text="appPage==='dashboard' ? 'Panel' : appPage==='clientes' ? 'Clientes' : appPage==='cartillas' ? 'Cartillas de sellos' : 'Ruleta de premios'"></h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <i data-lucide="bell" class="w-5 h-5 text-slate-400 hidden sm:block"></i>
+        <div class="w-9 h-9 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-sm">CT</div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-6 lg:p-10">
+
+      <div x-show="appPage==='dashboard'" x-cloak>
+        <p class="text-slate-500 mb-8">Hola, equipo de Café Tostado — esto es lo que pasó en tus programas.</p>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          <div class="bg-white rounded-2xl p-6 border border-slate-100">
+            <div class="flex items-center justify-between mb-3"><i data-lucide="users" class="w-5 h-5 text-primary-600"></i><span class="flex items-center gap-1 text-xs font-mono font-bold text-emerald-600"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +8%</span></div>
+            <p class="font-display font-black text-3xl">482</p>
+            <p class="text-xs text-slate-500 mt-1">Clientes activos</p>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-slate-100">
+            <div class="flex items-center justify-between mb-3"><i data-lucide="stamp" class="w-5 h-5 text-stamp-500"></i><span class="flex items-center gap-1 text-xs font-mono font-bold text-emerald-600"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +12%</span></div>
+            <p class="font-display font-black text-3xl">37</p>
+            <p class="text-xs text-slate-500 mt-1">Sellos registrados hoy</p>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-slate-100">
+            <div class="flex items-center justify-between mb-3"><i data-lucide="target" class="w-5 h-5 text-gold-500"></i><span class="flex items-center gap-1 text-xs font-mono font-bold text-rose-500"><i data-lucide="trending-down" class="w-3.5 h-3.5"></i> -4%</span></div>
+            <p class="font-display font-black text-3xl">19</p>
+            <p class="text-xs text-slate-500 mt-1">Giros de ruleta hoy</p>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-slate-100">
+            <div class="flex items-center justify-between mb-3"><i data-lucide="trophy" class="w-5 h-5 text-primary-600"></i><span class="flex items-center gap-1 text-xs font-mono font-bold text-emerald-600"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +21%</span></div>
+            <p class="font-display font-black text-3xl">64</p>
+            <p class="text-xs text-slate-500 mt-1">Premios entregados (mes)</p>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-5 mb-8">
+          <div class="bg-white rounded-2xl p-6 border border-slate-100 lg:col-span-2">
+            <p class="font-bold mb-4">Actividad de la semana</p>
+            <div class="h-64"><canvas id="chartVisitas"></canvas></div>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-slate-100">
+            <p class="font-bold mb-4">Premios entregados por tipo</p>
+            <div class="h-64"><canvas id="chartPremios"></canvas></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <p class="font-bold px-6 pt-6 pb-4">Actividad reciente</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-400 font-mono text-xs border-y border-slate-100">
+              <th class="px-6 py-3">Cliente</th><th class="px-6 py-3">Acción</th><th class="px-6 py-3">Detalle</th><th class="px-6 py-3">Fecha</th>
+            </tr></thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr><td class="px-6 py-3.5 font-semibold">María Fernández</td><td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-stamp-50 text-stamp-600 text-xs font-bold">Sello</span></td><td class="px-6 py-3.5 text-slate-500">Café de la casa · 5/8</td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs">Hoy, 10:14 a.m.</td></tr>
+              <tr><td class="px-6 py-3.5 font-semibold">Lucía Paredes</td><td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-gold-50 text-gold-600 text-xs font-bold">Ruleta</span></td><td class="px-6 py-3.5 text-slate-500">Gran premio: Audífonos</td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs">Ayer, 4:12 p.m.</td></tr>
+              <tr><td class="px-6 py-3.5 font-semibold">Jorge Quispe</td><td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-stamp-50 text-stamp-600 text-xs font-bold">Sello</span></td><td class="px-6 py-3.5 text-slate-500">Café de la casa · 8/8 completada</td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs">Ayer, 1:05 p.m.</td></tr>
+              <tr><td class="px-6 py-3.5 font-semibold">Camila Ríos</td><td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-gold-50 text-gold-600 text-xs font-bold">Ruleta</span></td><td class="px-6 py-3.5 text-slate-500">Combo sorpresa</td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs">15 jun, 6:40 p.m.</td></tr>
+              <tr><td class="px-6 py-3.5 font-semibold">Diego Tovar</td><td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-primary-50 text-primary-600 text-xs font-bold">Cliente nuevo</span></td><td class="px-6 py-3.5 text-slate-500">Registrado desde Cartillas</td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs">14 jun, 11:20 a.m.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div x-show="appPage==='clientes'" x-cloak>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div class="relative flex-1 max-w-sm">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+            <input type="text" x-model="clienteSearchTable" placeholder="Buscar por nombre o teléfono" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none">
+          </div>
+          <button @click="abrirNuevoCliente()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ink text-white font-bold text-sm"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo cliente</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-400 font-mono text-xs border-y border-slate-100">
+              <th class="px-6 py-3">Nombre</th><th class="px-6 py-3">Teléfono</th><th class="px-6 py-3 hidden sm:table-cell">Registrado</th><th class="px-6 py-3">Cartillas</th><th class="px-6 py-3"></th>
+            </tr></thead>
+            <tbody class="divide-y divide-slate-50">
+              <template x-for="c in clientesFiltrados()" :key="c.id">
+                <tr>
+                  <td class="px-6 py-3.5 font-semibold" x-text="c.nombre"></td>
+                  <td class="px-6 py-3.5 font-mono text-xs text-slate-500" x-text="c.telefono"></td>
+                  <td class="px-6 py-3.5 text-slate-500 hidden sm:table-cell" x-text="c.fechaRegistro"></td>
+                  <td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full bg-primary-50 text-primary-600 text-xs font-bold" x-text="cartillasActivasDeCliente(c.id)"></span></td>
+                  <td class="px-6 py-3.5 text-right"><button @click="abrirEditarCliente(c)" class="p-2 rounded-lg hover:bg-slate-100"><i data-lucide="pencil" class="w-4 h-4 text-slate-500"></i></button></td>
+                </tr>
+              </template>
+              <tr x-show="clientesFiltrados().length===0"><td colspan="5" class="px-6 py-10 text-center text-slate-400 text-sm">No encontramos clientes con ese nombre o teléfono.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div x-show="appPage==='cartillas'" x-cloak>
+        <div class="flex items-center justify-between mb-5">
+          <p class="font-bold text-lg">Programas</p>
+          <button @click="abrirNuevoPrograma()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ink text-white font-bold text-sm"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo programa</button>
+        </div>
+        <div class="grid md:grid-cols-3 gap-5 mb-10">
+          <template x-for="p in programas" :key="p.id">
+            <div class="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-bold pr-2" x-text="p.nombre"></h3>
+                <button @click="p.activo=!p.activo" class="w-11 h-6 rounded-full flex items-center px-0.5 shrink-0 transition-colors" :class="p.activo ? 'bg-emerald-500 justify-end' : 'bg-slate-200 justify-start'">
+                  <span class="w-5 h-5 rounded-full bg-white block"></span>
+                </button>
+              </div>
+              <p class="text-sm text-slate-500 mb-4 leading-relaxed" x-text="p.descripcion"></p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-stamp-50 text-stamp-600 text-xs font-bold font-mono" x-text="p.sellosRequeridos+' sellos'"></span>
+                <span class="px-2.5 py-1 rounded-full bg-gold-50 text-gold-600 text-xs font-bold" x-text="p.expiraDias ? p.expiraDias+' días' : 'Sin expiración'"></span>
+              </div>
+              <p class="text-sm font-semibold mb-5 flex items-center gap-2"><i data-lucide="gift" class="w-4 h-4 text-primary-600"></i><span x-text="p.premio"></span></p>
+              <button @click="abrirEditarPrograma(p)" class="mt-auto flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-ink font-bold text-sm"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar</button>
+            </div>
+          </template>
+        </div>
+
+        <div class="flex items-center justify-between mb-5">
+          <p class="font-bold text-lg">Tarjetas de clientes</p>
+          <button @click="abrirNuevaTarjeta()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stamp-500 text-white font-bold text-sm"><i data-lucide="plus" class="w-4 h-4"></i> Registrar tarjeta</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-400 font-mono text-xs border-y border-slate-100">
+              <th class="px-6 py-3">Cliente</th><th class="px-6 py-3 hidden sm:table-cell">Programa</th><th class="px-6 py-3">Progreso</th><th class="px-6 py-3"></th>
+            </tr></thead>
+            <tbody class="divide-y divide-slate-50">
+              <template x-for="t in tarjetas" :key="t.id">
+                <tr>
+                  <td class="px-6 py-4 font-semibold" x-text="clienteNombre(t.clienteId)"></td>
+                  <td class="px-6 py-4 text-slate-500 hidden sm:table-cell" x-text="programaNombre(t.programaId)"></td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <div class="flex gap-1 flex-wrap max-w-[160px]">
+                        <template x-for="i in programaSellos(t.programaId)" :key="i">
+                          <span class="w-3 h-3 rounded-full" :class="i<=t.sellos ? 'bg-stamp-500' : 'bg-slate-200'"></span>
+                        </template>
+                      </div>
+                      <span class="font-mono text-xs text-slate-400" x-text="t.sellos+'/'+programaSellos(t.programaId)"></span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-right"><button @click="abrirSello(t)" class="px-4 py-2 rounded-lg bg-ink text-white text-xs font-bold">+ Sello</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div x-show="appPage==='ruleta'" x-cloak>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <p class="text-slate-500 max-w-md">Configura premios y participantes. Cuando todo esté listo, inicia el juego.</p>
+          <button @click="iniciarJuego()" class="flex items-center gap-2 px-7 py-3.5 rounded-full bg-gold-400 text-ink font-bold shadow-lg shadow-gold-100"><i data-lucide="play" class="w-4 h-4"></i> Iniciar juego</button>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white rounded-2xl border border-slate-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <p class="font-bold">Premios</p>
+              <button @click="abrirNuevoPremio()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-ink text-white text-xs font-bold"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Premio</button>
+            </div>
+            <div class="space-y-3 max-h-[420px] overflow-auto no-scrollbar">
+              <template x-for="p in premios" :key="p.id">
+                <div class="border border-slate-100 rounded-xl p-3.5">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-3 h-3 rounded-full shrink-0" :style="'background:'+p.color"></span>
+                      <p class="font-semibold text-sm" x-text="'#'+p.posicion+' · '+p.nombre"></p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <button @click="abrirEditarPremio(p)" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="pencil" class="w-3.5 h-3.5 text-slate-400"></i></button>
+                      <button @click="eliminarPremio(p.id)" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-slate-400"></i></button>
+                    </div>
+                  </div>
+                  <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" :style="'width:'+Math.round((p.cantidadDisponible/p.cantidadTotal)*100)+'%;background:'+p.color"></div>
+                  </div>
+                  <p class="text-xs font-mono text-slate-400 mt-1.5" x-text="p.cantidadDisponible+' de '+p.cantidadTotal+' disponibles'"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-6">
+            <p class="font-bold mb-4">Participantes</p>
+            <div class="relative mb-3">
+              <input type="text" x-model="participanteForm.query" placeholder="Busca un cliente para agregarlo" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none">
+              <div x-show="participanteForm.query" class="absolute z-10 w-full bg-white border border-slate-100 rounded-xl shadow-xl mt-1.5 max-h-52 overflow-auto">
+                <template x-for="c in sugerenciasParticipante()" :key="c.id">
+                  <button type="button" @click="agregarParticipante(c)" class="w-full text-left px-4 py-2.5 hover:bg-cream flex items-center justify-between text-sm">
+                    <span x-text="c.nombre"></span><span class="font-mono text-xs text-slate-400" x-text="c.telefono"></span>
+                  </button>
+                </template>
+                <div x-show="sugerenciasParticipante().length===0 && !participanteForm.mostrarNuevo" class="px-4 py-2.5">
+                  <button type="button" @click="participanteForm.mostrarNuevo=true" class="text-stamp-600 font-semibold text-sm">+ Crear cliente "<span x-text="participanteForm.query"></span>"</button>
+                </div>
+                <div x-show="participanteForm.mostrarNuevo" class="px-4 py-3 border-t border-slate-100 flex gap-2">
+                  <input type="text" x-model="participanteForm.nuevoTelefono" placeholder="Teléfono" class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none">
+                  <button @click="confirmarNuevoParticipante()" class="px-3.5 py-2 rounded-lg bg-ink text-white text-xs font-bold">Agregar</button>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-2 max-h-[330px] overflow-auto no-scrollbar">
+              <template x-for="p in participantes" :key="p.id">
+                <div class="flex items-center justify-between border border-slate-100 rounded-xl px-4 py-2.5">
+                  <div>
+                    <p class="font-semibold text-sm" x-text="p.nombre"></p>
+                    <p class="text-xs text-slate-400" x-show="p.estado==='jugado'" x-text="'Ganó: '+p.premioGanado"></p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold" :class="p.estado==='pendiente' ? 'bg-primary-50 text-primary-600' : 'bg-emerald-50 text-emerald-600'" x-text="p.estado==='pendiente' ? 'Pendiente' : 'Jugó'"></span>
+                    <button x-show="p.estado==='pendiente'" @click="quitarParticipante(p.id)" class="p-1 rounded hover:bg-slate-100"><i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i></button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <p class="font-bold px-6 pt-6 pb-4">Resultados</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-400 font-mono text-xs border-y border-slate-100">
+              <th class="px-6 py-3">Participante</th><th class="px-6 py-3">Premio</th><th class="px-6 py-3">Fecha</th>
+            </tr></thead>
+            <tbody class="divide-y divide-slate-50">
+              <template x-for="r in resultados" :key="r.id">
+                <tr><td class="px-6 py-3.5 font-semibold" x-text="r.participante"></td><td class="px-6 py-3.5 text-slate-500" x-text="r.premio"></td><td class="px-6 py-3.5 text-slate-400 font-mono text-xs" x-text="r.fecha"></td></tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div x-show="appPage==='ruleta-play'" x-cloak>
+        <button @click="irPagina('ruleta')" class="flex items-center gap-2 text-sm font-bold text-slate-500 mb-6"><i data-lucide="arrow-left" class="w-4 h-4"></i> Volver a configuración</button>
+        <div class="grid lg:grid-cols-[1fr_320px] gap-10 items-start">
+          <div class="flex flex-col items-center">
+            <div class="relative w-[300px] h-[300px] mb-8">
+              <div class="absolute -top-1 left-1/2 -translate-x-1/2 z-20 wheel-pointer"></div>
+              <div class="absolute inset-0 rounded-full shadow-2xl ring-8 ring-white" :style="'transition:transform 3.8s cubic-bezier(.15,.67,.1,1);transform:rotate('+rotacionActual+'deg);background:'+wheelGradient()">
+                <template x-for="(p,i) in premios" :key="p.id">
+                  <div class="absolute inset-0 flex items-start justify-center" :style="'transform:'+labelTransform(i)">
+                    <span class="px-2 py-1 rounded-full bg-white/90 font-mono text-[10px] font-bold text-ink shadow whitespace-nowrap" :style="'transform:'+labelInnerTransform(i)" x-text="p.nombre"></span>
+                  </div>
+                </template>
+              </div>
+              <button @click="girar()" :disabled="ruletaGirando" class="absolute inset-0 m-auto w-20 h-20 rounded-full bg-ink text-white font-display font-bold text-sm flex items-center justify-center shadow-xl disabled:opacity-70 z-10">
+                <span x-show="!ruletaGirando">GIRAR</span>
+                <i x-show="ruletaGirando" data-lucide="loader-circle" class="w-6 h-6 animate-spin"></i>
+              </button>
+            </div>
+            <div class="w-full max-w-sm">
+              <label class="text-xs font-mono font-bold text-slate-400">JUGADOR EN TURNO</label>
+              <select x-model.number="participanteSeleccionadoId" @change="faltaParticipante=false" class="w-full mt-1.5 px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold outline-none focus:border-primary-500">
+                <option value="">Selecciona un participante</option>
+                <template x-for="p in pendientesParticipantes()" :key="p.id">
+                  <option :value="p.id" x-text="p.nombre"></option>
+                </template>
+              </select>
+              <p x-show="faltaParticipante" class="text-stamp-600 text-xs font-semibold mt-2">Selecciona quién va a girar antes de continuar.</p>
+              <p x-show="sinStockRuleta" class="text-stamp-600 text-xs font-semibold mt-2">Ya no quedan premios disponibles en la ruleta.</p>
+              <p x-show="pendientesParticipantes().length===0 && !sinStockRuleta" class="text-slate-400 text-xs mt-2">No hay participantes pendientes. Agrega uno desde configuración.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-100 p-6">
+            <p class="font-bold mb-4">Stock en el tambor</p>
+            <div class="space-y-3 mb-6">
+              <template x-for="p in premios" :key="p.id">
+                <div class="flex items-center gap-2.5 text-sm">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background:'+p.color"></span>
+                  <span class="flex-1 font-semibold" :class="p.cantidadDisponible===0 && 'text-slate-300 line-through'" x-text="p.nombre"></span>
+                  <span class="font-mono text-xs text-slate-400" x-text="p.cantidadDisponible"></span>
+                </div>
+              </template>
+            </div>
+            <p class="font-bold mb-3 text-sm">Últimos resultados</p>
+            <div class="space-y-2">
+              <template x-for="r in resultados.slice(0,4)" :key="r.id">
+                <div class="text-xs border border-slate-100 rounded-lg px-3 py-2">
+                  <p class="font-semibold" x-text="r.participante"></p>
+                  <p class="text-slate-400" x-text="r.premio+' · '+r.fecha"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</section>
+
+<div x-show="clienteDrawer" x-cloak class="fixed inset-0 z-50">
+  <div x-show="clienteDrawer" x-transition.opacity @click="clienteDrawer=false" class="absolute inset-0 bg-ink/40"></div>
+  <div x-show="clienteDrawer" x-transition:enter="transition transform duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-6 h-20 border-b border-slate-100">
+      <h3 class="font-display font-bold text-xl uppercase" x-text="clienteForm.id ? 'Editar cliente' : 'Nuevo cliente'"></h3>
+      <button @click="clienteDrawer=false"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex-1 overflow-auto p-6 space-y-5">
+      <div><label class="text-xs font-mono font-bold text-slate-400">NOMBRE COMPLETO</label><input type="text" x-model="clienteForm.nombre" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">TELÉFONO</label><input type="text" x-model="clienteForm.telefono" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">CORREO (OPCIONAL)</label><input type="email" x-model="clienteForm.email" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">NOTAS (OPCIONAL)</label><textarea x-model="clienteForm.notas" rows="3" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></textarea></div>
+    </div>
+    <div class="p-6 border-t border-slate-100 flex gap-3">
+      <button @click="clienteDrawer=false" class="flex-1 py-3 rounded-xl border-2 border-ink font-bold text-sm">Cancelar</button>
+      <button @click="guardarCliente()" class="flex-1 py-3 rounded-xl bg-ink text-white font-bold text-sm">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<div x-show="programaDrawer" x-cloak class="fixed inset-0 z-50">
+  <div x-show="programaDrawer" x-transition.opacity @click="programaDrawer=false" class="absolute inset-0 bg-ink/40"></div>
+  <div x-show="programaDrawer" x-transition:enter="transition transform duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-6 h-20 border-b border-slate-100">
+      <h3 class="font-display font-bold text-xl uppercase" x-text="programaForm.id ? 'Editar programa' : 'Nuevo programa'"></h3>
+      <button @click="programaDrawer=false"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex-1 overflow-auto p-6 space-y-5">
+      <div><label class="text-xs font-mono font-bold text-slate-400">NOMBRE DEL PROGRAMA</label><input type="text" x-model="programaForm.nombre" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">DESCRIPCIÓN</label><textarea x-model="programaForm.descripcion" rows="2" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></textarea></div>
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">SELLOS NECESARIOS</label>
+        <div class="flex items-center gap-3 mt-1.5">
+          <button type="button" @click="programaForm.sellosRequeridos=Math.max(1,programaForm.sellosRequeridos-1)" class="w-9 h-9 rounded-lg border border-slate-200 font-bold">-</button>
+          <input type="number" x-model.number="programaForm.sellosRequeridos" class="w-20 text-center py-2 rounded-xl border border-slate-200 text-sm outline-none">
+          <button type="button" @click="programaForm.sellosRequeridos++" class="w-9 h-9 rounded-lg border border-slate-200 font-bold">+</button>
+        </div>
+      </div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">PREMIO</label><input type="text" x-model="programaForm.premio" placeholder="Ej. 1 café americano gratis" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">EXPIRACIÓN (OPCIONAL)</label>
+        <select x-model="programaForm.expiraOpcion" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500">
+          <option value="sin">Sin expiración</option>
+          <option value="30">30 días</option>
+          <option value="60">60 días</option>
+          <option value="90">90 días</option>
+          <option value="custom">Fecha personalizada</option>
+        </select>
+        <input x-show="programaForm.expiraOpcion==='custom'" type="date" x-model="programaForm.expiraCustom" class="w-full mt-2.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none">
+      </div>
+      <label class="flex items-center gap-3"><input type="checkbox" x-model="programaForm.activo" class="w-4 h-4"> <span class="text-sm font-semibold">Programa activo</span></label>
+    </div>
+    <div class="p-6 border-t border-slate-100 flex gap-3">
+      <button @click="programaDrawer=false" class="flex-1 py-3 rounded-xl border-2 border-ink font-bold text-sm">Cancelar</button>
+      <button @click="guardarPrograma()" class="flex-1 py-3 rounded-xl bg-ink text-white font-bold text-sm">Guardar programa</button>
+    </div>
+  </div>
+</div>
+
+<div x-show="nuevaTarjetaDrawer" x-cloak class="fixed inset-0 z-50">
+  <div x-show="nuevaTarjetaDrawer" x-transition.opacity @click="nuevaTarjetaDrawer=false" class="absolute inset-0 bg-ink/40"></div>
+  <div x-show="nuevaTarjetaDrawer" x-transition:enter="transition transform duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-6 h-20 border-b border-slate-100">
+      <h3 class="font-display font-bold text-xl uppercase">Registrar tarjeta</h3>
+      <button @click="nuevaTarjetaDrawer=false"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex-1 overflow-auto p-6 space-y-5">
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">CLIENTE</label>
+        <div x-show="!nuevaTarjetaForm.clienteId" class="relative mt-1.5">
+          <input type="text" x-model="nuevaTarjetaForm.query" placeholder="Busca por nombre o teléfono" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500">
+          <div x-show="nuevaTarjetaForm.query" class="absolute z-10 w-full bg-white border border-slate-100 rounded-xl shadow-xl mt-1.5 max-h-52 overflow-auto">
+            <template x-for="c in sugerenciasClienteTarjeta()" :key="c.id">
+              <button type="button" @click="elegirClienteTarjeta(c)" class="w-full text-left px-4 py-2.5 hover:bg-cream flex items-center justify-between text-sm">
+                <span x-text="c.nombre"></span><span class="font-mono text-xs text-slate-400" x-text="c.telefono"></span>
+              </button>
+            </template>
+            <div x-show="sugerenciasClienteTarjeta().length===0 && !nuevaTarjetaForm.mostrarNuevo" class="px-4 py-2.5">
+              <button type="button" @click="nuevaTarjetaForm.mostrarNuevo=true" class="text-stamp-600 font-semibold text-sm">+ Crear cliente "<span x-text="nuevaTarjetaForm.query"></span>"</button>
+            </div>
+            <div x-show="nuevaTarjetaForm.mostrarNuevo" class="px-4 py-3 border-t border-slate-100 flex gap-2">
+              <input type="text" x-model="nuevaTarjetaForm.nuevoTelefono" placeholder="Teléfono" class="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm outline-none">
+              <button @click="confirmarNuevoClienteTarjeta()" class="px-3.5 py-2 rounded-lg bg-ink text-white text-xs font-bold">Agregar</button>
+            </div>
+          </div>
+        </div>
+        <div x-show="nuevaTarjetaForm.clienteId" class="mt-1.5 flex items-center justify-between bg-cream rounded-xl px-4 py-3">
+          <span class="font-semibold text-sm" x-text="nuevaTarjetaForm.query"></span>
+          <button @click="quitarClienteTarjeta()"><i data-lucide="x" class="w-4 h-4 text-slate-400"></i></button>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">PROGRAMA</label>
+        <select x-model="nuevaTarjetaForm.programaId" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500">
+          <option value="">Selecciona un programa</option>
+          <template x-for="p in programas" :key="p.id"><option :value="p.id" x-text="p.nombre"></option></template>
+        </select>
+      </div>
+    </div>
+    <div class="p-6 border-t border-slate-100 flex gap-3">
+      <button @click="nuevaTarjetaDrawer=false" class="flex-1 py-3 rounded-xl border-2 border-ink font-bold text-sm">Cancelar</button>
+      <button @click="crearTarjeta()" class="flex-1 py-3 rounded-xl bg-stamp-500 text-white font-bold text-sm">Crear tarjeta</button>
+    </div>
+  </div>
+</div>
+
+<div x-show="selloModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div x-show="selloModal" x-transition.opacity @click="cerrarSello()" class="absolute inset-0 bg-ink/40"></div>
+  <div x-show="selloModal" x-transition class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-7" x-data="{}" >
+    <template x-if="selloActivo">
+      <div>
+        <p class="font-mono text-xs text-slate-400" x-text="selloActivo.programaNombre"></p>
+        <h3 class="font-display font-bold text-2xl uppercase mb-5" x-text="selloActivo.clienteNombre"></h3>
+        <div class="flex gap-1.5 flex-wrap justify-center mb-2">
+          <template x-for="i in selloActivo.sellosRequeridos" :key="i">
+            <span class="w-7 h-7 rounded-full flex items-center justify-center" :class="i<=selloActivo.sellos ? 'bg-stamp-500' : 'border-2 border-dashed border-slate-300'">
+              <i x-show="i<=selloActivo.sellos" data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+            </span>
+          </template>
+        </div>
+        <p class="text-center font-mono text-xs text-slate-400 mb-6" x-text="selloActivo.sellos+' / '+selloActivo.sellosRequeridos+' sellos'"></p>
+        <div class="flex items-center justify-center gap-5 mb-6">
+          <button @click="ajustarSello(-1)" class="w-11 h-11 rounded-full border-2 border-ink font-bold text-lg">-</button>
+          <button @click="ajustarSello(1)" class="w-11 h-11 rounded-full bg-stamp-500 text-white font-bold text-lg">+</button>
+        </div>
+        <div x-show="selloActivo.sellos===selloActivo.sellosRequeridos" class="bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-xl p-3.5 mb-5 flex items-center gap-2">
+          <i data-lucide="party-popper" class="w-4 h-4 shrink-0"></i> Cartilla completa. Premio: <span x-text="selloActivo.premio"></span>
+        </div>
+        <label class="text-xs font-mono font-bold text-slate-400">NOTA (OPCIONAL)</label>
+        <input type="text" x-model="selloActivo.nota" placeholder="Ej. Compra de S/35" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500 mb-6">
+        <div class="flex gap-3">
+          <button @click="cerrarSello()" class="flex-1 py-3 rounded-xl border-2 border-ink font-bold text-sm">Cancelar</button>
+          <button @click="cerrarSello()" class="flex-1 py-3 rounded-xl bg-ink text-white font-bold text-sm">Guardar sello</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<div x-show="premioDrawer" x-cloak class="fixed inset-0 z-50">
+  <div x-show="premioDrawer" x-transition.opacity @click="premioDrawer=false" class="absolute inset-0 bg-ink/40"></div>
+  <div x-show="premioDrawer" x-transition:enter="transition transform duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-6 h-20 border-b border-slate-100">
+      <h3 class="font-display font-bold text-xl uppercase" x-text="premioForm.id ? 'Editar premio' : 'Nuevo premio'"></h3>
+      <button @click="premioDrawer=false"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex-1 overflow-auto p-6 space-y-5">
+      <div><label class="text-xs font-mono font-bold text-slate-400">NOMBRE DEL PREMIO</label><input type="text" x-model="premioForm.nombre" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div><label class="text-xs font-mono font-bold text-slate-400">POSICIÓN EN LA RULETA</label><input type="number" min="1" x-model.number="premioForm.posicion" class="w-full mt-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-primary-500"></div>
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">CANTIDAD DISPONIBLE</label>
+        <div class="flex items-center gap-3 mt-1.5">
+          <button type="button" @click="premioForm.cantidadTotal=Math.max(1,premioForm.cantidadTotal-1)" class="w-9 h-9 rounded-lg border border-slate-200 font-bold">-</button>
+          <input type="number" x-model.number="premioForm.cantidadTotal" class="w-20 text-center py-2 rounded-xl border border-slate-200 text-sm outline-none">
+          <button type="button" @click="premioForm.cantidadTotal++" class="w-9 h-9 rounded-lg border border-slate-200 font-bold">+</button>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-mono font-bold text-slate-400">COLOR EN LA RULETA</label>
+        <div class="flex gap-2 mt-2">
+          <template x-for="c in premiosColores" :key="c">
+            <button type="button" @click="premioForm.color=c" class="w-8 h-8 rounded-full" :style="'background:'+c" :class="premioForm.color===c && 'ring-2 ring-offset-2 ring-ink'"></button>
+          </template>
+        </div>
+      </div>
+    </div>
+    <div class="p-6 border-t border-slate-100 flex gap-3">
+      <button @click="premioDrawer=false" class="flex-1 py-3 rounded-xl border-2 border-ink font-bold text-sm">Cancelar</button>
+      <button @click="guardarPremio()" class="flex-1 py-3 rounded-xl bg-ink text-white font-bold text-sm">Guardar premio</button>
+    </div>
+  </div>
+</div>
+
+<div x-show="premioGanadoModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-ink/50"></div>
+  <div x-show="premioGanadoModal" x-transition class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
+    <template x-if="premioGanadoInfo">
+      <div>
+        <i data-lucide="trophy" class="w-12 h-12 text-gold-400 mx-auto mb-4"></i>
+        <p class="font-mono text-xs text-slate-400 mb-1">¡FELICIDADES!</p>
+        <h3 class="font-display font-black text-3xl uppercase mb-2" x-text="premioGanadoInfo.participante"></h3>
+        <p class="text-slate-600 mb-6">Ganó: <span class="font-bold text-ink" x-text="premioGanadoInfo.premio"></span></p>
+        <button @click="cerrarPremioGanado()" class="w-full py-3 rounded-xl bg-ink text-white font-bold text-sm">Continuar</button>
+      </div>
+    </template>
+  </div>
+</div>
+
+</div>
+
+<script>
+function appData(){
+return {
+  screen:'landing',
+  appPage:'dashboard',
+  mobileSidebarOpen:false,
+  mobileNavOpen:false,
+  billing:'mensual',
+  faqOpen:null,
+
+  clientes:[
+    {id:1,nombre:'María Fernández',telefono:'987 654 321',email:'maria.fernandez@gmail.com',fechaRegistro:'12 mar 2026',notas:''},
+    {id:2,nombre:'Jorge Quispe',telefono:'945 112 230',email:'jorgequispe@gmail.com',fechaRegistro:'02 abr 2026',notas:'Cliente frecuente, pide siempre capuccino'},
+    {id:3,nombre:'Lucía Paredes',telefono:'912 887 410',email:'',fechaRegistro:'18 abr 2026',notas:''},
+    {id:4,nombre:'Andrés Salazar',telefono:'998 220 115',email:'andres.s@hotmail.com',fechaRegistro:'30 abr 2026',notas:''},
+    {id:5,nombre:'Camila Ríos',telefono:'955 671 902',email:'camila.rios@gmail.com',fechaRegistro:'09 may 2026',notas:''},
+    {id:6,nombre:'Diego Tovar',telefono:'934 887 660',email:'',fechaRegistro:'21 may 2026',notas:'Alérgico al maní'},
+    {id:7,nombre:'Valentina Cruz',telefono:'968 443 201',email:'vale.cruz@gmail.com',fechaRegistro:'02 jun 2026',notas:''},
+    {id:8,nombre:'Renzo Huamán',telefono:'921 330 887',email:'',fechaRegistro:'10 jun 2026',notas:''},
+    {id:9,nombre:'Patricia León',telefono:'947 120 556',email:'p.leon@gmail.com',fechaRegistro:'14 jun 2026',notas:''},
+    {id:10,nombre:'Sebastián Vega',telefono:'913 887 240',email:'',fechaRegistro:'17 jun 2026',notas:''}
+  ],
+  clienteSearchTable:'',
+  clienteDrawer:false,
+  clienteForm:{id:null,nombre:'',telefono:'',email:'',notas:''},
+
+  programas:[
+    {id:1,nombre:'Café de la casa',descripcion:'Por cada compra de un café grande, suma un sello.',sellosRequeridos:8,premio:'1 café americano gratis',expiraDias:60,activo:true},
+    {id:2,nombre:'Corte + Barba VIP',descripcion:'Sellos por cada corte o arreglo de barba completado.',sellosRequeridos:6,premio:'1 corte clásico gratis',expiraDias:null,activo:true},
+    {id:3,nombre:'Boutique Puntos',descripcion:'Acumula sellos en cada compra mayor a S/40.',sellosRequeridos:10,premio:'20% de descuento en tu próxima compra',expiraDias:90,activo:false}
+  ],
+  programaDrawer:false,
+  programaForm:{id:null,nombre:'',descripcion:'',sellosRequeridos:8,premio:'',expiraOpcion:'sin',expiraCustom:'',activo:true},
+
+  tarjetas:[
+    {id:1,clienteId:1,programaId:1,sellos:5},
+    {id:2,clienteId:2,programaId:1,sellos:8},
+    {id:3,clienteId:4,programaId:2,sellos:3},
+    {id:4,clienteId:5,programaId:3,sellos:2},
+    {id:5,clienteId:6,programaId:1,sellos:1},
+    {id:6,clienteId:9,programaId:2,sellos:6}
+  ],
+  nuevaTarjetaDrawer:false,
+  nuevaTarjetaForm:{query:'',clienteId:null,programaId:'',mostrarNuevo:false,nuevoTelefono:''},
+
+  selloModal:false,
+  selloActivo:null,
+
+  premiosColores:['#3D348B','#E63946','#F2A93B','#1B7F5C','#7B5EA7','#D90368','#2E86AB','#FB8B24'],
+  premios:[
+    {id:1,posicion:1,nombre:'Café gratis',cantidadTotal:10,cantidadDisponible:6,color:'#3D348B'},
+    {id:2,posicion:2,nombre:'Dcto. 10%',cantidadTotal:20,cantidadDisponible:14,color:'#E63946'},
+    {id:3,posicion:3,nombre:'Sticker pack',cantidadTotal:25,cantidadDisponible:9,color:'#F2A93B'},
+    {id:4,posicion:4,nombre:'Gira otra vez',cantidadTotal:15,cantidadDisponible:11,color:'#1B7F5C'},
+    {id:5,posicion:5,nombre:'Postre gratis',cantidadTotal:8,cantidadDisponible:3,color:'#7B5EA7'},
+    {id:6,posicion:6,nombre:'Dcto. 20%',cantidadTotal:10,cantidadDisponible:4,color:'#D90368'},
+    {id:7,posicion:7,nombre:'Combo sorpresa',cantidadTotal:6,cantidadDisponible:2,color:'#2E86AB'},
+    {id:8,posicion:8,nombre:'Gran premio: Audífonos',cantidadTotal:2,cantidadDisponible:1,color:'#FB8B24'}
+  ],
+  premioDrawer:false,
+  premioForm:{id:null,posicion:1,nombre:'',cantidadTotal:10,color:'#3D348B'},
+
+  participantes:[
+    {id:1,clienteId:7,nombre:'Valentina Cruz',estado:'pendiente',premioGanado:null},
+    {id:2,clienteId:8,nombre:'Renzo Huamán',estado:'pendiente',premioGanado:null},
+    {id:3,clienteId:3,nombre:'Lucía Paredes',estado:'jugado',premioGanado:'Gran premio: Audífonos'},
+    {id:4,clienteId:10,nombre:'Sebastián Vega',estado:'pendiente',premioGanado:null}
+  ],
+  participanteForm:{query:'',mostrarNuevo:false,nuevoTelefono:''},
+
+  resultados:[
+    {id:1,participante:'Lucía Paredes',premio:'Gran premio: Audífonos',fecha:'17 jun, 4:12 p.m.'},
+    {id:2,participante:'Jorge Quispe',premio:'Dcto. 10%',fecha:'16 jun, 1:05 p.m.'},
+    {id:3,participante:'Camila Ríos',premio:'Combo sorpresa',fecha:'15 jun, 6:40 p.m.'},
+    {id:4,participante:'Andrés Salazar',premio:'Sticker pack',fecha:'14 jun, 11:20 a.m.'}
+  ],
+
+  rotacionActual:0,
+  ruletaGirando:false,
+  participanteSeleccionadoId:null,
+  sinStockRuleta:false,
+  faltaParticipante:false,
+  premioGanadoModal:false,
+  premioGanadoInfo:null,
+
+  chartsListos:false,
+
+  init(){
+    this.$nextTick(()=>{
+      if(window.lucide) lucide.createIcons();
+      if(window.AOS) AOS.init({duration:650,once:true,offset:40});
+    });
+  },
+
+  irApp(pagina){
+    this.screen='app';
+    this.appPage=pagina||'dashboard';
+    this.mobileSidebarOpen=false;
+    window.scrollTo(0,0);
+    this.$nextTick(()=>{
+      if(window.lucide) lucide.createIcons();
+      if(this.appPage==='dashboard') this.dibujarGraficas();
+    });
+  },
+  irLanding(){
+    this.screen='landing';
+    window.scrollTo(0,0);
+    this.$nextTick(()=>{
+      if(window.lucide) lucide.createIcons();
+      if(window.AOS) AOS.refresh();
+    });
+  },
+  irPagina(p){
+    this.appPage=p;
+    this.mobileSidebarOpen=false;
+    window.scrollTo(0,0);
+    this.$nextTick(()=>{
+      if(window.lucide) lucide.createIcons();
+      if(p==='dashboard') this.dibujarGraficas();
+    });
+  },
+
+  dibujarGraficas(){
+    if(this.chartsListos) return;
+    const ctx1=document.getElementById('chartVisitas');
+    const ctx2=document.getElementById('chartPremios');
+    if(!ctx1||!ctx2||!window.Chart) return;
+    new Chart(ctx1,{
+      type:'line',
+      data:{labels:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+        datasets:[
+          {label:'Sellos registrados',data:[18,22,19,27,31,42,29],borderColor:'#3D348B',backgroundColor:'rgba(61,52,139,0.08)',tension:0.4,fill:true,pointRadius:3,pointBackgroundColor:'#3D348B'},
+          {label:'Giros de ruleta',data:[9,11,14,12,17,24,16],borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.06)',tension:0.4,fill:true,pointRadius:3,pointBackgroundColor:'#E63946'}
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans'},boxWidth:10}}},scales:{y:{beginAtZero:true,grid:{color:'#F1EFE8'}},x:{grid:{display:false}}}}
+    });
+    new Chart(ctx2,{
+      type:'doughnut',
+      data:{labels:['Café/Postre','Descuentos','Stickers/Combos','Gran premio'],
+        datasets:[{data:[36,28,27,9],backgroundColor:['#3D348B','#E63946','#F2A93B','#1B7F5C'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{family:'Plus Jakarta Sans',size:11}}}}}
+    });
+    this.chartsListos=true;
+  },
+
+  clienteNombre(id){const c=this.clientes.find(x=>x.id===id);return c?c.nombre:'—';},
+  clienteTelefono(id){const c=this.clientes.find(x=>x.id===id);return c?c.telefono:'';},
+  programaNombre(id){const p=this.programas.find(x=>x.id===id);return p?p.nombre:'—';},
+  programaSellos(id){const p=this.programas.find(x=>x.id===id);return p?p.sellosRequeridos:0;},
+  programaPremio(id){const p=this.programas.find(x=>x.id===id);return p?p.premio:'';},
+
+  clientesFiltrados(){
+    const q=this.clienteSearchTable.toLowerCase();
+    if(!q) return this.clientes;
+    return this.clientes.filter(c=>c.nombre.toLowerCase().includes(q)||c.telefono.includes(q));
+  },
+  cartillasActivasDeCliente(id){return this.tarjetas.filter(t=>t.clienteId===id).length;},
+
+  abrirNuevoCliente(){this.clienteForm={id:null,nombre:'',telefono:'',email:'',notas:''};this.clienteDrawer=true;},
+  abrirEditarCliente(c){this.clienteForm={...c};this.clienteDrawer=true;},
+  guardarCliente(){
+    if(!this.clienteForm.nombre||!this.clienteForm.telefono) return;
+    if(this.clienteForm.id){
+      const i=this.clientes.findIndex(x=>x.id===this.clienteForm.id);
+      this.clientes[i]={...this.clienteForm};
+    } else {
+      this.clientes.push({...this.clienteForm,id:Date.now(),fechaRegistro:'Hoy'});
+    }
+    this.clienteDrawer=false;
+  },
+
+  abrirNuevoPrograma(){this.programaForm={id:null,nombre:'',descripcion:'',sellosRequeridos:8,premio:'',expiraOpcion:'sin',expiraCustom:'',activo:true};this.programaDrawer=true;},
+  abrirEditarPrograma(p){
+    const esEstandar=[30,60,90].includes(p.expiraDias);
+    this.programaForm={
+      id:p.id,nombre:p.nombre,descripcion:p.descripcion,sellosRequeridos:p.sellosRequeridos,premio:p.premio,
+      expiraOpcion: p.expiraDias ? (esEstandar?String(p.expiraDias):'custom') : 'sin',
+      expiraCustom: (p.expiraDias && !esEstandar) ? String(p.expiraDias) : '',
+      activo:p.activo
+    };
+    this.programaDrawer=true;
+  },
+  guardarPrograma(){
+    if(!this.programaForm.nombre||!this.programaForm.premio) return;
+    let expiraDias=null;
+    if(this.programaForm.expiraOpcion==='custom') expiraDias=Number(this.programaForm.expiraCustom)||null;
+    else if(this.programaForm.expiraOpcion!=='sin') expiraDias=Number(this.programaForm.expiraOpcion);
+    const payload={nombre:this.programaForm.nombre,descripcion:this.programaForm.descripcion,sellosRequeridos:Number(this.programaForm.sellosRequeridos)||1,premio:this.programaForm.premio,expiraDias,activo:this.programaForm.activo};
+    if(this.programaForm.id){
+      const i=this.programas.findIndex(x=>x.id===this.programaForm.id);
+      this.programas[i]={...payload,id:this.programaForm.id};
+    } else {
+      this.programas.push({...payload,id:Date.now()});
+    }
+    this.programaDrawer=false;
+  },
+
+  abrirNuevaTarjeta(){this.nuevaTarjetaForm={query:'',clienteId:null,programaId:'',mostrarNuevo:false,nuevoTelefono:''};this.nuevaTarjetaDrawer=true;},
+  sugerenciasClienteTarjeta(){
+    const q=this.nuevaTarjetaForm.query.toLowerCase();
+    if(!q) return [];
+    return this.clientes.filter(c=>c.nombre.toLowerCase().includes(q)||c.telefono.includes(q)).slice(0,5);
+  },
+  elegirClienteTarjeta(c){this.nuevaTarjetaForm.clienteId=c.id;this.nuevaTarjetaForm.query=c.nombre;this.nuevaTarjetaForm.mostrarNuevo=false;},
+  quitarClienteTarjeta(){this.nuevaTarjetaForm.clienteId=null;this.nuevaTarjetaForm.query='';},
+  confirmarNuevoClienteTarjeta(){
+    if(!this.nuevaTarjetaForm.query) return;
+    const nuevo={id:Date.now(),nombre:this.nuevaTarjetaForm.query,telefono:this.nuevaTarjetaForm.nuevoTelefono||'Sin registrar',email:'',fechaRegistro:'Hoy',notas:''};
+    this.clientes.push(nuevo);
+    this.nuevaTarjetaForm.clienteId=nuevo.id;
+    this.nuevaTarjetaForm.mostrarNuevo=false;
+  },
+  crearTarjeta(){
+    if(!this.nuevaTarjetaForm.clienteId||!this.nuevaTarjetaForm.programaId) return;
+    this.tarjetas.push({id:Date.now(),clienteId:this.nuevaTarjetaForm.clienteId,programaId:Number(this.nuevaTarjetaForm.programaId),sellos:0});
+    this.nuevaTarjetaDrawer=false;
+  },
+
+  abrirSello(t){
+    this.selloActivo={tarjetaId:t.id,sellos:t.sellos,sellosRequeridos:this.programaSellos(t.programaId),clienteNombre:this.clienteNombre(t.clienteId),programaNombre:this.programaNombre(t.programaId),premio:this.programaPremio(t.programaId),nota:''};
+    this.selloModal=true;
+  },
+  ajustarSello(delta){
+    const s=this.selloActivo;
+    const completabaAntes=s.sellos===s.sellosRequeridos;
+    s.sellos=Math.max(0,Math.min(s.sellosRequeridos,s.sellos+delta));
+    const real=this.tarjetas.find(x=>x.id===s.tarjetaId);
+    if(real) real.sellos=s.sellos;
+    if(s.sellos===s.sellosRequeridos && !completabaAntes && window.confetti){
+      confetti({particleCount:90,spread:75,origin:{y:0.6},colors:['#3D348B','#E63946','#F2A93B']});
+    }
+  },
+  cerrarSello(){this.selloModal=false;this.selloActivo=null;},
+
+  abrirNuevoPremio(){this.premioForm={id:null,posicion:this.premios.length+1,nombre:'',cantidadTotal:10,color:this.premiosColores[this.premios.length%this.premiosColores.length]};this.premioDrawer=true;},
+  abrirEditarPremio(p){this.premioForm={id:p.id,posicion:p.posicion,nombre:p.nombre,cantidadTotal:p.cantidadTotal,color:p.color};this.premioDrawer=true;},
+  guardarPremio(){
+    if(!this.premioForm.nombre) return;
+    if(this.premioForm.id){
+      const i=this.premios.findIndex(x=>x.id===this.premioForm.id);
+      const entregados=this.premios[i].cantidadTotal-this.premios[i].cantidadDisponible;
+      this.premios[i]={id:this.premioForm.id,posicion:Number(this.premioForm.posicion),nombre:this.premioForm.nombre,color:this.premioForm.color,cantidadTotal:Number(this.premioForm.cantidadTotal),cantidadDisponible:Math.max(0,Number(this.premioForm.cantidadTotal)-entregados)};
+    } else {
+      this.premios.push({id:Date.now(),posicion:Number(this.premioForm.posicion),nombre:this.premioForm.nombre,color:this.premioForm.color,cantidadTotal:Number(this.premioForm.cantidadTotal),cantidadDisponible:Number(this.premioForm.cantidadTotal)});
+    }
+    this.premios.sort((a,b)=>a.posicion-b.posicion);
+    this.premioDrawer=false;
+  },
+  eliminarPremio(id){this.premios=this.premios.filter(p=>p.id!==id);},
+
+  sugerenciasParticipante(){
+    const q=this.participanteForm.query.toLowerCase();
+    if(!q) return [];
+    const yaIds=this.participantes.map(p=>p.clienteId);
+    return this.clientes.filter(c=>!yaIds.includes(c.id)&&(c.nombre.toLowerCase().includes(q)||c.telefono.includes(q))).slice(0,5);
+  },
+  agregarParticipante(c){
+    this.participantes.push({id:Date.now(),clienteId:c.id,nombre:c.nombre,estado:'pendiente',premioGanado:null});
+    this.participanteForm={query:'',mostrarNuevo:false,nuevoTelefono:''};
+  },
+  confirmarNuevoParticipante(){
+    if(!this.participanteForm.query) return;
+    const nuevoCliente={id:Date.now(),nombre:this.participanteForm.query,telefono:this.participanteForm.nuevoTelefono||'Sin registrar',email:'',fechaRegistro:'Hoy',notas:''};
+    this.clientes.push(nuevoCliente);
+    this.agregarParticipante(nuevoCliente);
+  },
+  quitarParticipante(id){this.participantes=this.participantes.filter(p=>p.id!==id);},
+  pendientesParticipantes(){return this.participantes.filter(p=>p.estado==='pendiente');},
+
+  wheelGradient(){
+    const total=this.premios.length;
+    if(!total) return '#E5E1D6';
+    const per=360/total;
+    const stops=this.premios.map((p,i)=>{
+      const color=p.cantidadDisponible>0?p.color:'#D9D6CC';
+      return color+' '+(i*per)+'deg '+((i+1)*per)+'deg';
+    });
+    return 'conic-gradient(from 0deg, '+stops.join(',')+')';
+  },
+  labelTransform(i){
+    const total=this.premios.length;
+    const per=360/total;
+    const mid=i*per+per/2;
+    return 'rotate('+mid+'deg)';
+  },
+  labelInnerTransform(i){
+    const total=this.premios.length;
+    const per=360/total;
+    const mid=i*per+per/2;
+    return 'translateY(-118px) rotate('+(-mid)+'deg)';
+  },
+
+  iniciarJuego(){this.irPagina('ruleta-play');},
+  girar(){
+    if(this.ruletaGirando) return;
+    const disponibles=this.premios.filter(p=>p.cantidadDisponible>0);
+    if(disponibles.length===0){this.sinStockRuleta=true;return;}
+    if(!this.participanteSeleccionadoId){this.faltaParticipante=true;return;}
+    this.sinStockRuleta=false;this.faltaParticipante=false;
+    const ganador=disponibles[0];
+    const idx=this.premios.findIndex(p=>p.id===ganador.id);
+    const total=this.premios.length;
+    const per=360/total;
+    const mid=idx*per+per/2;
+    const margen=per*0.32;
+    const jitter=(Math.random()*2-1)*margen;
+    const target=mid+jitter;
+    const neededMod=(360-target)%360;
+    const currentMod=((this.rotacionActual%360)+360)%360;
+    let delta=(neededMod-currentMod)%360;
+    if(delta<0) delta+=360;
+    const vueltas=5;
+    this.rotacionActual+=vueltas*360+delta;
+    this.ruletaGirando=true;
+    setTimeout(()=>{
+      this.ruletaGirando=false;
+      ganador.cantidadDisponible-=1;
+      const participante=this.participantes.find(p=>p.id===this.participanteSeleccionadoId);
+      if(participante){participante.estado='jugado';participante.premioGanado=ganador.nombre;}
+      const ahora=new Date();
+      const resultado={id:Date.now(),participante:participante?participante.nombre:'—',premio:ganador.nombre,fecha:'Hoy, '+ahora.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})};
+      this.resultados.unshift(resultado);
+      this.premioGanadoInfo=resultado;
+      this.premioGanadoModal=true;
+      this.participanteSeleccionadoId=null;
+      if(window.confetti){
+        confetti({particleCount:130,spread:90,startVelocity:38,origin:{y:0.55},colors:['#3D348B','#E63946','#F2A93B','#1B7F5C']});
+      }
+    },3800);
+  },
+  cerrarPremioGanado(){this.premioGanadoModal=false;this.premioGanadoInfo=null;}
+}
+}
+</script>
+</body>
+</html>

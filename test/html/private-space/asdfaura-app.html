@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura — Para creadoras</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11.1.14/swiper-bundle.min.css">
+<script src="https://cdn.jsdelivr.net/npm/swiper@11.1.14/swiper-bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.css">
+<script src="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        base:     '#0D0A0E',
+        surface:  '#1A1520',
+        surf2:    '#221C2B',
+        primary:  '#E8427C',
+        second:   '#FF8FA3',
+        accent:   '#7C3AED',
+        accent2:  '#A855F7',
+        txt:      '#F5EEF8',
+        muted:    '#9C8FAA',
+      },
+      fontFamily: {
+        display: ['Playfair Display','serif'],
+        body:    ['DM Sans','sans-serif'],
+      }
+    }
+  }
+}
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:#0D0A0E;
+  color:#F5EEF8;
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#2A2435;border-radius:4px;}
+
+/* ── Aurora helpers ── */
+.aurora-text{
+  background:linear-gradient(135deg,#E8427C,#A855F7,#60A5FA);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.aurora-bg{background:linear-gradient(135deg,#E8427C,#7C3AED,#2563EB);}
+.aurora-border{position:relative;}
+.aurora-border::before{
+  content:'';position:absolute;inset:-1px;
+  background:linear-gradient(135deg,#E8427C,#7C3AED,#2563EB);
+  border-radius:inherit;z-index:-1;
+}
+
+/* ══════════════════════════════════════════════
+   LAYOUT SHELL
+   Mobile: bottom nav + full-width content
+   Desktop (≥1024px): left sidebar + center feed + right panel
+══════════════════════════════════════════════ */
+#app-shell{
+  display:flex;
+  min-height:100vh;
+}
+
+/* ── Left Sidebar (desktop only) ── */
+#sidebar{
+  display:none;
+  width:260px;
+  flex-shrink:0;
+  position:fixed;
+  top:0;left:0;bottom:0;
+  background:#0D0A0E;
+  border-right:1px solid rgba(124,58,237,0.12);
+  padding:28px 16px 24px;
+  flex-direction:column;
+  gap:4px;
+  z-index:100;
+  overflow-y:auto;
+}
+@media(min-width:1024px){
+  #sidebar{display:flex;}
+  #bottom-nav{display:none !important;}
+  #main-content{margin-left:260px;}
+}
+
+.sidebar-logo{
+  font-family:'Playfair Display',serif;
+  font-size:32px;font-weight:900;
+  padding:0 12px 28px;
+}
+.sidebar-link{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 14px;border-radius:14px;
+  background:none;border:none;
+  color:#9C8FAA;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:500;cursor:pointer;
+  transition:all 0.2s;width:100%;text-align:left;
+}
+.sidebar-link:hover{background:rgba(124,58,237,0.08);color:#F5EEF8;}
+.sidebar-link.active{
+  background:rgba(232,66,124,0.1);
+  color:#E8427C;font-weight:600;
+}
+.sidebar-link i{width:22px;text-align:center;font-size:18px;}
+.sidebar-link .link-label{flex:1;}
+.sidebar-link .badge{
+  background:linear-gradient(135deg,#E8427C,#7C3AED);
+  color:white;font-size:11px;font-weight:700;
+  padding:2px 7px;border-radius:20px;
+}
+.sidebar-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0;}
+.sidebar-cta{
+  margin-top:auto;
+  background:linear-gradient(135deg,rgba(232,66,124,0.12),rgba(124,58,237,0.15));
+  border:1px solid rgba(232,66,124,0.2);
+  border-radius:16px;padding:16px;
+}
+.sidebar-user{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;border-radius:14px;
+  cursor:pointer;margin-top:8px;
+  transition:background 0.2s;
+}
+.sidebar-user:hover{background:rgba(255,255,255,0.04);}
+
+/* ── Right Panel (desktop ≥1280px) ── */
+#right-panel{
+  display:none;
+  width:320px;
+  flex-shrink:0;
+  position:fixed;
+  top:0;right:0;bottom:0;
+  padding:28px 20px;
+  border-left:1px solid rgba(124,58,237,0.1);
+  overflow-y:auto;
+  background:#0D0A0E;
+}
+@media(min-width:1280px){
+  #right-panel{display:block;}
+  #main-content{margin-right:320px;}
+}
+
+/* ── Main Content ── */
+#main-content{
+  flex:1;
+  min-width:0;
+  padding-bottom:80px; /* mobile bottom nav */
+}
+@media(min-width:1024px){
+  #main-content{padding-bottom:0;}
+}
+
+/* ── Bottom Nav (mobile) ── */
+#bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:68px;z-index:200;
+  background:rgba(13,10,14,0.97);
+  backdrop-filter:blur(20px);
+  border-top:1px solid rgba(124,58,237,0.15);
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 4px 6px;
+}
+.bot-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;
+  color:#9C8FAA;transition:color 0.2s;
+  padding:6px 14px;border-radius:12px;
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;
+}
+.bot-btn.active{color:#E8427C;}
+.bot-btn i{font-size:20px;}
+.bot-btn.post{
+  background:linear-gradient(135deg,#E8427C,#7C3AED);
+  color:white;border-radius:16px;padding:10px 16px;
+  margin-bottom:16px;
+  box-shadow:0 4px 20px rgba(232,66,124,0.45);
+}
+.bot-btn.post i{font-size:22px;}
+
+/* ══════════════════════════════════════════════
+   SCREENS
+══════════════════════════════════════════════ */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* ── Feed Screen ── */
+#screen-feed .feed-wrap{
+  max-width:600px;margin:0 auto;
+  padding:0 0 16px;
+}
+@media(min-width:1024px){
+  #screen-feed .feed-header{padding:24px 0 0;}
+}
+
+/* Stories */
+.stories-bar{
+  display:flex;gap:14px;overflow-x:auto;
+  padding:16px 16px;scrollbar-width:none;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.stories-bar::-webkit-scrollbar{display:none;}
+.s-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;}
+.s-ring{
+  width:64px;height:64px;border-radius:50%;padding:2.5px;
+  background:linear-gradient(135deg,#E8427C,#7C3AED,#60A5FA);
+}
+.s-ring.seen{background:#2A2435;}
+.s-avatar{
+  width:100%;height:100%;border-radius:50%;
+  border:2px solid #0D0A0E;background:#221C2B;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+.s-name{font-size:11px;color:#9C8FAA;max-width:64px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Post Card */
+.post-card{
+  background:#0D0A0E;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  margin-bottom:0;
+}
+@media(min-width:1024px){
+  .post-card{
+    background:#1A1520;border-radius:20px;
+    border:1px solid rgba(255,255,255,0.05);
+    margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+}
+.post-media{
+  width:100%;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+  font-size:88px;overflow:hidden;position:relative;
+}
+
+/* ── Discover Screen ── */
+#screen-discover .disc-wrap{
+  max-width:600px;margin:0 auto;
+  display:flex;flex-direction:column;
+  height:calc(100vh - 68px);
+  padding:0 0 0;
+}
+@media(min-width:1024px){
+  #screen-discover .disc-wrap{height:100vh;padding:0;}
+}
+
+.swipe-stack{
+  flex:1;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px 16px 0;
+}
+.swipe-card{
+  position:absolute;
+  width:calc(100% - 32px);max-width:400px;
+  border-radius:24px;overflow:hidden;
+  background:#1A1520;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  cursor:grab;user-select:none;touch-action:none;
+}
+.swipe-card:nth-child(1){z-index:10;}
+.swipe-card:nth-child(2){transform:scale(0.95) translateY(14px);z-index:5;}
+.swipe-card:nth-child(3){transform:scale(0.90) translateY(28px);z-index:1;}
+.card-media{
+  width:100%;aspect-ratio:3/4;
+  display:flex;align-items:center;justify-content:center;
+  font-size:100px;position:relative;
+}
+.card-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,rgba(13,10,14,0.97) 0%,rgba(13,10,14,0.3) 60%,transparent);
+  padding:32px 20px 20px;
+}
+.swipe-actions{
+  display:flex;justify-content:center;align-items:center;gap:20px;
+  padding:16px 0 20px;
+}
+@media(min-width:1024px){.swipe-actions{padding-bottom:32px;}}
+.swipe-btn{
+  width:62px;height:62px;border-radius:50%;
+  border:none;cursor:pointer;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.swipe-btn:hover{transform:scale(1.08);}
+.swipe-btn:active{transform:scale(0.93);}
+.btn-pass{background:#221C2B;color:#9C8FAA;box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+.btn-like{background:linear-gradient(135deg,#E8427C,#7C3AED);color:white;box-shadow:0 6px 24px rgba(232,66,124,0.45);}
+.btn-super{background:linear-gradient(135deg,#7C3AED,#2563EB);color:white;box-shadow:0 6px 24px rgba(124,58,237,0.4);width:52px;height:52px;}
+.vote-label{
+  position:absolute;top:28px;
+  font-family:'Playfair Display',serif;font-size:38px;font-weight:900;
+  padding:6px 18px;border-radius:10px;border:3px solid;opacity:0;
+  pointer-events:none;z-index:20;transition:opacity 0.1s;
+}
+.lbl-like{left:20px;color:#22c55e;border-color:#22c55e;transform:rotate(-15deg);}
+.lbl-nope{right:20px;color:#E8427C;border-color:#E8427C;transform:rotate(15deg);}
+
+/* ── Search Screen ── */
+#screen-search .search-wrap{
+  max-width:800px;margin:0 auto;padding:20px 16px;
+}
+.search-input{
+  width:100%;background:#1A1520;
+  border:1px solid rgba(124,58,237,0.2);border-radius:16px;
+  padding:13px 16px 13px 44px;
+  color:#F5EEF8;font-family:'DM Sans';font-size:15px;outline:none;
+  transition:border-color 0.2s;
+}
+.search-input:focus{border-color:rgba(232,66,124,0.5);}
+.search-input::placeholder{color:#9C8FAA;}
+.cat-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+@media(min-width:640px){.cat-grid{grid-template-columns:repeat(4,1fr);}}
+.cat-card{
+  border-radius:16px;padding:20px 16px;cursor:pointer;
+  border:1px solid rgba(124,58,237,0.15);
+  transition:transform 0.2s,border-color 0.2s;
+}
+.cat-card:hover{transform:translateY(-2px);border-color:rgba(232,66,124,0.3);}
+.creator-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer;
+}
+.cr-avatar{
+  width:50px;height:50px;border-radius:50%;
+  padding:2px;flex-shrink:0;
+  background:linear-gradient(135deg,#E8427C,#7C3AED);
+}
+.cr-inner{
+  width:100%;height:100%;border-radius:50%;background:#1A1520;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+
+/* ── Profile Screen ── */
+#screen-profile .prof-wrap{
+  max-width:900px;margin:0 auto;
+}
+.cover-area{
+  height:200px;border-radius:0;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#1A1520,#221C2B);
+}
+@media(min-width:1024px){
+  .cover-area{border-radius:0 0 24px 24px;height:240px;}
+}
+.prof-avatar-ring{
+  width:92px;height:92px;border-radius:50%;
+  background:linear-gradient(135deg,#E8427C,#7C3AED);padding:3px;
+  flex-shrink:0;
+}
+.prof-avatar-inner{
+  width:100%;height:100%;border-radius:50%;background:#1A1520;
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;border:2.5px solid #0D0A0E;
+}
+.stat-box{
+  background:#1A1520;border-radius:14px;padding:14px 20px;text-align:center;
+  border:1px solid rgba(124,58,237,0.12);flex:1;cursor:pointer;
+  transition:background 0.2s;
+}
+.stat-box:hover{background:#221C2B;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
+@media(min-width:640px){.grid-3{gap:6px;}}
+.grid-post{
+  aspect-ratio:1;border-radius:8px;background:#1A1520;
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;cursor:pointer;overflow:hidden;position:relative;
+  transition:opacity 0.2s;
+}
+.grid-post:hover{opacity:0.85;}
+
+/* ── Shared components ── */
+.btn-prim{
+  background:linear-gradient(135deg,#E8427C,#7C3AED);
+  color:white;border:none;border-radius:14px;
+  padding:11px 22px;font-family:'DM Sans';font-size:14px;
+  font-weight:600;cursor:pointer;transition:opacity 0.2s,transform 0.15s;
+}
+.btn-prim:hover{opacity:0.9;}
+.btn-prim:active{transform:scale(0.97);}
+.btn-out{
+  background:transparent;color:#E8427C;
+  border:1.5px solid rgba(232,66,124,0.35);
+  border-radius:14px;padding:10px 20px;
+  font-family:'DM Sans';font-size:14px;font-weight:500;cursor:pointer;
+  transition:all 0.2s;
+}
+.btn-out:hover{background:rgba(232,66,124,0.08);}
+.btn-follow{
+  background:linear-gradient(135deg,#E8427C,#7C3AED);
+  border:none;border-radius:10px;padding:7px 18px;
+  color:white;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans';transition:opacity 0.2s;
+  white-space:nowrap;
+}
+.btn-follow:hover{opacity:0.85;}
+.verified{color:#E8427C;font-size:13px;margin-left:3px;}
+.tag{
+  border-radius:20px;padding:5px 14px;font-size:13px;cursor:pointer;
+  transition:opacity 0.2s;display:inline-block;
+}
+.tag:hover{opacity:0.8;}
+.section-label{
+  font-size:11px;color:#9C8FAA;font-weight:600;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;
+}
+
+/* ── Upload Modal ── */
+#upload-modal{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(13,10,14,0.88);
+  display:none;align-items:flex-end;justify-content:center;
+}
+@media(min-width:1024px){
+  #upload-modal{align-items:center;}
+}
+#upload-modal.open{display:flex;}
+.modal-sheet{
+  background:#1A1520;border-top:1px solid rgba(124,58,237,0.2);
+  width:100%;
+}
+@media(min-width:1024px){
+  .modal-sheet{
+    border-radius:24px;border:1px solid rgba(124,58,237,0.2);
+    max-width:480px;width:100%;
+  }
+}
+.modal-handle{width:40px;height:4px;background:#2A2435;border-radius:2px;margin:14px auto 20px;}
+.upload-opt{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 20px;cursor:pointer;border-radius:12px;margin:0 8px;
+  transition:background 0.15s;
+}
+.upload-opt:hover{background:rgba(232,66,124,0.06);}
+.opt-icon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+
+/* ── Story Viewer ── */
+#story-viewer{
+  position:fixed;inset:0;z-index:600;
+  background:#000;display:none;flex-direction:column;
+}
+#story-viewer.open{display:flex;}
+.story-bar{height:3px;background:rgba(255,255,255,0.25);border-radius:2px;flex:1;}
+.story-fill{height:100%;background:white;border-radius:2px;width:0%;transition:width 5s linear;}
+
+/* ── Right Panel widgets ── */
+.rp-card{
+  background:#1A1520;border-radius:16px;
+  padding:16px;border:1px solid rgba(124,58,237,0.1);
+  margin-bottom:16px;
+}
+.rp-creator{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;
+}
+
+/* ── Animations ── */
+@keyframes pulse-glow{
+  0%{box-shadow:0 0 0 0 rgba(232,66,124,0.5);}
+  70%{box-shadow:0 0 0 10px rgba(232,66,124,0);}
+  100%{box-shadow:0 0 0 0 rgba(232,66,124,0);}
+}
+.pulse{animation:pulse-glow 2s infinite;}
+@keyframes slideUp{from{transform:translateY(32px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.slide-up{animation:slideUp 0.4s ease forwards;}
+button:focus-visible{outline:2px solid #E8427C;outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div id="app-shell">
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR — Desktop only
+═══════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-logo aurora-text">aura</div>
+
+  <button class="sidebar-link active" id="sl-feed" onclick="switchScreen('feed')">
+    <i class="fa-solid fa-house"></i>
+    <span class="link-label">Inicio</span>
+  </button>
+  <button class="sidebar-link" id="sl-discover" onclick="switchScreen('discover')">
+    <i class="fa-solid fa-compass"></i>
+    <span class="link-label">Descubrir</span>
+  </button>
+  <button class="sidebar-link" id="sl-search" onclick="switchScreen('search')">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="link-label">Buscar</span>
+  </button>
+  <button class="sidebar-link" onclick="openUpload()" style="background:linear-gradient(135deg,rgba(232,66,124,0.15),rgba(124,58,237,0.15));color:#E8427C;margin:4px 0;">
+    <i class="fa-solid fa-plus-circle"></i>
+    <span class="link-label">Crear</span>
+  </button>
+  <button class="sidebar-link" onclick="showNotif()">
+    <i class="fa-regular fa-bell"></i>
+    <span class="link-label">Notificaciones</span>
+    <span class="badge">3</span>
+  </button>
+  <button class="sidebar-link" onclick="openDM()">
+    <i class="fa-regular fa-paper-plane"></i>
+    <span class="link-label">Mensajes</span>
+    <span class="badge">7</span>
+  </button>
+
+  <div class="sidebar-divider"></div>
+
+  <button class="sidebar-link" id="sl-profile" onclick="switchScreen('profile')">
+    <i class="fa-regular fa-user"></i>
+    <span class="link-label">Mi perfil</span>
+  </button>
+  <button class="sidebar-link" onclick="showSettings()">
+    <i class="fa-solid fa-sliders"></i>
+    <span class="link-label">Configuración</span>
+  </button>
+
+  <!-- Subscription CTA -->
+  <div class="sidebar-cta" style="margin-top:auto;">
+    <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-bottom:6px;">Activa Premium</div>
+    <div style="font-size:13px;color:#9C8FAA;margin-bottom:12px;line-height:1.4;">Gana con tu contenido exclusivo</div>
+    <button class="btn-prim" style="width:100%;font-size:13px;" onclick="unlockPremium()">Empezar · $9.99/mes</button>
+  </div>
+
+  <!-- User chip -->
+  <div class="sidebar-user" onclick="switchScreen('profile')">
+    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#7C3AED);padding:2px;flex-shrink:0;">
+      <div style="width:100%;height:100%;border-radius:50%;background:#221C2B;display:flex;align-items:center;justify-content:center;font-size:17px;border:1.5px solid #0D0A0E;">👩‍💻</div>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">tu.nombre</div>
+      <div style="font-size:12px;color:#9C8FAA;">@tu.nombre</div>
+    </div>
+    <i class="fa-solid fa-ellipsis" style="color:#9C8FAA;font-size:16px;"></i>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<main id="main-content">
+
+  <!-- ─────────────────────────────────────
+       SCREEN: FEED
+  ───────────────────────────────────── -->
+  <div class="screen active" id="screen-feed">
+    <!-- Mobile header only -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0;background:#0D0A0E;" class="lg-hide">
+      <span class="aurora-text" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;">aura</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="showNotif()" style="background:none;border:none;cursor:pointer;position:relative;">
+          <i class="fa-regular fa-bell" style="font-size:22px;color:#F5EEF8;"></i>
+          <div style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#E8427C;border-radius:50%;border:2px solid #0D0A0E;"></div>
+        </button>
+        <button onclick="openDM()" style="background:#1A1520;border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <i class="fa-regular fa-paper-plane" style="color:#F5EEF8;font-size:16px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="feed-wrap">
+      <!-- Desktop header -->
+      <div style="padding:24px 0 0;display:none;" class="desk-show">
+        <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;margin-bottom:20px;">Inicio</h2>
+      </div>
+
+      <!-- Stories -->
+      <div class="stories-bar">
+        <div class="s-item" onclick="openStory('Tú','👩‍💻')">
+          <div style="position:relative;width:64px;height:64px;">
+            <div class="s-ring"><div class="s-avatar">👩‍💻</div></div>
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:linear-gradient(135deg,#E8427C,#7C3AED);border-radius:50%;border:2px solid #0D0A0E;display:flex;align-items:center;justify-content:center;">
+              <i class="fa-solid fa-plus" style="font-size:10px;color:white;"></i>
+            </div>
+          </div>
+          <span class="s-name">Tu story</span>
+        </div>
+        <div class="s-item" onclick="openStory('Valeria','✨')"><div class="s-ring"><div class="s-avatar">✨</div></div><span class="s-name">Valeria</span></div>
+        <div class="s-item" onclick="openStory('Luna','🌙')"><div class="s-ring"><div class="s-avatar">🌙</div></div><span class="s-name">Luna</span></div>
+        <div class="s-item" onclick="openStory('Sofía','🦋')"><div class="s-ring" style="background:linear-gradient(135deg,#A855F7,#2563EB);"><div class="s-avatar">🦋</div></div><span class="s-name">Sofía</span></div>
+        <div class="s-item" onclick="openStory('Isabella','🌸')"><div class="s-ring seen"><div class="s-avatar" style="background:#221C2B;">🌸</div></div><span class="s-name">Isabella</span></div>
+        <div class="s-item" onclick="openStory('Camila','🔥')"><div class="s-ring seen"><div class="s-avatar" style="background:#221C2B;">🔥</div></div><span class="s-name">Camila</span></div>
+        <div class="s-item" onclick="openStory('Daniela','💜')"><div class="s-ring seen"><div class="s-avatar" style="background:#221C2B;">💜</div></div><span class="s-name">Daniela</span></div>
+      </div>
+
+      <!-- Post 1 -->
+      <article class="post-card slide-up">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#7C3AED);padding:2px;cursor:pointer;" onclick="goToProfile('valeria')">
+            <div style="width:100%;height:100%;border-radius:50%;background:#1A1520;display:flex;align-items:center;justify-content:center;font-size:19px;border:1.5px solid #0D0A0E;">✨</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-weight:600;font-size:14px;cursor:pointer;" onclick="goToProfile('valeria')">valeria.luna</span>
+              <i class="fa-solid fa-circle-check verified"></i>
+            </div>
+            <span style="font-size:12px;color:#9C8FAA;">Bogotá, Colombia</span>
+          </div>
+          <button onclick="followUser(this)" class="btn-follow">Seguir</button>
+        </div>
+        <div class="post-media" style="background:linear-gradient(135deg,#2D1B3D,#1A0E2E,#3D1A2D);">✨</div>
+        <div style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="display:flex;gap:18px;">
+              <button class="like-btn" onclick="likePost(this)" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';transition:color 0.2s;">
+                <i class="fa-regular fa-heart" style="font-size:22px;"></i><span>4.2k</span>
+              </button>
+              <button style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';" onclick="focusComment()">
+                <i class="fa-regular fa-comment" style="font-size:22px;"></i><span>318</span>
+              </button>
+              <button style="background:none;border:none;cursor:pointer;color:#9C8FAA;" onclick="openDM()">
+                <i class="fa-regular fa-paper-plane" style="font-size:22px;"></i>
+              </button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span onclick="unlockPremium()" style="font-size:11px;background:linear-gradient(135deg,rgba(232,66,124,0.15),rgba(124,58,237,0.15));border:1px solid rgba(232,66,124,0.25);border-radius:20px;padding:4px 12px;color:#FF8FA3;cursor:pointer;">
+                <i class="fa-solid fa-lock" style="font-size:10px;"></i> Premium
+              </span>
+              <button onclick="bookmarkPost(this)" style="background:none;border:none;cursor:pointer;color:#9C8FAA;">
+                <i class="fa-regular fa-bookmark" style="font-size:20px;"></i>
+              </button>
+            </div>
+          </div>
+          <div style="font-size:14px;line-height:1.6;">
+            <span style="font-weight:600;">valeria.luna</span>
+            <span style="color:#D4C8E0;"> Nueva sesión fotográfica 🌙✨ Colección nocturna completa para suscriptoras</span>
+          </div>
+          <div style="margin-top:6px;">
+            <span style="font-size:13px;color:#7C3AED;cursor:pointer;">#fotografíanocturna</span>
+            <span style="font-size:13px;color:#7C3AED;cursor:pointer;"> #creadora</span>
+            <span style="font-size:13px;color:#7C3AED;cursor:pointer;"> #colección</span>
+          </div>
+          <span style="font-size:12px;color:#9C8FAA;margin-top:4px;display:block;">hace 23 min</span>
+        </div>
+      </article>
+
+      <!-- Post 2 -->
+      <article class="post-card">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#A855F7,#2563EB);padding:2px;cursor:pointer;" onclick="goToProfile('sofiadancer')">
+            <div style="width:100%;height:100%;border-radius:50%;background:#1A1520;display:flex;align-items:center;justify-content:center;font-size:19px;border:1.5px solid #0D0A0E;">🦋</div>
+          </div>
+          <div style="flex:1;">
+            <span style="font-weight:600;font-size:14px;cursor:pointer;" onclick="goToProfile('sofiadancer')">sofia.dancer</span>
+            <div style="font-size:12px;color:#9C8FAA;">Medellín · Coreógrafa</div>
+          </div>
+          <button onclick="followUser(this)" class="btn-follow">Seguir</button>
+        </div>
+        <div class="post-media" style="background:linear-gradient(135deg,#1A0E2E,#0D1A3D,#1A1A3D);">
+          🦋
+          <div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.75);border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:5px;">
+            <i class="fa-solid fa-play" style="font-size:10px;color:white;"></i>
+            <span style="font-size:12px;color:white;font-family:'DM Sans';">0:45</span>
+          </div>
+        </div>
+        <div style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;gap:18px;margin-bottom:10px;">
+            <button class="like-btn" onclick="likePost(this)" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';">
+              <i class="fa-regular fa-heart" style="font-size:22px;"></i><span>8.7k</span>
+            </button>
+            <button style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';" onclick="focusComment()">
+              <i class="fa-regular fa-comment" style="font-size:22px;"></i><span>621</span>
+            </button>
+          </div>
+          <div style="font-size:14px;line-height:1.6;">
+            <span style="font-weight:600;">sofia.dancer</span>
+            <span style="color:#D4C8E0;"> Nueva coreografía completa 🦋 Solo para aura girls 💜</span>
+          </div>
+          <span style="font-size:12px;color:#9C8FAA;margin-top:4px;display:block;">hace 2 h</span>
+        </div>
+      </article>
+
+      <!-- Post 3 — Premium locked -->
+      <article class="post-card">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#FF8FA3);padding:2px;">
+            <div style="width:100%;height:100%;border-radius:50%;background:#1A1520;display:flex;align-items:center;justify-content:center;font-size:19px;border:1.5px solid #0D0A0E;">🌸</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-weight:600;font-size:14px;">isabella.art</span>
+              <i class="fa-solid fa-circle-check verified"></i>
+            </div>
+            <span style="font-size:12px;color:#9C8FAA;">Ciudad de México · Artista</span>
+          </div>
+          <button style="background:none;border:none;cursor:pointer;color:#9C8FAA;font-size:20px;">•••</button>
+        </div>
+        <div style="position:relative;">
+          <div class="post-media" style="background:linear-gradient(135deg,#2D1B3D,#3D1A1A);filter:blur(10px);">🌸</div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(13,10,14,0.55);">
+            <div style="width:60px;height:60px;background:linear-gradient(135deg,#E8427C,#7C3AED);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <i class="fa-solid fa-lock" style="color:white;font-size:24px;"></i>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:18px;">Contenido exclusivo</div>
+              <div style="font-size:13px;color:#9C8FAA;margin-top:4px;">Suscríbete por $9.99/mes</div>
+            </div>
+            <button class="btn-prim" onclick="unlockPremium()" style="padding:10px 28px;">Suscribirse</button>
+          </div>
+        </div>
+        <div style="padding:12px 16px;">
+          <div style="font-size:14px;color:#9C8FAA;">Galería completa disponible para suscriptoras ✨</div>
+          <span style="font-size:12px;color:#9C8FAA;margin-top:4px;display:block;">hace 4 h</span>
+        </div>
+      </article>
+
+      <!-- Post 4 -->
+      <article class="post-card">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#7C3AED);padding:2px;">
+            <div style="width:100%;height:100%;border-radius:50%;background:#1A1520;display:flex;align-items:center;justify-content:center;font-size:19px;border:1.5px solid #0D0A0E;">🔥</div>
+          </div>
+          <div style="flex:1;">
+            <span style="font-weight:600;font-size:14px;">camila.creates</span>
+            <div style="font-size:12px;color:#9C8FAA;">Buenos Aires</div>
+          </div>
+          <button onclick="followUser(this)" class="btn-follow">Seguir</button>
+        </div>
+        <div class="post-media" style="background:linear-gradient(135deg,#1A2D3D,#0D1A2E,#1A1A2D);">🔥</div>
+        <div style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;gap:18px;margin-bottom:10px;">
+            <button class="like-btn" onclick="likePost(this)" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';">
+              <i class="fa-regular fa-heart" style="font-size:22px;"></i><span>2.1k</span>
+            </button>
+            <button style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;color:#9C8FAA;font-size:14px;font-family:'DM Sans';" onclick="focusComment()">
+              <i class="fa-regular fa-comment" style="font-size:22px;"></i><span>94</span>
+            </button>
+          </div>
+          <div style="font-size:14px;line-height:1.6;">
+            <span style="font-weight:600;">camila.creates</span>
+            <span style="color:#D4C8E0;"> BTS del shooting de hoy 🔥 La sesión completa pronto 👀</span>
+          </div>
+          <span style="font-size:12px;color:#9C8FAA;margin-top:4px;display:block;">hace 6 h</span>
+        </div>
+      </article>
+    </div>
+  </div><!-- /screen-feed -->
+
+
+  <!-- ─────────────────────────────────────
+       SCREEN: DISCOVER
+  ───────────────────────────────────── -->
+  <div class="screen" id="screen-discover">
+    <div class="disc-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;">Descubrir</h2>
+        <button onclick="showFilters()" style="background:#1A1520;border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:9px 16px;color:#F5EEF8;font-size:13px;font-family:'DM Sans';cursor:pointer;">
+          <i class="fa-solid fa-sliders" style="margin-right:5px;"></i>Filtros
+        </button>
+      </div>
+
+      <!-- Swipe Stack -->
+      <div class="swipe-stack" id="swipe-stack">
+        <div class="swipe-card" id="sc-1" data-user="Daniela G.">
+          <div class="card-media" style="background:linear-gradient(135deg,#2D1B3D,#1A0E2E,#3D1A2D);">
+            <div style="font-size:110px;z-index:1;">🦋</div>
+            <div class="card-overlay">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+                <div>
+                  <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.1;">Daniela G. <span style="font-size:22px;font-weight:400;">25</span></div>
+                  <div style="font-size:13px;color:#FF8FA3;margin-top:4px;"><i class="fa-solid fa-location-dot" style="font-size:11px;"></i> Bogotá · 3 km</div>
+                  <div style="font-size:13px;color:#9C8FAA;margin-top:4px;">Fotógrafa · Creadora de contenido</div>
+                  <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                    <span style="background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);border-radius:20px;padding:3px 12px;font-size:11px;color:#A855F7;">📸 Fotografía</span>
+                    <span style="background:rgba(232,66,124,0.15);border:1px solid rgba(232,66,124,0.25);border-radius:20px;padding:3px 12px;font-size:11px;color:#FF8FA3;">🌙 Lifestyle</span>
+                  </div>
+                </div>
+                <div style="text-align:center;flex-shrink:0;">
+                  <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#E8427C;">12.4k</div>
+                  <div style="font-size:10px;color:#9C8FAA;">seguidoras</div>
+                </div>
+              </div>
+            </div>
+            <div class="vote-label lbl-like">SEGUIR ✓</div>
+            <div class="vote-label lbl-nope">PASAR ✗</div>
+          </div>
+        </div>
+
+        <div class="swipe-card" id="sc-2" data-user="Luna M.">
+          <div class="card-media" style="background:linear-gradient(135deg,#0D1A2E,#1A0E2E,#2D1B3D);">
+            <div style="font-size:110px;">🌙</div>
+            <div class="card-overlay">
+              <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">Luna M. <span style="font-size:22px;font-weight:400;">22</span></div>
+              <div style="font-size:13px;color:#FF8FA3;margin-top:4px;"><i class="fa-solid fa-location-dot" style="font-size:11px;"></i> Medellín · 120 km</div>
+              <div style="font-size:13px;color:#9C8FAA;margin-top:4px;">Artista digital · Ilustradora</div>
+            </div>
+            <div class="vote-label lbl-like">SEGUIR ✓</div>
+            <div class="vote-label lbl-nope">PASAR ✗</div>
+          </div>
+        </div>
+
+        <div class="swipe-card" id="sc-3" data-user="Sofía R.">
+          <div class="card-media" style="background:linear-gradient(135deg,#1A2D1A,#0D2D1A,#1A1A2D);">
+            <div style="font-size:110px;">🌸</div>
+            <div class="card-overlay">
+              <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">Sofía R. <span style="font-size:22px;font-weight:400;">28</span></div>
+              <div style="font-size:13px;color:#FF8FA3;margin-top:4px;"><i class="fa-solid fa-location-dot" style="font-size:11px;"></i> Lima · 2,500 km</div>
+              <div style="font-size:13px;color:#9C8FAA;margin-top:4px;">Danzante · Creadora wellness</div>
+            </div>
+            <div class="vote-label lbl-like">SEGUIR ✓</div>
+            <div class="vote-label lbl-nope">PASAR ✗</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="swipe-actions">
+        <button class="swipe-btn btn-pass" onclick="swipeLeft()" title="Pasar"><i class="fa-solid fa-xmark"></i></button>
+        <button class="swipe-btn btn-super" onclick="superLike()" title="Super seguir"><i class="fa-solid fa-star" style="font-size:20px;"></i></button>
+        <button class="swipe-btn btn-like pulse" onclick="swipeRight()" title="Seguir"><i class="fa-solid fa-heart"></i></button>
+      </div>
+    </div>
+  </div><!-- /screen-discover -->
+
+
+  <!-- ─────────────────────────────────────
+       SCREEN: SEARCH
+  ───────────────────────────────────── -->
+  <div class="screen" id="screen-search">
+    <div class="search-wrap">
+      <!-- Desktop title -->
+      <div style="margin-bottom:20px;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;">Buscar</h2>
+      </div>
+      <div style="position:relative;margin-bottom:20px;">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9C8FAA;font-size:15px;"></i>
+        <input type="text" class="search-input" placeholder="Buscar creadoras, etiquetas..." oninput="filterSearch(this.value)">
+      </div>
+
+      <!-- Trending -->
+      <div style="margin-bottom:24px;">
+        <div class="section-label">Tendencias</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span class="tag" onclick="searchTag('#fotografía')" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:#A855F7;">#fotografía</span>
+          <span class="tag" onclick="searchTag('#lifestyle')" style="background:rgba(232,66,124,0.1);border:1px solid rgba(232,66,124,0.2);color:#FF8FA3;">#lifestyle</span>
+          <span class="tag" onclick="searchTag('#arte')" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:#A855F7;">#arte</span>
+          <span class="tag" onclick="searchTag('#danza')" style="background:rgba(232,66,124,0.1);border:1px solid rgba(232,66,124,0.2);color:#FF8FA3;">#danza</span>
+          <span class="tag" onclick="searchTag('#moda')" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:#60A5FA;">#moda</span>
+          <span class="tag" onclick="searchTag('#fitness')" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:#A855F7;">#fitness</span>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div style="margin-bottom:28px;">
+        <div class="section-label">Explorar</div>
+        <div class="cat-grid">
+          <div class="cat-card" onclick="exploreCategory('Fotografía')" style="background:linear-gradient(135deg,#2D1B3D,#1A0E2E);">
+            <div style="font-size:36px;margin-bottom:10px;">📸</div>
+            <div style="font-weight:600;font-size:15px;">Fotografía</div>
+            <div style="font-size:12px;color:#9C8FAA;margin-top:3px;">24.3k creadoras</div>
+          </div>
+          <div class="cat-card" onclick="exploreCategory('Arte Digital')" style="background:linear-gradient(135deg,#1A0E2E,#0D1A3D);">
+            <div style="font-size:36px;margin-bottom:10px;">🎨</div>
+            <div style="font-weight:600;font-size:15px;">Arte Digital</div>
+            <div style="font-size:12px;color:#9C8FAA;margin-top:3px;">18.7k creadoras</div>
+          </div>
+          <div class="cat-card" onclick="exploreCategory('Danza')" style="background:linear-gradient(135deg,#1A0E1A,#2D1B2D);">
+            <div style="font-size:36px;margin-bottom:10px;">💃</div>
+            <div style="font-weight:600;font-size:15px;">Danza</div>
+            <div style="font-size:12px;color:#9C8FAA;margin-top:3px;">9.1k creadoras</div>
+          </div>
+          <div class="cat-card" onclick="exploreCategory('Lifestyle')" style="background:linear-gradient(135deg,#3D1A1A,#2D1B1A);">
+            <div style="font-size:36px;margin-bottom:10px;">🌸</div>
+            <div style="font-weight:600;font-size:15px;">Lifestyle</div>
+            <div style="font-size:12px;color:#9C8FAA;margin-top:3px;">31.2k creadoras</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Creators -->
+      <div>
+        <div class="section-label">Creadoras en auge</div>
+        <div id="creators-list">
+          <div class="creator-row" onclick="goToProfile('valeria')">
+            <div class="cr-avatar"><div class="cr-inner">✨</div></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:3px;">
+                <span style="font-weight:600;font-size:14px;">valeria.luna</span>
+                <i class="fa-solid fa-circle-check verified"></i>
+              </div>
+              <div style="font-size:12px;color:#9C8FAA;">Fotógrafa · 84.2k seguidoras</div>
+            </div>
+            <button onclick="event.stopPropagation();followUser(this)" class="btn-follow">Seguir</button>
+          </div>
+          <div class="creator-row" onclick="goToProfile('sofiadancer')">
+            <div class="cr-avatar" style="background:linear-gradient(135deg,#A855F7,#2563EB);"><div class="cr-inner">🦋</div></div>
+            <div style="flex:1;min-width:0;">
+              <span style="font-weight:600;font-size:14px;">sofia.dancer</span>
+              <div style="font-size:12px;color:#9C8FAA;">Coreógrafa · 42.8k seguidoras</div>
+            </div>
+            <button onclick="event.stopPropagation();followUser(this)" class="btn-follow">Seguir</button>
+          </div>
+          <div class="creator-row" onclick="goToProfile('isabellaart')">
+            <div class="cr-avatar" style="background:linear-gradient(135deg,#E8427C,#FF8FA3);"><div class="cr-inner">🌸</div></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:3px;">
+                <span style="font-weight:600;font-size:14px;">isabella.art</span>
+                <i class="fa-solid fa-circle-check verified"></i>
+              </div>
+              <div style="font-size:12px;color:#9C8FAA;">Artista · 66.1k seguidoras</div>
+            </div>
+            <button onclick="event.stopPropagation();followUser(this)" class="btn-follow">Seguir</button>
+          </div>
+          <div class="creator-row">
+            <div class="cr-avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED);"><div class="cr-inner">🔥</div></div>
+            <div style="flex:1;min-width:0;">
+              <span style="font-weight:600;font-size:14px;">camila.creates</span>
+              <div style="font-size:12px;color:#9C8FAA;">Creadora · 29.5k seguidoras</div>
+            </div>
+            <button onclick="event.stopPropagation();followUser(this)" class="btn-follow">Seguir</button>
+          </div>
+          <div class="creator-row">
+            <div class="cr-avatar"><div class="cr-inner">💜</div></div>
+            <div style="flex:1;min-width:0;">
+              <span style="font-weight:600;font-size:14px;">daniela.g</span>
+              <div style="font-size:12px;color:#9C8FAA;">Modelo · 12.4k seguidoras</div>
+            </div>
+            <button onclick="event.stopPropagation();followUser(this)" class="btn-follow">Seguir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /screen-search -->
+
+
+  <!-- ─────────────────────────────────────
+       SCREEN: PROFILE
+  ───────────────────────────────────── -->
+  <div class="screen" id="screen-profile">
+    <div class="prof-wrap">
+      <!-- Cover -->
+      <div class="cover-area">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,66,124,0.2),rgba(124,58,237,0.3),rgba(37,99,235,0.15));"></div>
+        <div style="position:absolute;top:20px;right:30px;font-size:56px;opacity:0.2;transform:rotate(-15deg);">✨</div>
+        <div style="position:absolute;bottom:30px;left:24px;font-size:40px;opacity:0.15;transform:rotate(10deg);">🌙</div>
+        <button onclick="editCover()" style="position:absolute;top:14px;right:14px;background:rgba(13,10,14,0.7);border:none;border-radius:10px;padding:7px 14px;color:white;font-size:12px;font-family:'DM Sans';cursor:pointer;backdrop-filter:blur(8px);">
+          <i class="fa-solid fa-camera" style="margin-right:4px;"></i>Editar
+        </button>
+      </div>
+
+      <div style="padding:0 20px;">
+        <!-- Avatar + actions -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:-46px;margin-bottom:14px;">
+          <div class="prof-avatar-ring">
+            <div class="prof-avatar-inner">👩‍💻</div>
+          </div>
+          <div style="display:flex;gap:8px;padding-bottom:4px;">
+            <button onclick="showSettings()" style="background:#1A1520;border:1px solid rgba(255,255,255,0.08);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <i class="fa-solid fa-sliders" style="color:#F5EEF8;font-size:16px;"></i>
+            </button>
+            <button onclick="editProfile()" class="btn-out" style="padding:8px 18px;font-size:13px;">
+              <i class="fa-solid fa-pen" style="font-size:11px;margin-right:4px;"></i>Editar perfil
+            </button>
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <h3 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;">Tu Nombre</h3>
+          <i class="fa-solid fa-circle-check" style="color:#E8427C;font-size:17px;"></i>
+        </div>
+        <div style="font-size:14px;color:#9C8FAA;margin-top:3px;">@tu.nombre · Creadora de contenido</div>
+
+        <!-- Bio -->
+        <p style="font-size:14px;color:#D4C8E0;line-height:1.6;margin-top:10px;">
+          ✨ Creadora de contenido · Fotógrafa 📸<br>
+          🌙 Suscríbete para acceso exclusivo<br>
+          💜 DM abiertos para colaboraciones
+        </p>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+          <i class="fa-solid fa-link" style="color:#7C3AED;font-size:13px;"></i>
+          <span style="font-size:13px;color:#7C3AED;cursor:pointer;">aura.app/tu.nombre</span>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:flex;gap:10px;margin-top:18px;">
+          <div class="stat-box" onclick="showFollowers()">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">1.2k</div>
+            <div style="font-size:11px;color:#9C8FAA;margin-top:2px;">Seguidoras</div>
+          </div>
+          <div class="stat-box" onclick="showFollowing()">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">248</div>
+            <div style="font-size:11px;color:#9C8FAA;margin-top:2px;">Siguiendo</div>
+          </div>
+          <div class="stat-box">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;background:linear-gradient(135deg,#E8427C,#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">$420</div>
+            <div style="font-size:11px;color:#9C8FAA;margin-top:2px;">Ganancias</div>
+          </div>
+        </div>
+
+        <!-- Subs panel -->
+        <div style="margin-top:16px;background:linear-gradient(135deg,rgba(232,66,124,0.08),rgba(124,58,237,0.12));border:1px solid rgba(232,66,124,0.18);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">Suscripción activa</div>
+            <div style="font-size:12px;color:#9C8FAA;margin-top:2px;">34 suscriptoras · $9.99/mes</div>
+          </div>
+          <button class="btn-prim" onclick="manageSubscription()" style="padding:9px 18px;font-size:13px;">Gestionar</button>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08);margin-top:22px;">
+          <button onclick="switchTab(this,'posts')" class="ptab" style="flex:1;background:none;border:none;padding:12px 8px;color:#E8427C;font-family:'DM Sans';font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid #E8427C;">
+            <i class="fa-solid fa-grid-2" style="margin-right:4px;"></i>Posts
+          </button>
+          <button onclick="switchTab(this,'premium')" class="ptab" style="flex:1;background:none;border:none;padding:12px 8px;color:#9C8FAA;font-family:'DM Sans';font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;">
+            <i class="fa-solid fa-lock" style="margin-right:4px;"></i>Premium
+          </button>
+          <button onclick="switchTab(this,'saved')" class="ptab" style="flex:1;background:none;border:none;padding:12px 8px;color:#9C8FAA;font-family:'DM Sans';font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;">
+            <i class="fa-regular fa-bookmark" style="margin-right:4px;"></i>Guardado
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Posts -->
+      <div id="tab-posts" style="padding:4px 4px 100px;">
+        <div class="grid-3" style="padding:8px 16px;">
+          <div class="grid-post" onclick="openPost()">📸</div>
+          <div class="grid-post" onclick="openPost()">🌙</div>
+          <div class="grid-post" onclick="openPost()">✨</div>
+          <div class="grid-post" onclick="openPost()">💫</div>
+          <div class="grid-post" onclick="openPost()">🦋</div>
+          <div class="grid-post" onclick="openPost()">🌸</div>
+          <div class="grid-post" onclick="openPost()">🔥</div>
+          <div class="grid-post" onclick="openPost()">💜</div>
+          <div class="grid-post" onclick="openPost()">⭐</div>
+        </div>
+      </div>
+      <div id="tab-premium" style="display:none;padding:8px 20px 100px;">
+        <div class="grid-3">
+          <div class="grid-post" onclick="unlockPremium()" style="position:relative;">🔒<div style="position:absolute;inset:0;background:rgba(13,10,14,0.7);border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-lock" style="color:#E8427C;font-size:22px;"></i></div></div>
+          <div class="grid-post" onclick="unlockPremium()" style="position:relative;">🔒<div style="position:absolute;inset:0;background:rgba(13,10,14,0.7);border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-lock" style="color:#E8427C;font-size:22px;"></i></div></div>
+          <div class="grid-post" onclick="unlockPremium()" style="position:relative;">🔒<div style="position:absolute;inset:0;background:rgba(13,10,14,0.7);border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-lock" style="color:#E8427C;font-size:22px;"></i></div></div>
+          <div class="grid-post" onclick="unlockPremium()" style="position:relative;">🔒<div style="position:absolute;inset:0;background:rgba(13,10,14,0.7);border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-lock" style="color:#E8427C;font-size:22px;"></i></div></div>
+        </div>
+      </div>
+      <div id="tab-saved" style="display:none;padding:60px 20px 100px;text-align:center;">
+        <div style="font-size:52px;margin-bottom:14px;">🔖</div>
+        <div style="font-weight:600;font-size:17px;margin-bottom:8px;">Nada guardado aún</div>
+        <div style="font-size:14px;color:#9C8FAA;">Los posts que guardes aparecerán aquí</div>
+      </div>
+    </div>
+  </div><!-- /screen-profile -->
+
+</main><!-- /main-content -->
+
+
+<!-- ═══════════════════════════════════════════
+     RIGHT PANEL — Desktop ≥1280px
+═══════════════════════════════════════════ -->
+<aside id="right-panel">
+  <div style="padding-top:8px;">
+    <!-- Suggested creators -->
+    <div class="rp-card">
+      <div class="section-label" style="margin-bottom:14px;">Creadoras sugeridas</div>
+      <div class="rp-creator" onclick="goToProfile('valeria')">
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#7C3AED);padding:2px;flex-shrink:0;">
+          <div style="width:100%;height:100%;border-radius:50%;background:#221C2B;display:flex;align-items:center;justify-content:center;font-size:19px;">✨</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;">valeria.luna</div>
+          <div style="font-size:11px;color:#9C8FAA;">84.2k seguidoras</div>
+        </div>
+        <button onclick="event.stopPropagation();followUser(this)" style="background:linear-gradient(135deg,#E8427C,#7C3AED);border:none;border-radius:8px;padding:5px 12px;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans';">Seguir</button>
+      </div>
+      <div class="rp-creator">
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#A855F7,#2563EB);padding:2px;flex-shrink:0;">
+          <div style="width:100%;height:100%;border-radius:50%;background:#221C2B;display:flex;align-items:center;justify-content:center;font-size:19px;">🦋</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;">sofia.dancer</div>
+          <div style="font-size:11px;color:#9C8FAA;">42.8k seguidoras</div>
+        </div>
+        <button onclick="followUser(this)" style="background:linear-gradient(135deg,#E8427C,#7C3AED);border:none;border-radius:8px;padding:5px 12px;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans';">Seguir</button>
+      </div>
+      <div class="rp-creator">
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#FF8FA3);padding:2px;flex-shrink:0;">
+          <div style="width:100%;height:100%;border-radius:50%;background:#221C2B;display:flex;align-items:center;justify-content:center;font-size:19px;">🌸</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;">isabella.art <i class="fa-solid fa-circle-check" style="color:#E8427C;font-size:11px;"></i></div>
+          <div style="font-size:11px;color:#9C8FAA;">66.1k seguidoras</div>
+        </div>
+        <button onclick="followUser(this)" style="background:linear-gradient(135deg,#E8427C,#7C3AED);border:none;border-radius:8px;padding:5px 12px;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans';">Seguir</button>
+      </div>
+    </div>
+
+    <!-- Trending -->
+    <div class="rp-card">
+      <div class="section-label" style="margin-bottom:14px;">Tendencias</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="cursor:pointer;" onclick="searchTag('#fotografíanocturna')">
+          <div style="font-size:13px;font-weight:600;color:#F5EEF8;">#fotografíanocturna</div>
+          <div style="font-size:11px;color:#9C8FAA;">4.8k posts hoy</div>
+        </div>
+        <div style="cursor:pointer;" onclick="searchTag('#creadoras2026')">
+          <div style="font-size:13px;font-weight:600;color:#F5EEF8;">#creadoras2026</div>
+          <div style="font-size:11px;color:#9C8FAA;">12.1k posts hoy</div>
+        </div>
+        <div style="cursor:pointer;" onclick="searchTag('#auraitgirls')">
+          <div style="font-size:13px;font-weight:600;color:#E8427C;">#auraitgirls ✨</div>
+          <div style="font-size:11px;color:#9C8FAA;">Tendencia en Latinoamérica</div>
+        </div>
+        <div style="cursor:pointer;" onclick="searchTag('#lifestylecreator')">
+          <div style="font-size:13px;font-weight:600;color:#F5EEF8;">#lifestylecreator</div>
+          <div style="font-size:11px;color:#9C8FAA;">7.3k posts hoy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium promo -->
+    <div style="background:linear-gradient(135deg,rgba(232,66,124,0.12),rgba(124,58,237,0.18));border:1px solid rgba(232,66,124,0.2);border-radius:16px;padding:18px;">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px;">Monetiza tu contenido</div>
+      <div style="font-size:13px;color:#9C8FAA;margin-bottom:14px;line-height:1.5;">Las creadoras en aura ganan en promedio <span style="color:#FF8FA3;font-weight:600;">$340/mes</span> con sus suscriptoras</div>
+      <button class="btn-prim" style="width:100%;" onclick="unlockPremium()">Activar Premium</button>
+    </div>
+
+    <div style="font-size:11px;color:#4A4055;margin-top:16px;line-height:1.6;">
+      Términos · Privacidad · Cookies<br>
+      © 2026 Aura · Para creadoras 💜
+    </div>
+  </div>
+</aside>
+
+</div><!-- /app-shell -->
+
+
+<!-- ═══════════════════════════════════════════
+     BOTTOM NAV — Mobile only
+═══════════════════════════════════════════ -->
+<nav id="bottom-nav">
+  <button class="bot-btn active" id="bn-feed" onclick="switchScreen('feed')">
+    <i class="fa-solid fa-house"></i><span>Inicio</span>
+  </button>
+  <button class="bot-btn" id="bn-discover" onclick="switchScreen('discover')">
+    <i class="fa-solid fa-compass"></i><span>Descubrir</span>
+  </button>
+  <button class="bot-btn post" onclick="openUpload()">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+  <button class="bot-btn" id="bn-search" onclick="switchScreen('search')">
+    <i class="fa-solid fa-magnifying-glass"></i><span>Buscar</span>
+  </button>
+  <button class="bot-btn" id="bn-profile" onclick="switchScreen('profile')">
+    <i class="fa-regular fa-user"></i><span>Perfil</span>
+  </button>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════
+     UPLOAD MODAL
+═══════════════════════════════════════════ -->
+<div id="upload-modal" onclick="closeUploadOutside(event)">
+  <div class="modal-sheet slide-up">
+    <div class="modal-handle"></div>
+    <div style="padding:0 8px 8px;">
+      <h3 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;padding:0 16px 16px;">Crear</h3>
+      <div class="upload-opt" onclick="uploadContent('foto')">
+        <div class="opt-icon" style="background:linear-gradient(135deg,rgba(232,66,124,0.2),rgba(124,58,237,0.2));color:#E8427C;"><i class="fa-regular fa-image"></i></div>
+        <div><div style="font-weight:600;font-size:15px;">Foto o galería</div><div style="font-size:13px;color:#9C8FAA;margin-top:2px;">Sube una imagen o carrusel</div></div>
+        <i class="fa-solid fa-chevron-right" style="color:#9C8FAA;margin-left:auto;font-size:14px;"></i>
+      </div>
+      <div class="upload-opt" onclick="uploadContent('video')">
+        <div class="opt-icon" style="background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(37,99,235,0.2));color:#7C3AED;"><i class="fa-regular fa-circle-play"></i></div>
+        <div><div style="font-weight:600;font-size:15px;">Video / Reel</div><div style="font-size:13px;color:#9C8FAA;margin-top:2px;">Hasta 60 segundos</div></div>
+        <i class="fa-solid fa-chevron-right" style="color:#9C8FAA;margin-left:auto;font-size:14px;"></i>
+      </div>
+      <div class="upload-opt" onclick="uploadContent('story')">
+        <div class="opt-icon" style="background:linear-gradient(135deg,rgba(255,143,163,0.2),rgba(232,66,124,0.2));color:#FF8FA3;"><i class="fa-regular fa-circle-dot"></i></div>
+        <div><div style="font-weight:600;font-size:15px;">Story</div><div style="font-size:13px;color:#9C8FAA;margin-top:2px;">Desaparece en 24 horas</div></div>
+        <i class="fa-solid fa-chevron-right" style="color:#9C8FAA;margin-left:auto;font-size:14px;"></i>
+      </div>
+      <div class="upload-opt" onclick="uploadContent('premium')">
+        <div class="opt-icon" style="background:linear-gradient(135deg,rgba(232,66,124,0.3),rgba(124,58,237,0.3));color:white;"><i class="fa-solid fa-lock"></i></div>
+        <div><div style="font-weight:600;font-size:15px;">Contenido exclusivo</div><div style="font-size:13px;color:#9C8FAA;margin-top:2px;">Solo para suscriptoras · Genera ingresos</div></div>
+        <i class="fa-solid fa-chevron-right" style="color:#9C8FAA;margin-left:auto;font-size:14px;"></i>
+      </div>
+      <div style="padding:14px 16px 4px;">
+        <button onclick="closeUpload()" style="width:100%;background:#221C2B;border:none;border-radius:14px;padding:13px;color:#9C8FAA;font-family:'DM Sans';font-size:15px;cursor:pointer;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     STORY VIEWER
+═══════════════════════════════════════════ -->
+<div id="story-viewer" onclick="closeStory()">
+  <div style="padding:14px 16px;display:flex;gap:8px;" onclick="event.stopPropagation()">
+    <div class="story-bar"><div class="story-fill" id="story-fill"></div></div>
+  </div>
+  <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
+    <div id="sv-avatar" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#E8427C,#7C3AED);padding:2px;">
+      <div style="width:100%;height:100%;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;font-size:17px;">✨</div>
+    </div>
+    <span id="sv-name" style="font-weight:600;font-size:15px;"></span>
+    <span style="font-size:12px;color:rgba(255,255,255,0.4);">hace 2 min</span>
+    <button onclick="closeStory()" style="margin-left:auto;background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px;">✕</button>
+  </div>
+  <div id="sv-content" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;"></div>
+  <div style="padding:16px 20px 32px;display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
+    <input type="text" placeholder="Responder..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:11px 18px;color:white;font-family:'DM Sans';font-size:14px;outline:none;">
+    <button onclick="likeStory()" style="background:none;border:none;cursor:pointer;font-size:26px;">🤍</button>
+    <button onclick="shareStory()" style="background:none;border:none;cursor:pointer;color:white;font-size:20px;"><i class="fa-regular fa-paper-plane"></i></button>
+  </div>
+</div>
+
+
+<!-- ─── Utility CSS for show/hide per breakpoint ─── -->
+<style>
+.lg-hide{display:flex;}
+.desk-show{display:none;}
+@media(min-width:1024px){
+  .lg-hide{display:none!important;}
+  .desk-show{display:block!important;}
+  /* Discover height fix */
+  #screen-discover .disc-wrap{height:calc(100vh - 0px);}
+}
+/* Feed post: rounded on desktop */
+@media(min-width:1024px){
+  .feed-wrap{padding:0 0 32px;}
+  .stories-bar{border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,0.05);border-bottom:none;}
+}
+</style>
+
+<script>
+const notyf = new Notyf({
+  duration:2800,
+  position:{x:'center',y:'top'},
+  types:[
+    {type:'success',background:'linear-gradient(135deg,#E8427C,#7C3AED)',icon:false},
+    {type:'error',  background:'linear-gradient(135deg,#7C3AED,#E8427C)',icon:false},
+  ]
+});
+
+/* ── Screen nav ── */
+function switchScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  // bottom nav
+  document.querySelectorAll('.bot-btn').forEach(b=>b.classList.remove('active'));
+  const bn=document.getElementById('bn-'+name);
+  if(bn)bn.classList.add('active');
+  // sidebar
+  document.querySelectorAll('.sidebar-link').forEach(b=>b.classList.remove('active'));
+  const sl=document.getElementById('sl-'+name);
+  if(sl)sl.classList.add('active');
+  // scroll to top
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── Like ── */
+function likePost(btn){
+  const i=btn.querySelector('i');
+  const liked=i.classList.contains('fa-solid');
+  if(liked){i.classList.replace('fa-solid','fa-regular');btn.style.color='#9C8FAA';}
+  else{i.classList.replace('fa-regular','fa-solid');btn.style.color='#E8427C';gsap.fromTo(i,{scale:0.4},{scale:1.4,duration:0.15,yoyo:true,repeat:1});}
+}
+
+/* ── Follow ── */
+function followUser(btn){
+  if(btn.textContent.trim()==='Seguir'){
+    btn.textContent='Siguiendo';btn.style.background='transparent';
+    btn.style.border='1.5px solid rgba(232,66,124,0.35)';btn.style.color='#E8427C';
+    notyf.success('¡Siguiendo a esta creadora 💜');
+  }else{
+    btn.textContent='Seguir';btn.style.background='linear-gradient(135deg,#E8427C,#7C3AED)';
+    btn.style.border='none';btn.style.color='white';
+  }
+}
+
+/* ── Upload ── */
+function openUpload(){document.getElementById('upload-modal').classList.add('open');}
+function closeUpload(){document.getElementById('upload-modal').classList.remove('open');}
+function closeUploadOutside(e){if(e.target===document.getElementById('upload-modal'))closeUpload();}
+function uploadContent(t){
+  closeUpload();
+  const m={foto:'Abriendo galería 📸',video:'Selecciona tu video 🎬',story:'Crea tu story ✨',premium:'Contenido exclusivo activado 🔒'};
+  setTimeout(()=>notyf.success(m[t]),300);
+}
+
+/* ── Stories ── */
+let _storyTimer=null;
+function openStory(user,emoji){
+  document.getElementById('sv-name').textContent=user.toLowerCase()+'.aura';
+  const av=document.getElementById('sv-avatar').querySelector('div');
+  av.textContent=emoji;
+  document.getElementById('sv-content').innerHTML=`<div style="font-size:100px;">${emoji}</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:white;">Story de ${user}</div>`;
+  document.getElementById('story-viewer').classList.add('open');
+  const fill=document.getElementById('story-fill');
+  fill.style.transition='none';fill.style.width='0%';
+  setTimeout(()=>{fill.style.transition='width 5s linear';fill.style.width='100%';},50);
+  if(_storyTimer)clearTimeout(_storyTimer);
+  _storyTimer=setTimeout(closeStory,5000);
+}
+function closeStory(){
+  document.getElementById('story-viewer').classList.remove('open');
+  if(_storyTimer){clearTimeout(_storyTimer);_storyTimer=null;}
+}
+function likeStory(){notyf.success('💜 Reaccionaste a esta story');}
+function shareStory(){notyf.success('Story compartida ✈️');}
+
+/* ── Swipe ── */
+let _cardIdx=0;
+const CARDS=['sc-1','sc-2','sc-3'];
+function swipeRight(){
+  const c=document.getElementById(CARDS[_cardIdx]);if(!c)return;
+  const name=c.dataset.user;
+  gsap.to(c,{x:600,rotation:28,opacity:0,duration:0.38,onComplete:()=>{c.style.display='none';}});
+  notyf.success(`Siguiendo a ${name} 💜`);
+  _cardIdx++;if(_cardIdx>=CARDS.length)setTimeout(resetCards,1200);
+}
+function swipeLeft(){
+  const c=document.getElementById(CARDS[_cardIdx]);if(!c)return;
+  gsap.to(c,{x:-600,rotation:-28,opacity:0,duration:0.38,onComplete:()=>{c.style.display='none';}});
+  _cardIdx++;if(_cardIdx>=CARDS.length)setTimeout(resetCards,1200);
+}
+function superLike(){
+  const c=document.getElementById(CARDS[_cardIdx]);if(!c)return;
+  const name=c.dataset.user;
+  gsap.to(c,{y:-700,opacity:0,duration:0.42,onComplete:()=>{c.style.display='none';}});
+  notyf.success(`⭐ Super seguiste a ${name}!`);
+  _cardIdx++;if(_cardIdx>=CARDS.length)setTimeout(resetCards,1200);
+}
+function resetCards(){
+  _cardIdx=0;
+  CARDS.forEach(id=>{const c=document.getElementById(id);if(c){c.style.display='';gsap.set(c,{x:0,y:0,rotation:0,opacity:1});}});
+  notyf.success('Nuevas creadoras para ti ✨');
+}
+
+// Touch & mouse drag
+(function(){
+  const stack=document.getElementById('swipe-stack');
+  let sx=0,sy=0,drag=false,el=null;
+
+  function getTopCard(){return document.getElementById(CARDS[_cardIdx]);}
+
+  function onStart(cx,cy){el=getTopCard();if(!el)return;sx=cx;sy=cy;drag=true;}
+  function onMove(cx,cy){
+    if(!drag||!el)return;
+    const dx=cx-sx;
+    gsap.set(el,{x:dx,rotation:dx*0.07});
+    el.querySelector('.lbl-like').style.opacity=Math.max(0,dx/90);
+    el.querySelector('.lbl-nope').style.opacity=Math.max(0,-dx/90);
+  }
+  function onEnd(cx){
+    if(!drag||!el)return;drag=false;
+    const dx=parseFloat(gsap.getProperty(el,'x'));
+    el.querySelector('.lbl-like').style.opacity=0;
+    el.querySelector('.lbl-nope').style.opacity=0;
+    if(dx>90)swipeRight();
+    else if(dx<-90)swipeLeft();
+    else gsap.to(el,{x:0,rotation:0,duration:0.3});
+    el=null;
+  }
+
+  // Touch
+  stack.addEventListener('touchstart',e=>{const t=e.touches[0];onStart(t.clientX,t.clientY);},{passive:true});
+  stack.addEventListener('touchmove',e=>{const t=e.touches[0];onMove(t.clientX,t.clientY);},{passive:true});
+  stack.addEventListener('touchend',e=>{onEnd(e.changedTouches[0].clientX);});
+
+  // Mouse
+  stack.addEventListener('mousedown',e=>{onStart(e.clientX,e.clientY);e.preventDefault();});
+  window.addEventListener('mousemove',e=>{if(drag)onMove(e.clientX,e.clientY);});
+  window.addEventListener('mouseup',e=>{if(drag)onEnd(e.clientX);});
+})();
+
+/* ── Search ── */
+function filterSearch(q){
+  document.querySelectorAll('#creators-list .creator-row').forEach(row=>{
+    const n=row.querySelector('span').textContent.toLowerCase();
+    row.style.display=(q===''||n.includes(q.toLowerCase()))?'flex':'none';
+  });
+}
+function searchTag(t){notyf.success(`Buscando ${t}`);}
+function exploreCategory(c){notyf.success(`Explorando ${c} ✨`);}
+
+/* ── Profile tabs ── */
+function switchTab(btn,tab){
+  document.querySelectorAll('.ptab').forEach(t=>{
+    t.style.color='#9C8FAA';t.style.borderBottomColor='transparent';t.style.fontWeight='500';
+  });
+  btn.style.color='#E8427C';btn.style.borderBottomColor='#E8427C';btn.style.fontWeight='600';
+  ['posts','premium','saved'].forEach(id=>{
+    const el=document.getElementById('tab-'+id);
+    if(el)el.style.display='none';
+  });
+  const t=document.getElementById('tab-'+tab);
+  if(t)t.style.display=tab==='posts'?'block':'block';
+}
+
+/* ── Misc ── */
+function goToProfile(u){switchScreen('profile');notyf.success(`Perfil de ${u} ✨`);}
+function showNotif(){notyf.success('3 nuevas notificaciones 🔔');}
+function openDM(){notyf.success('Mensajes directos próximamente 💬');}
+function unlockPremium(){notyf.success('Suscripción premium · $9.99/mes 🔓');}
+function bookmarkPost(btn){
+  const i=btn.querySelector('i');
+  i.classList.toggle('fa-regular');i.classList.toggle('fa-solid');
+  i.style.color=i.classList.contains('fa-solid')?'#E8427C':'#9C8FAA';
+  if(i.classList.contains('fa-solid'))notyf.success('Post guardado ✓');
+}
+function openPost(){notyf.success('Vista de post próximamente ✨');}
+function editProfile(){notyf.success('Editor de perfil próximamente ✏️');}
+function editCover(){notyf.success('Cambia tu portada 🖼️');}
+function showSettings(){notyf.success('Configuración próximamente ⚙️');}
+function manageSubscription(){notyf.success('Panel de suscripción próximamente 💰');}
+function showFollowers(){notyf.success('1,200 seguidoras 💜');}
+function showFollowing(){notyf.success('Siguiendo a 248 creadoras ✨');}
+function focusComment(){notyf.success('Comentarios próximamente 💬');}
+function showFilters(){notyf.success('Filtros próximamente 🎛️');}
+
+/* ── Init ── */
+AOS.init({duration:400,once:true});
+gsap.from('#bottom-nav',{y:80,opacity:0,duration:0.6,ease:'back.out(1.7)',delay:0.2});
+</script>
+</body>
+</html>

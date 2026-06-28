@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>¡Qué Patas! Pet Shop | Tienda online para mascotas en Lima y Perú</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { nunito: ['Nunito', 'sans-serif'] },
+      colors: {
+        brand: { orange: '#F47B20', teal: '#1B7A7A', dark: '#0E4E4E' }
+      }
+    }
+  }
+}
+</script>
+<style>
+body { font-family: 'Nunito', sans-serif; }
+.slider-track { display: flex; transition: transform 0.5s ease; }
+.dropdown-menu { display: none; }
+.dropdown:hover .dropdown-menu { display: flex; }
+.cart-item-enter { animation: slideIn 0.3s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+.modal-bg { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.topbar-scroll { animation: scrollText 30s linear infinite; white-space: nowrap; }
+@keyframes scrollText { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.upsell-scroll { display:flex; gap:1rem; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+.upsell-scroll::-webkit-scrollbar { display:none; }
+.upsell-card { flex:0 0 auto; scroll-snap-align:start; }
+</style>
+</head>
+<body class="bg-white text-gray-800">
+
+<!-- TOP ANNOUNCEMENT BAR -->
+<div class="bg-black text-white text-xs py-2 overflow-hidden">
+  <div class="topbar-scroll inline-block">
+    ⚡ ¡Usa el código <strong>1ERACOMPRA10</strong> y obtén un <strong>10% OFF</strong> en tu primera compra! 🛒 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    ⚡ ¡Usa el código <strong>1ERACOMPRA10</strong> y obtén un <strong>10% OFF</strong> en tu primera compra! 🛒 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    ⚡ ¡Usa el código <strong>1ERACOMPRA10</strong> y obtén un <strong>10% OFF</strong> en tu primera compra! 🛒 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    ⚡ ¡Usa el código <strong>1ERACOMPRA10</strong> y obtén un <strong>10% OFF</strong> en tu primera compra! 🛒 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16 gap-4">
+    <!-- Logo -->
+    <a href="#" class="flex-shrink-0">
+      <div class="flex flex-col items-center leading-none">
+        <span class="text-2xl font-black text-brand-orange italic">¡Qué</span>
+        <span class="text-2xl font-black text-brand-teal italic -mt-1">patas!</span>
+        <span class="text-[9px] font-bold text-brand-teal tracking-widest uppercase">PET SHOP</span>
+      </div>
+    </a>
+
+    <!-- Nav links (desktop) -->
+    <nav class="hidden lg:flex items-center gap-1 text-sm font-semibold text-gray-700">
+
+      <!-- Perros dropdown -->
+      <div class="dropdown relative">
+        <button class="flex items-center gap-1 px-3 py-2 hover:text-brand-orange transition-colors">
+          Perros <i class="fa fa-chevron-down text-xs"></i>
+        </button>
+        <div class="dropdown-menu absolute top-full left-0 bg-white shadow-xl rounded-xl p-6 min-w-[520px] z-50 border border-gray-100">
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-3">Por categoría</p>
+              <ul class="space-y-1.5 text-gray-600">
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Higiene</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Comederos</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Bebederos</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Juguetes</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Correas y collares</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Escaleras</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Rampas</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Protectores y seguridad</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Coches</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Transportadores y bolsos</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-3">Los más buscados</p>
+              <ul class="space-y-1.5 text-gray-600">
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Rampa de madera</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Escalera plegable</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Funda para muebles</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Puerta de seguridad</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Barrera retráctil</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Coche 3 ruedas</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Asiento copiloto</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gatos dropdown -->
+      <div class="dropdown relative">
+        <button class="flex items-center gap-1 px-3 py-2 hover:text-brand-orange transition-colors">
+          Gatos <i class="fa fa-chevron-down text-xs"></i>
+        </button>
+        <div class="dropdown-menu absolute top-full left-0 bg-white shadow-xl rounded-xl p-6 min-w-[520px] z-50 border border-gray-100">
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-3">Por categoría</p>
+              <ul class="space-y-1.5 text-gray-600">
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Higiene</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Comederos</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Fuente de agua</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Juguetes</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Túneles</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Rascadores</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Transportadores</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Gimnasios</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Camas y Hamacas</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-3">Los más buscados</p>
+              <ul class="space-y-1.5 text-gray-600">
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Fuente básica</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Arenero para gato</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Rascador rampa con pelota</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Gimnasio de madera</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Gimnasio completo</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Cama gato cueva</a></li>
+                <li><a href="#" class="hover:text-brand-orange transition-colors">Hamaca para gatos</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Todos</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Packs</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Transportadores</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Gimnasios</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Fuentes</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Rampas</a>
+      <a href="#" class="px-3 py-2 hover:text-brand-orange transition-colors">Escaleras</a>
+    </nav>
+
+    <!-- Right icons -->
+    <div class="flex items-center gap-3">
+      <div class="hidden md:flex items-center border border-gray-200 rounded-full px-3 py-1.5 gap-2 w-52">
+        <i class="fa fa-search text-gray-400 text-sm"></i>
+        <input type="text" placeholder="Buscar..." class="outline-none text-sm w-full bg-transparent"/>
+      </div>
+      <a href="#" class="text-gray-600 hover:text-brand-orange transition-colors hidden md:block">
+        <i class="fa fa-user text-xl"></i>
+      </a>
+      <button id="cartBtn" class="relative text-gray-600 hover:text-brand-orange transition-colors">
+        <i class="fa fa-shopping-cart text-xl"></i>
+        <span id="cartCount" class="absolute -top-2 -right-2 bg-brand-orange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+      </button>
+      <button class="lg:hidden text-gray-600 hover:text-brand-orange" id="mobileMenuBtn">
+        <i class="fa fa-bars text-xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="hidden lg:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-2 text-sm font-semibold">
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Perros</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Gatos</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Todos</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Packs</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Transportadores</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Gimnasios</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Fuentes</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Rampas</a>
+    <a href="#" class="block py-2 text-gray-700 hover:text-brand-orange">Escaleras</a>
+  </div>
+</header>
+
+<!-- HERO SLIDER -->
+<section class="relative overflow-hidden">
+  <div id="sliderWrapper" class="slider-track">
+
+    <!-- Slide 1: Transportadores -->
+    <div class="min-w-full relative bg-gradient-to-br from-sky-100 to-teal-50 min-h-[480px] flex items-center overflow-hidden">
+      <div class="max-w-7xl mx-auto px-8 w-full flex items-center justify-between gap-8">
+        <div class="max-w-lg z-10">
+          <p class="text-brand-teal font-bold uppercase tracking-widest text-sm mb-2">Nueva colección</p>
+          <h1 class="text-4xl md:text-5xl font-black text-brand-dark leading-tight mb-4">
+            ¡Lleva a tu mascota<br>a todas partes con<br><span class="text-brand-teal">seguridad y comodidad!</span>
+          </h1>
+          <a href="#" class="inline-block bg-brand-teal text-white font-bold px-6 py-3 rounded-full hover:bg-brand-dark transition-colors shadow-lg text-sm mt-2">
+            ¡Encuentra el transportador ideal aquí!
+          </a>
+          <div class="flex gap-6 mt-8">
+            <div class="flex items-center gap-2 text-xs text-gray-600 font-semibold">
+              <div class="w-10 h-10 bg-white/70 rounded-full flex items-center justify-center text-brand-teal text-lg"><i class="fa fa-box-open"></i></div>
+              <span>Diseños prácticos<br>y espaciosos</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-600 font-semibold">
+              <div class="w-10 h-10 bg-white/70 rounded-full flex items-center justify-center text-brand-teal text-lg"><i class="fa fa-recycle"></i></div>
+              <span>Materiales duraderos<br>y fáciles de limpiar</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-600 font-semibold">
+              <div class="w-10 h-10 bg-white/70 rounded-full flex items-center justify-center text-brand-teal text-lg"><i class="fa fa-shield-halved"></i></div>
+              <span>Protección<br>garantizada</span>
+            </div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-end gap-2 h-80 relative">
+          <img src="https://quepatas.com/cdn/shop/files/Banner_1_1.jpg?v=1745433209&width=800" alt="Transportadores" class="h-full object-contain rounded-2xl shadow-2xl" onerror="this.src='https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80'"/>
+        </div>
+      </div>
+      <!-- paw decorations -->
+      <div class="absolute top-10 right-80 text-sky-200 text-5xl opacity-60">🐾</div>
+      <div class="absolute bottom-16 left-20 text-teal-200 text-3xl opacity-40">🐾</div>
+    </div>
+
+    <!-- Slide 2: Ofertas -->
+    <div class="min-w-full relative overflow-hidden min-h-[480px] flex items-center"
+         style="background: linear-gradient(135deg,#ff6b9d,#ff9a5c);">
+      <div class="max-w-7xl mx-auto px-8 w-full flex items-center justify-between gap-8">
+        <div class="max-w-lg z-10 text-white">
+          <span class="bg-white/20 backdrop-blur px-4 py-1 rounded-full text-sm font-bold inline-block mb-4">🎉 Oferta especial</span>
+          <h1 class="text-4xl md:text-5xl font-black leading-tight mb-4">
+            ¡Hasta <span class="text-yellow-300">50% OFF</span><br>en productos<br>seleccionados!
+          </h1>
+          <p class="text-white/90 text-lg font-semibold mb-6">Solo por tiempo limitado. ¡No te lo pierdas!</p>
+          <a href="#ofertas" class="inline-block bg-white text-brand-orange font-black px-8 py-3 rounded-full hover:bg-yellow-50 transition shadow-lg text-sm">
+            Ver ofertas →
+          </a>
+        </div>
+        <div class="hidden md:block">
+          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500&q=80" alt="Perro feliz" class="h-72 object-cover rounded-2xl shadow-2xl"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Mayo -->
+    <div class="min-w-full relative bg-gradient-to-br from-purple-100 to-pink-50 min-h-[480px] flex items-center overflow-hidden">
+      <div class="max-w-7xl mx-auto px-8 w-full flex items-center justify-between">
+        <div class="max-w-lg z-10">
+          <span class="bg-brand-orange text-white px-4 py-1 rounded-full text-sm font-bold inline-block mb-4">Mayo 2025</span>
+          <h1 class="text-4xl md:text-5xl font-black text-brand-dark leading-tight mb-4">
+            Lo mejor<br>para tus<br><span class="text-purple-600">engreídos</span> 🐾
+          </h1>
+          <p class="text-gray-600 font-semibold mb-6">Los mejores productos para perros y gatos al mejor precio</p>
+          <a href="#" class="inline-block bg-brand-orange text-white font-black px-8 py-3 rounded-full hover:bg-orange-600 transition shadow-lg text-sm">
+            Comprar ahora →
+          </a>
+        </div>
+        <div class="hidden md:block">
+          <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=500&q=80" alt="Gato" class="h-72 object-cover rounded-2xl shadow-2xl"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slider controls -->
+  <button id="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center z-10 transition">
+    <i class="fa fa-chevron-left text-gray-700"></i>
+  </button>
+  <button id="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white shadow-lg rounded-full w-10 h-10 flex items-center justify-center z-10 transition">
+    <i class="fa fa-chevron-right text-gray-700"></i>
+  </button>
+
+  <!-- Dots -->
+  <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+    <button class="dot w-3 h-3 rounded-full bg-white opacity-60 active:opacity-100 transition" data-index="0"></button>
+    <button class="dot w-3 h-3 rounded-full bg-white opacity-60 active:opacity-100 transition" data-index="1"></button>
+    <button class="dot w-3 h-3 rounded-full bg-white opacity-60 active:opacity-100 transition" data-index="2"></button>
+  </div>
+</section>
+
+<!-- STORE SUBTITLE -->
+<div class="text-center py-3 text-sm text-gray-500 bg-orange-50 border-y border-orange-100">
+  Tienda de productos para mascotas 🤍🐶🐱
+</div>
+
+<!-- TRUST BADGES -->
+<section class="bg-white border-b border-gray-100">
+  <div class="max-w-7xl mx-auto px-4 py-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center text-brand-teal"><i class="fa fa-truck-fast text-lg"></i></div>
+      <div>
+        <p class="text-xs font-bold text-gray-800">Envío rápido y seguro</p>
+        <p class="text-xs text-gray-500">a nivel nacional</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center text-brand-teal"><i class="fa fa-store text-lg"></i></div>
+      <div>
+        <p class="text-xs font-bold text-gray-800">Retiro en tienda</p>
+        <p class="text-xs text-gray-500">gratis</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center text-brand-teal"><i class="fa fa-users text-lg"></i></div>
+      <div>
+        <p class="text-xs font-bold text-gray-800">+1,500 clientes</p>
+        <p class="text-xs text-gray-500">felices</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center text-brand-teal"><i class="fa fa-clock text-lg"></i></div>
+      <div>
+        <p class="text-xs font-bold text-gray-800">Lun–Vie 9am–7pm</p>
+        <p class="text-xs text-gray-500">Sáb 9am–1pm</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COUNTDOWN BANNER -->
+<section class="bg-brand-orange py-6 text-white text-center">
+  <p class="text-lg font-black uppercase tracking-wider mb-3">⚡ ¡POR TIEMPO LIMITADO! Hasta <span class="text-yellow-300">50% de DESCUENTO</span></p>
+  <div class="flex justify-center gap-3" id="countdown">
+    <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-2 min-w-[60px]">
+      <p class="text-2xl font-black" id="cd-days">08</p>
+      <p class="text-xs font-semibold opacity-80">días</p>
+    </div>
+    <div class="text-2xl font-black self-center">:</div>
+    <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-2 min-w-[60px]">
+      <p class="text-2xl font-black" id="cd-hours">12</p>
+      <p class="text-xs font-semibold opacity-80">horas</p>
+    </div>
+    <div class="text-2xl font-black self-center">:</div>
+    <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-2 min-w-[60px]">
+      <p class="text-2xl font-black" id="cd-mins">11</p>
+      <p class="text-xs font-semibold opacity-80">minutos</p>
+    </div>
+    <div class="text-2xl font-black self-center">:</div>
+    <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-2 min-w-[60px]">
+      <p class="text-2xl font-black" id="cd-secs">56</p>
+      <p class="text-xs font-semibold opacity-80">segundos</p>
+    </div>
+  </div>
+</section>
+
+<!-- TOP OFFERS -->
+<section id="ofertas" class="max-w-7xl mx-auto px-4 py-12">
+  <h2 class="text-2xl font-black text-gray-800 mb-8">Top ofertas del mes para tus engreídos</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+    <!-- Product cards -->
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://quepatas.com/cdn/shop/files/collarin-donut.jpg?v=1745433209&width=400" onerror="this.src='https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&q=80'" alt="Collarín Donut" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Collarín Donut</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 44.00</p>
+        <p class="text-base font-black text-red-500">S/ 22.00</p>
+        <button onclick="addToCart('Collarín Donut', 22.00, 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4a?w=400&q=80" alt="Malla de Seguridad" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Malla de Seguridad</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 84.00</p>
+        <p class="text-base font-black text-red-500">S/ 42.00</p>
+        <button onclick="addToCart('Malla de Seguridad', 42.00, 'https://images.unsplash.com/photo-1548767797-d8c844163c4a?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&q=80" alt="Bolso Transportador" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Bolso Transportador</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 134.40</p>
+        <p class="text-base font-black text-red-500">S/ 67.20</p>
+        <button onclick="addToCart('Bolso Transportador', 67.20, 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=400&q=80" alt="Comedero Doble" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Comedero Doble Elevado</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 190.00</p>
+        <p class="text-base font-black text-red-500">S/ 95.00</p>
+        <button onclick="addToCart('Comedero Doble Elevado', 95.00, 'https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1516750105099-4b8a83e217ee?w=400&q=80" alt="Puerta de Seguridad" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 flex-wrap mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Envío gratis</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Puerta de Seguridad</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 399.00</p>
+        <p class="text-base font-black text-red-500">S/ 199.50</p>
+        <button onclick="addToCart('Puerta de Seguridad', 199.50, 'https://images.unsplash.com/photo-1516750105099-4b8a83e217ee?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=400&q=80" alt="Escalera Plegable" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Escalera Plegable</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 357.00</p>
+        <p class="text-base font-black text-red-500">S/ 178.50</p>
+        <button onclick="addToCart('Escalera Plegable', 178.50, 'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80" alt="Bebedero" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Bebedero de Agua</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 378.00</p>
+        <p class="text-base font-black text-red-500">S/ 189.00</p>
+        <button onclick="addToCart('Bebedero de Agua', 189.00, 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80" alt="Corral Jaula" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Llega hoy</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Corral Jaula</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 357.00</p>
+        <p class="text-base font-black text-red-500">S/ 178.50</p>
+        <button onclick="addToCart('Corral Jaula', 178.50, 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80" alt="Gimnasio Torre" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 flex-wrap mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Envío gratis</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Gimnasio Torre 206cm</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 945.00</p>
+        <p class="text-base font-black text-red-500">S/ 472.50</p>
+        <button onclick="addToCart('Gimnasio Torre 206cm', 472.50, 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group cursor-pointer">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">-50%</span>
+        <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&q=80" alt="Coche 3 Ruedas" class="w-full h-44 object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+      </div>
+      <div class="px-3 pb-4">
+        <div class="flex gap-1 flex-wrap mb-2">
+          <span class="text-xs bg-orange-100 text-brand-orange px-2 py-0.5 rounded-full font-semibold">Oferta</span>
+          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Envío gratis</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800 mb-1">Coche de 3 Ruedas</h3>
+        <p class="text-xs text-gray-400 line-through">S/ 525.00</p>
+        <p class="text-base font-black text-red-500">S/ 262.50</p>
+        <button onclick="addToCart('Coche de 3 Ruedas', 262.50, 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=100&q=80')"
+          class="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-2 rounded-full hover:bg-orange-600 transition">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CATEGORY BANNERS -->
+<section class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <a href="#" class="relative overflow-hidden rounded-2xl h-40 group">
+    <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80" alt="Lo mejor en Dormitorio" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+    <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-6">
+      <div class="text-white">
+        <p class="text-xs font-semibold opacity-80">Lo mejor en</p>
+        <p class="text-xl font-black">Dormitorio</p>
+        <p class="text-xs underline mt-1 opacity-80">VER PRODUCTOS →</p>
+      </div>
+    </div>
+  </a>
+  <a href="#" class="relative overflow-hidden rounded-2xl h-40 group">
+    <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80" alt="Lo mejor en Paseo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+    <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-6">
+      <div class="text-white">
+        <p class="text-xs font-semibold opacity-80">Lo mejor en</p>
+        <p class="text-xl font-black">Paseo</p>
+        <p class="text-xs underline mt-1 opacity-80">VER PRODUCTOS →</p>
+      </div>
+    </div>
+  </a>
+  <a href="#" class="relative overflow-hidden rounded-2xl h-40 group">
+    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&q=80" alt="Lo mejor en Higiene" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+    <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-6">
+      <div class="text-white">
+        <p class="text-xs font-semibold opacity-80">Lo mejor en</p>
+        <p class="text-xl font-black">Higiene</p>
+        <p class="text-xs underline mt-1 opacity-80">VER PRODUCTOS →</p>
+      </div>
+    </div>
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-900 text-gray-300 py-12 mt-8">
+  <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
+    <div>
+      <div class="mb-4">
+        <span class="text-2xl font-black text-brand-orange italic">¡Qué</span>
+        <span class="text-2xl font-black text-brand-teal italic ml-1">patas!</span>
+      </div>
+      <p class="text-sm text-gray-400">Tienda de productos para mascotas. Todo para tu perro y gato en un solo lugar.</p>
+      <div class="flex gap-3 mt-4">
+        <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors"><i class="fab fa-instagram text-sm"></i></a>
+        <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors"><i class="fab fa-facebook text-sm"></i></a>
+        <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-green-500 transition-colors"><i class="fab fa-whatsapp text-sm"></i></a>
+        <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition-colors"><i class="fab fa-tiktok text-sm"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4 class="text-white font-bold mb-4">Perros</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Transportadores</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Coches</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Escaleras y rampas</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Comederos</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Puertas de seguridad</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-white font-bold mb-4">Gatos</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Gimnasios</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Rascadores</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Fuentes de agua</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Camas y hamacas</a></li>
+        <li><a href="#" class="hover:text-brand-orange transition-colors">Transportadores</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-white font-bold mb-4">Atención al cliente</h4>
+      <ul class="space-y-2 text-sm">
+        <li class="flex items-center gap-2"><i class="fa fa-clock text-brand-orange"></i> Lun–Vie: 9am – 7pm</li>
+        <li class="flex items-center gap-2"><i class="fa fa-clock text-brand-orange"></i> Sáb: 9am – 1pm</li>
+        <li class="flex items-center gap-2"><i class="fab fa-whatsapp text-green-400"></i> WhatsApp disponible</li>
+        <li class="flex items-center gap-2"><i class="fa fa-envelope text-brand-orange"></i> hola@quepatas.com</li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-4 mt-8 pt-8 border-t border-white/10 text-xs text-gray-500 text-center">
+    © 2025 ¡Qué Patas! Pet Shop. Todos los derechos reservados. Lima, Perú.
+  </div>
+</footer>
+
+<!-- WHATSAPP FLOATING BUTTON -->
+<a href="https://wa.me/51999999999" target="_blank"
+   class="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 z-50">
+  <i class="fab fa-whatsapp text-2xl"></i>
+</a>
+
+<!-- REWARDS BUTTON -->
+<button class="fixed bottom-6 left-6 bg-brand-orange hover:bg-orange-600 text-white px-4 py-2.5 rounded-full flex items-center gap-2 shadow-xl text-sm font-bold z-50 transition-all hover:scale-105">
+  <i class="fa fa-gift"></i> Recompensas
+</button>
+
+
+<!-- ===== CART SIDEBAR ===== -->
+<div id="cartOverlay" class="fixed inset-0 bg-black/40 z-[60] hidden modal-bg" onclick="closeCart()"></div>
+<div id="cartSidebar" class="fixed right-0 top-0 h-full w-full max-w-sm bg-white z-[70] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+  <!-- Cart header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <h2 class="text-xl font-black text-gray-800">Carrito</h2>
+    <button onclick="closeCart()" class="text-gray-400 hover:text-gray-700 text-xl"><i class="fa fa-times"></i></button>
+  </div>
+
+  <!-- Free shipping progress -->
+  <div id="freeShippingBar" class="hidden px-5 py-3 bg-orange-50 border-b border-orange-100">
+    <p id="freeShippingMsg" class="text-xs font-bold text-brand-orange mb-2">¡Felicitaciones! Has obtenido el envío gratis 🌟</p>
+    <div class="bg-orange-200 rounded-full h-2 overflow-hidden">
+      <div id="freeShippingProgress" class="bg-brand-orange h-full rounded-full transition-all duration-500" style="width:100%"></div>
+    </div>
+  </div>
+
+  <!-- Added notification -->
+  <div id="addedNotif" class="hidden mx-5 mt-3 bg-green-50 border border-green-200 rounded-xl px-4 py-2 flex items-center gap-2">
+    <i class="fa fa-circle-check text-green-500"></i>
+    <span class="text-sm text-green-700 font-semibold">Producto agregado al carrito exitosamente</span>
+  </div>
+
+  <!-- Cart items -->
+  <div id="cartItems" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+    <p id="emptyCart" class="text-center text-gray-400 py-12">
+      <i class="fa fa-cart-shopping text-4xl mb-3 block opacity-30"></i>
+      Tu carrito está vacío
+    </p>
+  </div>
+
+  <!-- Upsell section -->
+  <div id="upsellSection" class="px-5 pb-3 border-t border-gray-100 pt-3 hidden">
+    <div class="upsell-scroll">
+      <div class="upsell-card bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 p-3 min-w-[260px]">
+        <img src="https://images.unsplash.com/photo-1516750105099-4b8a83e217ee?w=80&q=80" alt="Puerta" class="w-14 h-14 object-contain rounded-lg"/>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-gray-700">Puerta de Seguridad</p>
+          <div class="flex items-center justify-between mt-1">
+            <div>
+              <p class="text-xs text-gray-400 line-through">S/ 399.00</p>
+              <p class="text-sm font-black text-brand-orange">S/ 199.50</p>
+            </div>
+            <button onclick="addToCart('Puerta de Seguridad', 199.50, 'https://images.unsplash.com/photo-1516750105099-4b8a83e217ee?w=80&q=80')"
+              class="bg-brand-orange text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-orange-600 transition">
+              Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="upsell-card bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 p-3 min-w-[260px]">
+        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=80&q=80" alt="Gimnasio" class="w-14 h-14 object-contain rounded-lg"/>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-gray-700">Gimnasio Torre 206cm</p>
+          <div class="flex items-center justify-between mt-1">
+            <div>
+              <p class="text-xs text-gray-400 line-through">S/ 945.00</p>
+              <p class="text-sm font-black text-brand-orange">S/ 472.50</p>
+            </div>
+            <button onclick="addToCart('Gimnasio Torre 206cm', 472.50, 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=80&q=80')"
+              class="bg-brand-orange text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-orange-600 transition">
+              Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart footer -->
+  <div id="cartFooter" class="hidden px-5 py-4 border-t border-gray-100 bg-white">
+    <div class="flex justify-between text-sm font-semibold text-red-500 mb-1">
+      <span>DESCUENTOS</span>
+      <span id="cartDiscount">S/ 0.00</span>
+    </div>
+    <div class="flex justify-between text-base font-black text-gray-800 mb-4">
+      <span>SUBTOTAL</span>
+      <span id="cartSubtotal">S/ 0.00</span>
+    </div>
+    <button class="w-full bg-brand-orange text-white font-black py-3.5 rounded-full hover:bg-orange-600 transition text-sm shadow-lg">
+      Finalizar Pedido
+    </button>
+    <button onclick="closeCart()" class="w-full text-center text-sm text-gray-500 underline mt-3 hover:text-gray-700 transition">
+      Seguir comprando
+    </button>
+  </div>
+</div>
+
+
+<!-- ===== SUBSCRIBE MODAL ===== -->
+<div id="subscribeModal" class="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4 modal-bg">
+  <div class="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full flex flex-col md:flex-row">
+    <!-- Left visual -->
+    <div class="bg-gradient-to-br from-pink-400 to-rose-300 p-8 flex flex-col items-center justify-center text-white text-center md:w-5/12 relative">
+      <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:24px 24px;"></div>
+      <div class="relative z-10">
+        <i class="fa fa-paw text-4xl mb-3 opacity-80"></i>
+        <p class="text-lg font-bold mb-1">Suscríbete</p>
+        <p class="text-sm font-semibold mb-3 opacity-90">Y OBTÉN</p>
+        <div class="text-6xl font-black">10%</div>
+        <div class="text-2xl font-black">OFF</div>
+        <p class="text-sm font-bold mt-2 opacity-90">en tu PRIMERA compra</p>
+        <p class="text-xs mt-3 opacity-75">Además disfruta de hasta <strong>50% OFF</strong> en productos rebajados.</p>
+        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80" alt="mascota" class="w-32 h-32 object-cover rounded-full mt-4 mx-auto border-4 border-white/30"/>
+      </div>
+    </div>
+    <!-- Right form -->
+    <div class="p-8 md:w-7/12 flex flex-col justify-center">
+      <p class="text-brand-orange font-black text-sm uppercase tracking-widest mb-2">Exclusivo para nuevos suscriptores</p>
+      <h3 class="text-2xl font-black text-gray-800 mb-3">¡10% de descuento en tu primera compra!</h3>
+      <p class="text-sm text-gray-500 mb-6">Solo por tiempo limitado: deja tu correo y recibe un 10% de descuento en tu primera compra. ¡No dejes pasar esta oportunidad!</p>
+      <input type="text" placeholder="Nombre" class="border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 w-full outline-none focus:border-brand-orange transition-colors"/>
+      <input type="email" placeholder="Email" class="border border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 w-full outline-none focus:border-brand-orange transition-colors"/>
+      <button onclick="closeModal()" class="w-full bg-gray-900 text-white font-black py-3.5 rounded-xl hover:bg-gray-700 transition text-sm">
+        Obtener cupón
+      </button>
+      <button onclick="closeModal()" class="text-xs text-gray-400 hover:text-gray-600 mt-3 text-center underline transition">No, gracias</button>
+    </div>
+  </div>
+  <button onclick="closeModal()" class="absolute top-4 right-4 bg-white rounded-full w-9 h-9 flex items-center justify-center text-gray-500 hover:text-gray-800 shadow-lg transition">
+    <i class="fa fa-times"></i>
+  </button>
+</div>
+
+
+<script>
+// ======= CART STATE =======
+let cart = [];
+const FREE_SHIPPING_THRESHOLD = 200;
+
+function addToCart(name, price, img) {
+  const existing = cart.find(i => i.name === name);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ name, price, img, qty: 1 });
+  }
+  renderCart();
+  openCart();
+  showAddedNotif();
+}
+
+function removeFromCart(name) {
+  cart = cart.filter(i => i.name !== name);
+  renderCart();
+}
+
+function changeQty(name, delta) {
+  const item = cart.find(i => i.name === name);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) { removeFromCart(name); return; }
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const empty = document.getElementById('emptyCart');
+  const footer = document.getElementById('cartFooter');
+  const upsell = document.getElementById('upsellSection');
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount = subtotal; // shown as total savings vs full price (simplified)
+
+  document.getElementById('cartCount').textContent = count;
+
+  if (cart.length === 0) {
+    container.innerHTML = '';
+    empty.classList.remove('hidden');
+    footer.classList.add('hidden');
+    upsell.classList.add('hidden');
+    document.getElementById('freeShippingBar').classList.add('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  footer.classList.remove('hidden');
+  upsell.classList.remove('hidden');
+
+  // free shipping bar
+  const fsBar = document.getElementById('freeShippingBar');
+  fsBar.classList.remove('hidden');
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    document.getElementById('freeShippingMsg').textContent = '🌟 ¡Felicitaciones! Has obtenido el envío gratis';
+    document.getElementById('freeShippingProgress').style.width = '100%';
+  } else {
+    const remaining = (FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2);
+    document.getElementById('freeShippingMsg').textContent = `Te faltan S/ ${remaining} para el envío gratis`;
+    document.getElementById('freeShippingProgress').style.width = `${(subtotal / FREE_SHIPPING_THRESHOLD * 100)}%`;
+  }
+
+  container.innerHTML = cart.map(item => `
+    <div class="flex items-center gap-3 cart-item-enter">
+      <img src="${item.img}" alt="${item.name}" class="w-16 h-16 object-contain rounded-xl border border-gray-100 p-1"/>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-gray-800 truncate">${item.name}</p>
+        <p class="text-sm font-black text-red-500">S/ ${(item.price).toFixed(2)}</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="changeQty('${item.name}', -1)" class="w-6 h-6 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition text-sm font-bold">−</button>
+          <span class="text-sm font-bold w-4 text-center">${item.qty}</span>
+          <button onclick="changeQty('${item.name}', 1)" class="w-6 h-6 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition text-sm font-bold">+</button>
+          <button onclick="removeFromCart('${item.name}')" class="text-xs text-gray-400 hover:text-red-500 transition ml-2 underline">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('cartSubtotal').textContent = `S/ ${subtotal.toFixed(2)}`;
+  document.getElementById('cartDiscount').textContent = `S/ -${(subtotal * 0.5).toFixed(2)}`;
+}
+
+function openCart() {
+  document.getElementById('cartOverlay').classList.remove('hidden');
+  document.getElementById('cartSidebar').classList.remove('translate-x-full');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCart() {
+  document.getElementById('cartOverlay').classList.add('hidden');
+  document.getElementById('cartSidebar').classList.add('translate-x-full');
+  document.body.style.overflow = '';
+}
+
+function showAddedNotif() {
+  const notif = document.getElementById('addedNotif');
+  notif.classList.remove('hidden');
+  setTimeout(() => notif.classList.add('hidden'), 2500);
+}
+
+document.getElementById('cartBtn').addEventListener('click', openCart);
+
+// ======= SUBSCRIBE MODAL =======
+function closeModal() {
+  document.getElementById('subscribeModal').classList.add('hidden');
+}
+setTimeout(() => {
+  document.getElementById('subscribeModal').classList.remove('hidden');
+}, 3000);
+
+// ======= HERO SLIDER =======
+let currentSlide = 0;
+const totalSlides = 3;
+
+function goToSlide(index) {
+  currentSlide = index;
+  document.getElementById('sliderWrapper').style.transform = `translateX(-${currentSlide * 100}%)`;
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('opacity-100', i === currentSlide);
+    d.classList.toggle('opacity-60', i !== currentSlide);
+  });
+}
+
+document.getElementById('nextSlide').addEventListener('click', () => goToSlide((currentSlide + 1) % totalSlides));
+document.getElementById('prevSlide').addEventListener('click', () => goToSlide((currentSlide - 1 + totalSlides) % totalSlides));
+document.querySelectorAll('.dot').forEach(d => d.addEventListener('click', () => goToSlide(+d.dataset.index)));
+
+// Auto-advance
+setInterval(() => goToSlide((currentSlide + 1) % totalSlides), 5000);
+goToSlide(0);
+
+// ======= MOBILE MENU =======
+document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+});
+
+// ======= COUNTDOWN =======
+let endTime = Date.now() + (8*86400 + 12*3600 + 11*60 + 56) * 1000;
+function updateCountdown() {
+  const diff = Math.max(0, endTime - Date.now());
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cd-days').textContent = String(d).padStart(2,'0');
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent = String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent = String(s).padStart(2,'0');
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+</script>
+</body>
+</html>

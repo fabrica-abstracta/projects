@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villa Azul — Panel de Gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<style>
+  :root {
+    --navy:   #1a2744;
+    --navy2:  #243259;
+    --sand:   #f5f0e8;
+    --sand2:  #ede7d9;
+    --gold:   #c9a84c;
+    --gold2:  #e6c96e;
+    --slate:  #4a5568;
+    --red:    #c0392b;
+    --green:  #1e7e5a;
+    --white:  #ffffff;
+    --text:   #1a2744;
+    --muted:  #7a8599;
+    --border: #ddd6c8;
+    --r:      10px;
+    --shadow: 0 2px 12px rgba(26,39,68,.10);
+    --shadow2:0 6px 28px rgba(26,39,68,.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+  html { font-size:15px; }
+  body {
+    font-family:'Inter',sans-serif;
+    background: var(--sand);
+    color: var(--text);
+    min-height:100vh;
+    display:flex;
+  }
+
+  /* ───── SIDEBAR ───── */
+  .sidebar {
+    width:220px; flex-shrink:0;
+    background:var(--navy);
+    display:flex; flex-direction:column;
+    position:fixed; top:0; left:0; height:100vh;
+    z-index:100;
+  }
+  .sidebar-brand {
+    padding:28px 22px 20px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .sidebar-brand h1 {
+    font-family:'Playfair Display',serif;
+    font-size:1.3rem; color:var(--white); line-height:1.2;
+  }
+  .sidebar-brand span {
+    display:block; font-size:.68rem; letter-spacing:.12em;
+    color:var(--gold2); text-transform:uppercase; margin-top:3px;
+  }
+  .sidebar-nav { flex:1; padding:18px 0; }
+  .nav-label {
+    font-size:.63rem; letter-spacing:.14em; text-transform:uppercase;
+    color:rgba(255,255,255,.3); padding:14px 22px 6px; font-weight:600;
+  }
+  .nav-item {
+    display:flex; align-items:center; gap:11px;
+    padding:11px 22px; cursor:pointer; font-size:.875rem; font-weight:500;
+    color:rgba(255,255,255,.65); transition:all .18s; user-select:none;
+    border-left:3px solid transparent;
+  }
+  .nav-item:hover { color:var(--white); background:rgba(255,255,255,.06); }
+  .nav-item.active {
+    color:var(--gold2); background:rgba(201,168,76,.1);
+    border-left-color:var(--gold2);
+  }
+  .nav-item svg { flex-shrink:0; opacity:.75; }
+  .nav-item.active svg { opacity:1; }
+  .sidebar-footer {
+    padding:18px 22px; border-top:1px solid rgba(255,255,255,.08);
+    font-size:.78rem; color:rgba(255,255,255,.35);
+  }
+
+  /* ───── MAIN ───── */
+  .main {
+    margin-left:220px; flex:1; min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+  .topbar {
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:14px 32px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:50;
+  }
+  .topbar-left h2 { font-size:1.05rem; font-weight:600; }
+  .topbar-left p { font-size:.8rem; color:var(--muted); margin-top:1px; }
+  .topbar-right { display:flex; align-items:center; gap:14px; }
+  .btn {
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 18px; border-radius:8px; font-size:.845rem; font-weight:600;
+    cursor:pointer; border:none; transition:all .18s; font-family:'Inter',sans-serif;
+  }
+  .btn-primary { background:var(--navy); color:var(--white); }
+  .btn-primary:hover { background:var(--navy2); transform:translateY(-1px); box-shadow:var(--shadow2); }
+  .btn-ghost { background:transparent; color:var(--slate); border:1.5px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--navy); color:var(--navy); }
+  .btn-gold { background:var(--gold); color:var(--white); }
+  .btn-gold:hover { background:var(--gold2); color:var(--navy); }
+  .btn-danger { background:var(--red); color:var(--white); }
+  .btn-sm { padding:6px 13px; font-size:.79rem; }
+
+  .content { padding:28px 32px; flex:1; }
+
+  /* ───── TABS ───── */
+  .tabs {
+    display:flex; gap:4px; background:var(--sand2);
+    border-radius:10px; padding:4px; width:fit-content; margin-bottom:28px;
+  }
+  .tab {
+    padding:8px 20px; border-radius:8px; cursor:pointer;
+    font-size:.845rem; font-weight:500; color:var(--muted);
+    transition:all .18s; user-select:none;
+  }
+  .tab.active { background:var(--white); color:var(--navy); box-shadow:var(--shadow); font-weight:600; }
+  .tab:hover:not(.active) { color:var(--navy); }
+
+  /* ───── STATS ROW ───── */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--white); border-radius:var(--r); padding:18px 20px;
+    border:1px solid var(--border); position:relative; overflow:hidden;
+  }
+  .stat-card::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .stat-card.s1::after { background:linear-gradient(90deg,var(--navy),var(--navy2)); }
+  .stat-card.s2::after { background:linear-gradient(90deg,var(--green),#27ae60); }
+  .stat-card.s3::after { background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+  .stat-card.s4::after { background:linear-gradient(90deg,#8e44ad,#9b59b6); }
+  .stat-label { font-size:.74rem; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); font-weight:600; }
+  .stat-value { font-size:1.9rem; font-weight:700; color:var(--navy); margin:4px 0 2px; line-height:1; }
+  .stat-sub { font-size:.76rem; color:var(--muted); }
+
+  /* ───── SECTION HEADER ───── */
+  .sec-header {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;
+  }
+  .sec-header h3 { font-size:1rem; font-weight:600; }
+  .sec-header p { font-size:.8rem; color:var(--muted); margin-top:2px; }
+
+  /* ───── ROOM GRID ───── */
+  .rooms-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:18px; }
+  .room-card {
+    background:var(--white); border-radius:var(--r); overflow:hidden;
+    border:1.5px solid var(--border); transition:all .2s; cursor:pointer;
+  }
+  .room-card:hover { box-shadow:var(--shadow2); transform:translateY(-2px); border-color:var(--navy); }
+  .room-img { width:100%; height:150px; object-fit:cover; display:block; }
+  .room-body { padding:14px 16px; }
+  .room-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .room-name { font-weight:600; font-size:.925rem; }
+  .room-num { font-size:.76rem; color:var(--muted); margin-top:2px; }
+  .badge {
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:.7rem; font-weight:600; letter-spacing:.04em;
+  }
+  .badge-available { background:#d4edda; color:#1e7e5a; }
+  .badge-occupied  { background:#fde8e8; color:var(--red); }
+  .badge-cleaning  { background:#fff3cd; color:#856404; }
+  .badge-cat { background:rgba(26,39,68,.08); color:var(--navy); }
+  .room-meta { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .room-meta span { font-size:.76rem; color:var(--muted); display:flex; align-items:center; gap:3px; }
+  .room-price { font-size:.95rem; font-weight:700; color:var(--navy); margin-top:10px; }
+  .room-price span { font-size:.72rem; font-weight:400; color:var(--muted); }
+  .room-actions { display:flex; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+
+  /* ───── TABLE ───── */
+  .table-wrap { background:var(--white); border-radius:var(--r); border:1px solid var(--border); overflow:hidden; }
+  table { width:100%; border-collapse:collapse; }
+  thead { background:var(--sand); }
+  th { padding:11px 16px; text-align:left; font-size:.77rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); white-space:nowrap; }
+  td { padding:13px 16px; font-size:.845rem; border-top:1px solid var(--border); vertical-align:middle; }
+  tr:hover td { background:rgba(245,240,232,.5); }
+  .action-row { display:flex; gap:7px; }
+
+  /* ───── CALENDAR ───── */
+  .calendar-section { display:grid; grid-template-columns:1fr 340px; gap:22px; }
+  .cal-card { background:var(--white); border-radius:var(--r); border:1px solid var(--border); padding:20px; }
+  .cal-card h4 { font-size:.9rem; font-weight:600; margin-bottom:16px; }
+  #reservas-calendar .flatpickr-calendar {
+    box-shadow:none !important; border:none !important; width:100% !important;
+  }
+  .upcoming-list { display:flex; flex-direction:column; gap:10px; }
+  .upcoming-item {
+    padding:12px 14px; border-radius:8px; border:1px solid var(--border);
+    cursor:pointer; transition:all .18s;
+  }
+  .upcoming-item:hover { border-color:var(--navy); background:rgba(26,39,68,.02); }
+  .upcoming-item-top { display:flex; justify-content:space-between; align-items:center; }
+  .upcoming-name { font-weight:600; font-size:.85rem; }
+  .upcoming-room { font-size:.76rem; color:var(--muted); margin-top:3px; }
+  .upcoming-dates { font-size:.73rem; color:var(--muted); margin-top:5px; display:flex; gap:8px; align-items:center; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--gold); display:inline-block; }
+
+  /* ───── CATEGORIES ───── */
+  .cat-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
+  .cat-card {
+    background:var(--white); border-radius:var(--r); border:1px solid var(--border);
+    padding:16px 18px; display:flex; align-items:center; gap:14px;
+    transition:all .18s;
+  }
+  .cat-card:hover { box-shadow:var(--shadow); border-color:var(--navy); }
+  .cat-icon {
+    width:44px; height:44px; border-radius:10px; background:rgba(26,39,68,.07);
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;
+  }
+  .cat-info { flex:1; }
+  .cat-name { font-weight:600; font-size:.875rem; }
+  .cat-count { font-size:.75rem; color:var(--muted); margin-top:2px; }
+  .cat-price { font-size:.9rem; font-weight:700; color:var(--navy); margin-top:4px; }
+
+  /* ───── MODAL ───── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(26,39,68,.55);
+    backdrop-filter:blur(3px); z-index:1000; display:none;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--white); border-radius:14px; width:100%; max-width:520px;
+    box-shadow:0 20px 60px rgba(26,39,68,.25); animation:slideUp .2s ease;
+    max-height:90vh; overflow-y:auto;
+  }
+  @keyframes slideUp {
+    from { transform:translateY(20px); opacity:0; }
+    to   { transform:translateY(0);    opacity:1; }
+  }
+  .modal-header {
+    padding:22px 26px 16px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; background:var(--white); z-index:2;
+  }
+  .modal-header h3 { font-size:1rem; font-weight:700; }
+  .modal-close {
+    width:32px; height:32px; border-radius:8px; border:none; cursor:pointer;
+    background:var(--sand); color:var(--muted); font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+    transition:all .15s;
+  }
+  .modal-close:hover { background:var(--sand2); color:var(--navy); }
+  .modal-body { padding:22px 26px; }
+  .modal-footer { padding:16px 26px 22px; display:flex; gap:10px; justify-content:flex-end; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:.8rem; font-weight:600; color:var(--slate); margin-bottom:5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px;
+    font-family:'Inter',sans-serif; font-size:.875rem; color:var(--text);
+    background:var(--white); transition:border .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(26,39,68,.08);
+  }
+  .form-group textarea { resize:vertical; min-height:70px; }
+
+  /* ───── RATE TABLE ───── */
+  .rate-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .rate-row:last-child { border:none; }
+  .rate-season { flex:1; font-size:.875rem; font-weight:600; }
+  .rate-dates { font-size:.76rem; color:var(--muted); margin-top:2px; }
+  .rate-price { font-size:1.05rem; font-weight:700; color:var(--navy); min-width:80px; text-align:right; }
+
+  /* ───── TOAST ───── */
+  .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    background:var(--navy); color:var(--white); padding:12px 20px;
+    border-radius:10px; font-size:.845rem; box-shadow:var(--shadow2);
+    display:flex; align-items:center; gap:10px;
+    animation:toastIn .25s ease;
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(20px); } }
+  .toast.success { background:var(--green); }
+  .toast.error   { background:var(--red); }
+
+  /* ───── OCCUPANCY BAR ───── */
+  .occ-bar-wrap { background:var(--sand2); border-radius:6px; height:8px; overflow:hidden; margin-top:6px; }
+  .occ-bar { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--navy),var(--navy2)); transition:width .6s; }
+
+  /* ───── FLATPICKR overrides ───── */
+  .flatpickr-day.selected, .flatpickr-day.selected:hover {
+    background:var(--navy) !important; border-color:var(--navy) !important;
+  }
+  .flatpickr-day.inRange {
+    background:rgba(26,39,68,.12) !important; border-color:transparent !important;
+  }
+  .flatpickr-day:hover { background:var(--sand2) !important; }
+
+  /* ───── UTILITIES ───── */
+  .hidden { display:none !important; }
+  .page { display:none; }
+  .page.active { display:block; }
+  .flex-between { display:flex; align-items:center; justify-content:space-between; }
+  .mt-4 { margin-top:4px; }
+  .mt-8 { margin-top:8px; }
+  .mt-16 { margin-top:16px; }
+  .text-muted { color:var(--muted); font-size:.8rem; }
+  .empty-state { text-align:center; padding:48px 20px; color:var(--muted); }
+  .empty-state svg { opacity:.3; margin-bottom:12px; }
+  .empty-state p { font-size:.875rem; }
+  .chip { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <h1>Villa Azul</h1>
+    <span>Panel de Gestión</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Principal</div>
+    <div class="nav-item active" onclick="goPage('dashboard')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Resumen
+    </div>
+    <div class="nav-item" onclick="goPage('reservas')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </div>
+    <div class="nav-label">Inventario</div>
+    <div class="nav-item" onclick="goPage('cuartos')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Cuartos
+    </div>
+    <div class="nav-item" onclick="goPage('categorias')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+      Categorías
+    </div>
+    <div class="nav-item" onclick="goPage('tarifas')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Tarifas
+    </div>
+  </nav>
+  <div class="sidebar-footer">v2.1 · Villa Azul Hotel</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="page-title">Resumen General</h2>
+      <p id="page-sub">Lunes 9 de junio, 2026</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" id="btn-nueva-reserva" onclick="openModal('modal-reserva')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva reserva
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card s1">
+          <div class="stat-label">Ocupación hoy</div>
+          <div class="stat-value">73<span style="font-size:1.1rem">%</span></div>
+          <div class="stat-sub">16 de 22 cuartos ocupados</div>
+          <div class="occ-bar-wrap mt-4"><div class="occ-bar" style="width:73%"></div></div>
+        </div>
+        <div class="stat-card s2">
+          <div class="stat-label">Ingresos del mes</div>
+          <div class="stat-value">S/ 48,230</div>
+          <div class="stat-sub">↑ 12% vs mes anterior</div>
+        </div>
+        <div class="stat-card s3">
+          <div class="stat-label">Reservas activas</div>
+          <div class="stat-value">16</div>
+          <div class="stat-sub">3 llegadas hoy</div>
+        </div>
+        <div class="stat-card s4">
+          <div class="stat-label">Salidas hoy</div>
+          <div class="stat-value">4</div>
+          <div class="stat-sub">2 pendientes de pago</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:22px">
+        <!-- Llegadas hoy -->
+        <div>
+          <div class="sec-header">
+            <div><h3>Llegadas y salidas de hoy</h3><p>Gestión rápida del día</p></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Huésped</th><th>Cuarto</th><th>Tipo</th><th>Hora</th><th>Estado</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="hoy-tbody">
+                <tr>
+                  <td><strong>María Fernández</strong><br><span class="text-muted">2 noches</span></td>
+                  <td>#201 – Suite Mar</td>
+                  <td><span class="chip" style="background:#d4edda;color:#1e7e5a">Llegada</span></td>
+                  <td>14:00</td>
+                  <td><span class="badge badge-available">Confirmado</span></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="showToast('Check-in registrado ✓','success')">Check-in</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Carlos Méndez</strong><br><span class="text-muted">1 noche</span></td>
+                  <td>#105 – Doble Estándar</td>
+                  <td><span class="chip" style="background:#d4edda;color:#1e7e5a">Llegada</span></td>
+                  <td>15:30</td>
+                  <td><span class="badge badge-available">Confirmado</span></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="showToast('Check-in registrado ✓','success')">Check-in</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Ana Torres</strong><br><span class="text-muted">3 noches</span></td>
+                  <td>#302 – Suite Premium</td>
+                  <td><span class="chip" style="background:#d4edda;color:#1e7e5a">Llegada</span></td>
+                  <td>16:00</td>
+                  <td><span class="badge badge-cleaning">Pendiente</span></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="showToast('Check-in registrado ✓','success')">Check-in</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Roberto Silva</strong><br><span class="text-muted">2 noches</span></td>
+                  <td>#108 – Simple Estándar</td>
+                  <td><span class="chip" style="background:#fde8e8;color:#c0392b">Salida</span></td>
+                  <td>11:00</td>
+                  <td><span class="badge badge-occupied">En curso</span></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="showToast('Check-out completado ✓','success')">Check-out</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Luisa Paredes</strong><br><span class="text-muted">4 noches</span></td>
+                  <td>#204 – Suite Mar</td>
+                  <td><span class="chip" style="background:#fde8e8;color:#c0392b">Salida</span></td>
+                  <td>12:00</td>
+                  <td><span class="badge badge-occupied">En curso</span></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="showToast('Check-out completado ✓','success')">Check-out</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Estado cuartos rápido -->
+        <div>
+          <div class="sec-header">
+            <div><h3>Estado cuartos</h3><p>Vista rápida del piso</p></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <!-- Piso 1 -->
+            <div style="grid-column:1/-1;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-top:4px">Piso 1</div>
+            <div class="room-chip occ" title="101 – Ocupado" style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">101</div>
+            <div class="room-chip" style="background:#d4edda;border:1.5px solid #9ecfb0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--green)">102</div>
+            <div class="room-chip occ" style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">103</div>
+            <div class="room-chip" style="background:#fff3cd;border:1.5px solid #f0c040;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:#856404">104</div>
+            <div class="room-chip occ" style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">105</div>
+            <div class="room-chip" style="background:#d4edda;border:1.5px solid #9ecfb0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--green)">106</div>
+            <div class="room-chip occ" style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">107</div>
+            <div class="room-chip occ" style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">108</div>
+            <!-- Piso 2 -->
+            <div style="grid-column:1/-1;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-top:8px">Piso 2</div>
+            <div style="background:#d4edda;border:1.5px solid #9ecfb0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--green)">201</div>
+            <div style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">202</div>
+            <div style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">203</div>
+            <div style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">204</div>
+            <!-- Piso 3 -->
+            <div style="grid-column:1/-1;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-top:8px">Piso 3</div>
+            <div style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">301</div>
+            <div style="background:#d4edda;border:1.5px solid #9ecfb0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--green)">302</div>
+            <div style="background:#fde8e8;border:1.5px solid #e0a0a0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--red)">303</div>
+            <div style="background:#d4edda;border:1.5px solid #9ecfb0;border-radius:8px;padding:10px 4px;text-align:center;font-size:.78rem;font-weight:600;color:var(--green)">304</div>
+          </div>
+          <!-- leyenda -->
+          <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+            <span style="font-size:.73rem;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#fde8e8;border:1.5px solid #e0a0a0;display:inline-block"></span>Ocupado</span>
+            <span style="font-size:.73rem;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#d4edda;border:1.5px solid #9ecfb0;display:inline-block"></span>Disponible</span>
+            <span style="font-size:.73rem;color:var(--muted);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#fff3cd;border:1.5px solid #f0c040;display:inline-block"></span>Limpieza</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RESERVAS ═══ -->
+    <div class="page" id="page-reservas">
+      <div class="calendar-section">
+        <!-- Calendario -->
+        <div class="cal-card">
+          <h4>Calendario de reservas</h4>
+          <div id="reservas-calendar"></div>
+          <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+            <div style="font-size:.8rem;font-weight:600;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Reservas en junio</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Huésped</th><th>Cuarto</th><th>Entrada</th><th>Salida</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+                <tbody id="reservas-tbody">
+                  <tr>
+                    <td><strong>María Fernández</strong></td>
+                    <td>#201 Suite Mar</td><td>09 Jun</td><td>11 Jun</td>
+                    <td>S/ 1,600</td>
+                    <td><span class="badge badge-available">Confirmada</span></td>
+                    <td><div class="action-row">
+                      <button class="btn btn-ghost btn-sm" onclick="openEditReserva('Maria Fernandez','201','2026-06-09','2026-06-11','1600','confirmada')">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete('reserva 201 – M. Fernández')">Eliminar</button>
+                    </div></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Carlos Méndez</strong></td>
+                    <td>#105 Doble Estándar</td><td>09 Jun</td><td>10 Jun</td>
+                    <td>S/ 280</td>
+                    <td><span class="badge badge-available">Confirmada</span></td>
+                    <td><div class="action-row">
+                      <button class="btn btn-ghost btn-sm" onclick="openEditReserva('Carlos Mendez','105','2026-06-09','2026-06-10','280','confirmada')">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete('reserva 105 – C. Méndez')">Eliminar</button>
+                    </div></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ana Torres</strong></td>
+                    <td>#302 Suite Premium</td><td>09 Jun</td><td>12 Jun</td>
+                    <td>S/ 3,300</td>
+                    <td><span class="badge badge-cleaning">Pendiente pago</span></td>
+                    <td><div class="action-row">
+                      <button class="btn btn-ghost btn-sm" onclick="openEditReserva('Ana Torres','302','2026-06-09','2026-06-12','3300','pendiente')">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete('reserva 302 – A. Torres')">Eliminar</button>
+                    </div></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pedro Ruiz</strong></td>
+                    <td>#103 Doble Estándar</td><td>12 Jun</td><td>14 Jun</td>
+                    <td>S/ 560</td>
+                    <td><span class="badge badge-available">Confirmada</span></td>
+                    <td><div class="action-row">
+                      <button class="btn btn-ghost btn-sm" onclick="openEditReserva('Pedro Ruiz','103','2026-06-12','2026-06-14','560','confirmada')">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete('reserva 103 – P. Ruiz')">Eliminar</button>
+                    </div></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Sandra Vega</strong></td>
+                    <td>#301 Suite Premium</td><td>15 Jun</td><td>20 Jun</td>
+                    <td>S/ 5,500</td>
+                    <td><span class="badge badge-available">Confirmada</span></td>
+                    <td><div class="action-row">
+                      <button class="btn btn-ghost btn-sm" onclick="openEditReserva('Sandra Vega','301','2026-06-15','2026-06-20','5500','confirmada')">Editar</button>
+                      <button class="btn btn-danger btn-sm" onclick="confirmDelete('reserva 301 – S. Vega')">Eliminar</button>
+                    </div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Próximas -->
+        <div>
+          <div class="cal-card">
+            <h4>Próximas llegadas</h4>
+            <div class="upcoming-list">
+              <div class="upcoming-item" onclick="openEditReserva('María Fernández','201','2026-06-09','2026-06-11','1600','confirmada')">
+                <div class="upcoming-item-top">
+                  <div class="upcoming-name">María Fernández</div>
+                  <span class="badge badge-available">Hoy</span>
+                </div>
+                <div class="upcoming-room">Suite Mar · #201 · 2 personas</div>
+                <div class="upcoming-dates"><span class="dot"></span>09 Jun → 11 Jun · S/ 1,600</div>
+              </div>
+              <div class="upcoming-item" onclick="openEditReserva('Carlos Méndez','105','2026-06-09','2026-06-10','280','confirmada')">
+                <div class="upcoming-item-top">
+                  <div class="upcoming-name">Carlos Méndez</div>
+                  <span class="badge badge-available">Hoy</span>
+                </div>
+                <div class="upcoming-room">Doble Estándar · #105 · 1 persona</div>
+                <div class="upcoming-dates"><span class="dot"></span>09 Jun → 10 Jun · S/ 280</div>
+              </div>
+              <div class="upcoming-item">
+                <div class="upcoming-item-top">
+                  <div class="upcoming-name">Pedro Ruiz</div>
+                  <span class="badge badge-cleaning">En 3 días</span>
+                </div>
+                <div class="upcoming-room">Doble Estándar · #103 · 2 personas</div>
+                <div class="upcoming-dates"><span class="dot"></span>12 Jun → 14 Jun · S/ 560</div>
+              </div>
+              <div class="upcoming-item">
+                <div class="upcoming-item-top">
+                  <div class="upcoming-name">Sandra Vega</div>
+                  <span class="badge" style="background:rgba(26,39,68,.08);color:var(--navy)">En 6 días</span>
+                </div>
+                <div class="upcoming-room">Suite Premium · #301 · 2 personas</div>
+                <div class="upcoming-dates"><span class="dot"></span>15 Jun → 20 Jun · S/ 5,500</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CUARTOS ═══ -->
+    <div class="page" id="page-cuartos">
+      <div class="sec-header">
+        <div><h3>Todos los cuartos</h3><p>22 cuartos · 16 ocupados · 4 disponibles · 2 en limpieza</p></div>
+        <button class="btn btn-primary" onclick="openModal('modal-cuarto')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo cuarto
+        </button>
+      </div>
+      <div class="rooms-grid" id="cuartos-grid">
+
+        <div class="room-card" onclick="openEditCuarto('101','Simple Estándar','simple','Ocupado','180','1','1')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80" alt="101" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 101</div><div class="room-num">Simple Estándar · Piso 1</div></div>
+              <span class="badge badge-occupied">Ocupado</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 1 cama</span><span>🚿 1 baño</span><span>📐 18 m²</span>
+            </div>
+            <div class="room-price">S/ 180 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('101','Simple Estándar','simple','Ocupado','180','1','1')">Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openModal('modal-reserva')">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-card" onclick="openEditCuarto('102','Simple Estándar','simple','Disponible','180','1','1')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=400&q=80" alt="102" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 102</div><div class="room-num">Simple Estándar · Piso 1</div></div>
+              <span class="badge badge-available">Disponible</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 1 cama</span><span>🚿 1 baño</span><span>📐 18 m²</span>
+            </div>
+            <div class="room-price">S/ 180 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('102','Simple Estándar','simple','Disponible','180','1','1')">Editar</button>
+              <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openModal('modal-reserva')">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-card" onclick="openEditCuarto('105','Doble Estándar','doble','Ocupado','280','2','1')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&q=80" alt="105" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 105</div><div class="room-num">Doble Estándar · Piso 1</div></div>
+              <span class="badge badge-occupied">Ocupado</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 2 camas</span><span>🚿 1 baño</span><span>📐 24 m²</span>
+            </div>
+            <div class="room-price">S/ 280 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('105','Doble Estándar','doble','Ocupado','280','2','1')">Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openModal('modal-reserva')">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-card" onclick="openEditCuarto('104','Doble Estándar','doble','Limpieza','280','2','1')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&q=80" alt="104" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 104</div><div class="room-num">Doble Estándar · Piso 1</div></div>
+              <span class="badge badge-cleaning">Limpieza</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 2 camas</span><span>🚿 1 baño</span><span>📐 24 m²</span>
+            </div>
+            <div class="room-price">S/ 280 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('104','Doble Estándar','doble','Limpieza','280','2','1')">Editar</button>
+              <button class="btn btn-ghost btn-sm">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-card" onclick="openEditCuarto('201','Suite Mar','suite','Disponible','800','2','2')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&q=80" alt="201" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 201</div><div class="room-num">Suite Mar · Piso 2</div></div>
+              <span class="badge badge-available">Disponible</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 1 king</span><span>🚿 2 baños</span><span>📐 48 m²</span><span>🌊 Vista mar</span>
+            </div>
+            <div class="room-price">S/ 800 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('201','Suite Mar','suite','Disponible','800','1','2')">Editar</button>
+              <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openModal('modal-reserva')">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-card" onclick="openEditCuarto('301','Suite Premium','premium','Ocupado','1100','2','2')">
+          <img class="room-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&q=80" alt="301" loading="lazy">
+          <div class="room-body">
+            <div class="room-top">
+              <div><div class="room-name">Cuarto 301</div><div class="room-num">Suite Premium · Piso 3</div></div>
+              <span class="badge badge-occupied">Ocupado</span>
+            </div>
+            <div class="room-meta">
+              <span>🛏 1 king</span><span>🚿 2 baños</span><span>📐 65 m²</span><span>🌅 Terraza</span>
+            </div>
+            <div class="room-price">S/ 1,100 <span>/ noche</span></div>
+            <div class="room-actions">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCuarto('301','Suite Premium','premium','Ocupado','1100','1','2')">Editar</button>
+              <button class="btn btn-ghost btn-sm">Reservar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ CATEGORÍAS ═══ -->
+    <div class="page" id="page-categorias">
+      <div class="sec-header">
+        <div><h3>Categorías de cuartos</h3><p>Define tipos de habitación con sus características</p></div>
+        <button class="btn btn-primary" onclick="openModal('modal-categoria')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva categoría
+        </button>
+      </div>
+      <div class="cat-list">
+        <div class="cat-card" onclick="openEditCategoria('simple','Simple Estándar','6','WiFi, TV, A/C')">
+          <div class="cat-icon">🛏</div>
+          <div class="cat-info">
+            <div class="cat-name">Simple Estándar</div>
+            <div class="cat-count">6 cuartos · 1 cama</div>
+            <div class="cat-price">S/ 180 / noche</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCategoria('simple','Simple Estándar','6','WiFi, TV, A/C')">Editar</button>
+        </div>
+        <div class="cat-card" onclick="openEditCategoria('doble','Doble Estándar','8','WiFi, TV, A/C, Frigobar')">
+          <div class="cat-icon">🛏</div>
+          <div class="cat-info">
+            <div class="cat-name">Doble Estándar</div>
+            <div class="cat-count">8 cuartos · 2 camas</div>
+            <div class="cat-price">S/ 280 / noche</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCategoria('doble','Doble Estándar','8','WiFi, TV, A/C, Frigobar')">Editar</button>
+        </div>
+        <div class="cat-card" onclick="openEditCategoria('suite','Suite Mar','6','WiFi, Smart TV, A/C, Jacuzzi, Vista al mar')">
+          <div class="cat-icon">🌊</div>
+          <div class="cat-info">
+            <div class="cat-name">Suite Mar</div>
+            <div class="cat-count">6 cuartos · 1 cama king</div>
+            <div class="cat-price">S/ 800 / noche</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCategoria('suite','Suite Mar','6','WiFi, Smart TV, A/C, Jacuzzi, Vista al mar')">Editar</button>
+        </div>
+        <div class="cat-card" onclick="openEditCategoria('premium','Suite Premium','2','WiFi, Smart TV, A/C, Jacuzzi, Terraza, Mayordomo')">
+          <div class="cat-icon">⭐</div>
+          <div class="cat-info">
+            <div class="cat-name">Suite Premium</div>
+            <div class="cat-count">2 cuartos · 1 cama king</div>
+            <div class="cat-price">S/ 1,100 / noche</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditCategoria('premium','Suite Premium','2','WiFi, Smart TV, A/C, Jacuzzi, Terraza, Mayordomo')">Editar</button>
+        </div>
+      </div>
+
+      <!-- Tabla detalle -->
+      <div style="margin-top:28px">
+        <div class="sec-header"><h3>Detalle por categoría</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Categoría</th><th>Cuartos</th><th>Capacidad</th><th>Amenidades</th><th>Tarifa base</th><th>Ocupación</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Simple Estándar</strong></td><td>6</td><td>1–2 personas</td>
+                <td><span class="text-muted">WiFi, TV, A/C</span></td>
+                <td>S/ 180</td>
+                <td>
+                  <div style="font-size:.8rem;font-weight:600">83%</div>
+                  <div class="occ-bar-wrap" style="width:80px"><div class="occ-bar" style="width:83%"></div></div>
+                </td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openEditCategoria('simple','Simple Estándar','6','WiFi, TV, A/C')">Editar</button></td>
+              </tr>
+              <tr>
+                <td><strong>Doble Estándar</strong></td><td>8</td><td>2–3 personas</td>
+                <td><span class="text-muted">WiFi, TV, A/C, Frigobar</span></td>
+                <td>S/ 280</td>
+                <td>
+                  <div style="font-size:.8rem;font-weight:600">75%</div>
+                  <div class="occ-bar-wrap" style="width:80px"><div class="occ-bar" style="width:75%"></div></div>
+                </td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openEditCategoria('doble','Doble Estándar','8','WiFi, TV, A/C, Frigobar')">Editar</button></td>
+              </tr>
+              <tr>
+                <td><strong>Suite Mar</strong></td><td>6</td><td>2 personas</td>
+                <td><span class="text-muted">WiFi, Smart TV, Jacuzzi, Vista mar</span></td>
+                <td>S/ 800</td>
+                <td>
+                  <div style="font-size:.8rem;font-weight:600">66%</div>
+                  <div class="occ-bar-wrap" style="width:80px"><div class="occ-bar" style="width:66%"></div></div>
+                </td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openEditCategoria('suite','Suite Mar','6','WiFi, Smart TV, A/C, Jacuzzi, Vista al mar')">Editar</button></td>
+              </tr>
+              <tr>
+                <td><strong>Suite Premium</strong></td><td>2</td><td>2 personas</td>
+                <td><span class="text-muted">Todo incluido + Mayordomo</span></td>
+                <td>S/ 1,100</td>
+                <td>
+                  <div style="font-size:.8rem;font-weight:600">50%</div>
+                  <div class="occ-bar-wrap" style="width:80px"><div class="occ-bar" style="width:50%"></div></div>
+                </td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openEditCategoria('premium','Suite Premium','2','WiFi, Smart TV, A/C, Jacuzzi, Terraza, Mayordomo')">Editar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TARIFAS ═══ -->
+    <div class="page" id="page-tarifas">
+      <div class="sec-header">
+        <div><h3>Gestión de Tarifas</h3><p>Precios por temporada y tipo de cuarto</p></div>
+        <button class="btn btn-primary" onclick="openModal('modal-tarifa')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva tarifa
+        </button>
+      </div>
+
+      <!-- Por temporada -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="cal-card">
+          <h4>Temporada Alta · Dic–Mar</h4>
+          <div style="margin-top:12px">
+            <div class="rate-row">
+              <div><div class="rate-season">Simple Estándar</div><div class="rate-dates">1 Dic – 31 Mar</div></div>
+              <div class="rate-price">S/ 260</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Simple Estándar','alta','260','2025-12-01','2026-03-31')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Doble Estándar</div><div class="rate-dates">1 Dic – 31 Mar</div></div>
+              <div class="rate-price">S/ 420</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Doble Estándar','alta','420','2025-12-01','2026-03-31')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Suite Mar</div><div class="rate-dates">1 Dic – 31 Mar</div></div>
+              <div class="rate-price">S/ 1,100</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Suite Mar','alta','1100','2025-12-01','2026-03-31')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Suite Premium</div><div class="rate-dates">1 Dic – 31 Mar</div></div>
+              <div class="rate-price">S/ 1,600</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Suite Premium','alta','1600','2025-12-01','2026-03-31')">Editar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-card">
+          <h4>Temporada Baja · Abr–Nov</h4>
+          <div style="margin-top:12px">
+            <div class="rate-row">
+              <div><div class="rate-season">Simple Estándar</div><div class="rate-dates">1 Abr – 30 Nov</div></div>
+              <div class="rate-price">S/ 180</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Simple Estándar','baja','180','2026-04-01','2026-11-30')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Doble Estándar</div><div class="rate-dates">1 Abr – 30 Nov</div></div>
+              <div class="rate-price">S/ 280</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Doble Estándar','baja','280','2026-04-01','2026-11-30')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Suite Mar</div><div class="rate-dates">1 Abr – 30 Nov</div></div>
+              <div class="rate-price">S/ 800</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Suite Mar','baja','800','2026-04-01','2026-11-30')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Suite Premium</div><div class="rate-dates">1 Abr – 30 Nov</div></div>
+              <div class="rate-price">S/ 1,100</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Suite Premium','baja','1100','2026-04-01','2026-11-30')">Editar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-card">
+          <h4>Feriados y días especiales</h4>
+          <div style="margin-top:12px">
+            <div class="rate-row">
+              <div><div class="rate-season">Semana Santa</div><div class="rate-dates">Todas las categorías · +30%</div></div>
+              <div class="rate-price">+30%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Semana Santa','especial','+30%','2026-04-02','2026-04-05')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Fiestas Patrias</div><div class="rate-dates">Todas las categorías · +20%</div></div>
+              <div class="rate-price">+20%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Fiestas Patrias','especial','+20%','2026-07-27','2026-07-29')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Año Nuevo</div><div class="rate-dates">Todas las categorías · +50%</div></div>
+              <div class="rate-price">+50%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Año Nuevo','especial','+50%','2026-12-30','2027-01-02')">Editar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-card">
+          <h4>Descuentos activos</h4>
+          <div style="margin-top:12px">
+            <div class="rate-row">
+              <div><div class="rate-season">Estancia mínima 5 noches</div><div class="rate-dates">Cualquier categoría</div></div>
+              <div class="rate-price" style="color:var(--green)">-10%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Estancia 5+ noches','descuento','-10%','2026-01-01','2026-12-31')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Reserva anticipada 30 días</div><div class="rate-dates">Cualquier categoría</div></div>
+              <div class="rate-price" style="color:var(--green)">-15%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Anticipada 30 días','descuento','-15%','2026-01-01','2026-12-31')">Editar</button>
+            </div>
+            <div class="rate-row">
+              <div><div class="rate-season">Huésped frecuente</div><div class="rate-dates">3ra visita en adelante</div></div>
+              <div class="rate-price" style="color:var(--green)">-8%</div>
+              <button class="btn btn-ghost btn-sm" onclick="openEditTarifa('Huésped frecuente','descuento','-8%','2026-01-01','2026-12-31')">Editar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ═══ MODALES ═══ -->
+
+<!-- Modal: Nueva Reserva -->
+<div class="modal-overlay" id="modal-reserva">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-reserva-title">Nueva Reserva</h3>
+      <button class="modal-close" onclick="closeModal('modal-reserva')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del huésped</label>
+          <input type="text" id="r-nombre" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label>Teléfono / Email</label>
+          <input type="text" id="r-contacto" placeholder="+51 999 000 000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cuarto</label>
+          <select id="r-cuarto">
+            <option value="">— Seleccionar —</option>
+            <option>101 · Simple Estándar</option>
+            <option>102 · Simple Estándar</option>
+            <option>103 · Doble Estándar</option>
+            <option>104 · Doble Estándar</option>
+            <option>105 · Doble Estándar</option>
+            <option>106 · Simple Estándar</option>
+            <option>201 · Suite Mar</option>
+            <option>202 · Suite Mar</option>
+            <option>301 · Suite Premium</option>
+            <option>302 · Suite Premium</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Personas</label>
+          <select id="r-personas">
+            <option>1 persona</option><option>2 personas</option>
+            <option>3 personas</option><option>4 personas</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha de llegada</label>
+          <input type="text" id="r-entrada" placeholder="dd/mm/aaaa" readonly>
+        </div>
+        <div class="form-group">
+          <label>Fecha de salida</label>
+          <input type="text" id="r-salida" placeholder="dd/mm/aaaa" readonly>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="r-estado">
+            <option>Confirmada</option><option>Pendiente pago</option>
+            <option>Check-in</option><option>Check-out</option><option>Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Total (S/)</label>
+          <input type="number" id="r-total" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notas internas</label>
+        <textarea id="r-notas" placeholder="Solicitudes especiales, alergias, etc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reserva')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveReserva()">Guardar reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cuarto -->
+<div class="modal-overlay" id="modal-cuarto">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cuarto-title">Nuevo Cuarto</h3>
+      <button class="modal-close" onclick="closeModal('modal-cuarto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Número de cuarto</label>
+          <input type="text" id="c-num" placeholder="ej. 205">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="c-cat">
+            <option value="simple">Simple Estándar</option>
+            <option value="doble">Doble Estándar</option>
+            <option value="suite">Suite Mar</option>
+            <option value="premium">Suite Premium</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="c-estado">
+            <option>Disponible</option><option>Ocupado</option><option>Limpieza</option><option>Mantenimiento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tarifa (S/ / noche)</label>
+          <input type="number" id="c-precio" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Camas</label>
+          <select id="c-camas">
+            <option>1 cama simple</option><option>1 cama doble</option>
+            <option>2 camas simples</option><option>1 cama king</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Baños</label>
+          <select id="c-banios">
+            <option>1 baño</option><option>2 baños</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Amenidades</label>
+        <input type="text" id="c-amenidades" placeholder="WiFi, TV, A/C, ...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cuarto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCuarto()">Guardar cuarto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Categoría -->
+<div class="modal-overlay" id="modal-categoria">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cat-title">Nueva Categoría</h3>
+      <button class="modal-close" onclick="closeModal('modal-categoria')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre de la categoría</label>
+        <input type="text" id="cat-nombre" placeholder="ej. Junior Suite">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Icono (emoji)</label>
+          <input type="text" id="cat-icono" placeholder="🛏" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label>Tarifa base (S/)</label>
+          <input type="number" id="cat-tarifa" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea id="cat-desc" placeholder="Describe la categoría..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Amenidades incluidas</label>
+        <input type="text" id="cat-amenidades" placeholder="WiFi, TV, A/C, ...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-categoria')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCategoria()">Guardar categoría</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tarifa -->
+<div class="modal-overlay" id="modal-tarifa">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-tar-title">Nueva Tarifa</h3>
+      <button class="modal-close" onclick="closeModal('modal-tarifa')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="tar-cat">
+            <option>Simple Estándar</option><option>Doble Estándar</option>
+            <option>Suite Mar</option><option>Suite Premium</option><option>Todas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de tarifa</label>
+          <select id="tar-tipo">
+            <option value="alta">Temporada Alta</option>
+            <option value="baja">Temporada Baja</option>
+            <option value="especial">Día especial</option>
+            <option value="descuento">Descuento</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Precio / Ajuste</label>
+          <input type="text" id="tar-precio" placeholder="S/ 0 o +20% o -10%">
+        </div>
+        <div class="form-group">
+          <label>Nombre / Concepto</label>
+          <input type="text" id="tar-nombre" placeholder="ej. Año Nuevo 2026">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha inicio</label>
+          <input type="text" id="tar-inicio" placeholder="dd/mm/aaaa" readonly>
+        </div>
+        <div class="form-group">
+          <label>Fecha fin</label>
+          <input type="text" id="tar-fin" placeholder="dd/mm/aaaa" readonly>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-tarifa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTarifa()">Guardar tarifa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar eliminar -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Confirmar eliminación</h3>
+      <button class="modal-close" onclick="closeModal('modal-delete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.9rem;color:var(--slate)">¿Seguro que deseas eliminar <strong id="delete-target"></strong>? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
+      <button class="btn btn-danger" onclick="doDelete()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+  // ─── NAVEGACIÓN ───
+  const pages = {
+    dashboard:  { title:'Resumen General',   sub:'Lunes 9 de junio, 2026', btnLabel:'Nueva reserva', showBtn:true },
+    reservas:   { title:'Reservas',          sub:'Calendario y listado',   btnLabel:'Nueva reserva', showBtn:true },
+    cuartos:    { title:'Cuartos',           sub:'Inventario de habitaciones', btnLabel:null, showBtn:false },
+    categorias: { title:'Categorías',        sub:'Tipos de habitación',    btnLabel:null, showBtn:false },
+    tarifas:    { title:'Tarifas',           sub:'Precios por temporada',  btnLabel:null, showBtn:false },
+  };
+
+  function goPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('active');
+    });
+    const p = pages[name];
+    document.getElementById('page-title').textContent = p.title;
+    document.getElementById('page-sub').textContent = p.sub;
+    const btn = document.getElementById('btn-nueva-reserva');
+    btn.style.display = p.showBtn ? '' : 'none';
+    if(p.btnLabel) btn.querySelector('svg').nextSibling.textContent = ' '+p.btnLabel;
+  }
+
+  // ─── MODALES ───
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow='';
+  }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if(e.target===o) closeModal(o.id); });
+  });
+
+  // ─── EDITAR RESERVA ───
+  function openEditReserva(nombre, cuarto, entrada, salida, total, estado) {
+    document.getElementById('modal-reserva-title').textContent = 'Editar Reserva';
+    document.getElementById('r-nombre').value = nombre;
+    document.getElementById('r-cuarto').value = '';
+    document.getElementById('r-total').value = total;
+    // Flatpickr set dates
+    const fp1 = document.getElementById('r-entrada')._flatpickr;
+    const fp2 = document.getElementById('r-salida')._flatpickr;
+    if(fp1) fp1.setDate(entrada);
+    if(fp2) fp2.setDate(salida);
+    openModal('modal-reserva');
+  }
+
+  function openEditCuarto(num, nombre, cat, estado, precio, camas, banios) {
+    document.getElementById('modal-cuarto-title').textContent = 'Editar Cuarto #'+num;
+    document.getElementById('c-num').value = num;
+    document.getElementById('c-cat').value = cat;
+    document.getElementById('c-estado').value = estado;
+    document.getElementById('c-precio').value = precio;
+    openModal('modal-cuarto');
+  }
+
+  function openEditCategoria(id, nombre, cantidad, amenidades) {
+    document.getElementById('modal-cat-title').textContent = 'Editar: '+nombre;
+    document.getElementById('cat-nombre').value = nombre;
+    document.getElementById('cat-amenidades').value = amenidades;
+    openModal('modal-categoria');
+  }
+
+  function openEditTarifa(nombre, tipo, precio, inicio, fin) {
+    document.getElementById('modal-tar-title').textContent = 'Editar tarifa: '+nombre;
+    document.getElementById('tar-nombre').value = nombre;
+    document.getElementById('tar-tipo').value = tipo;
+    document.getElementById('tar-precio').value = precio;
+    const fp1 = document.getElementById('tar-inicio')._flatpickr;
+    const fp2 = document.getElementById('tar-fin')._flatpickr;
+    if(fp1) fp1.setDate(inicio);
+    if(fp2) fp2.setDate(fin);
+    openModal('modal-tarifa');
+  }
+
+  // ─── GUARDAR ───
+  function saveReserva() {
+    const n = document.getElementById('r-nombre').value.trim();
+    if(!n) { showToast('Ingresa el nombre del huésped','error'); return; }
+    closeModal('modal-reserva');
+    showToast('Reserva guardada correctamente ✓','success');
+  }
+  function saveCuarto() {
+    const n = document.getElementById('c-num').value.trim();
+    if(!n) { showToast('Ingresa el número de cuarto','error'); return; }
+    closeModal('modal-cuarto');
+    showToast('Cuarto #'+n+' guardado ✓','success');
+  }
+  function saveCategoria() {
+    const n = document.getElementById('cat-nombre').value.trim();
+    if(!n) { showToast('Ingresa el nombre de la categoría','error'); return; }
+    closeModal('modal-categoria');
+    showToast('Categoría "'+n+'" guardada ✓','success');
+  }
+  function saveTarifa() {
+    const n = document.getElementById('tar-nombre').value.trim();
+    if(!n) { showToast('Ingresa el nombre de la tarifa','error'); return; }
+    closeModal('modal-tarifa');
+    showToast('Tarifa guardada correctamente ✓','success');
+  }
+
+  // ─── ELIMINAR ───
+  let _deleteTarget = '';
+  function confirmDelete(label) {
+    _deleteTarget = label;
+    document.getElementById('delete-target').textContent = label;
+    openModal('modal-delete');
+  }
+  function doDelete() {
+    closeModal('modal-delete');
+    showToast(_deleteTarget+' eliminado','error');
+  }
+
+  // ─── TOAST ───
+  function showToast(msg, type='') {
+    const w = document.getElementById('toast-wrap');
+    const t = document.createElement('div');
+    t.className = 'toast '+(type||'');
+    t.innerHTML = (type==='success'?'✓ ':type==='error'?'✕ ':'ℹ ')+msg;
+    w.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+  }
+
+  // ─── FLATPICKR ───
+  document.addEventListener('DOMContentLoaded', () => {
+    // Calendario de reservas
+    flatpickr('#reservas-calendar', {
+      locale:'es', inline:true, mode:'range',
+      defaultDate:['2026-06-09','2026-06-11'],
+      onDayCreate: function(dObj, dStr, fp, dayElem) {
+        // marca días con reservas
+        const d = dayElem.dateObj;
+        const reservedDays = [9,10,11,12,13,14,15,16,17,18,19,20];
+        if(d.getMonth()===5 && reservedDays.includes(d.getDate())) {
+          dayElem.style.fontWeight='700';
+        }
+      }
+    });
+    // Fechas en modal reserva
+    flatpickr('#r-entrada', { locale:'es', dateFormat:'d/m/Y', minDate:'today' });
+    flatpickr('#r-salida',  { locale:'es', dateFormat:'d/m/Y', minDate:'today' });
+    // Fechas en modal tarifa
+    flatpickr('#tar-inicio', { locale:'es', dateFormat:'d/m/Y' });
+    flatpickr('#tar-fin',    { locale:'es', dateFormat:'d/m/Y' });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palacio del Sol — Gestión Hotelera</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<style>
+  :root {
+    --gold: #B8975A;
+    --gold-light: #D4B483;
+    --gold-pale: #F5EDD8;
+    --ink: #1C1A17;
+    --stone: #3D3830;
+    --ash: #6B6358;
+    --cream: #FAF7F2;
+    --white: #FFFFFF;
+    --border: #E4DDD0;
+    --success: #4A7C59;
+    --danger: #9B3A3A;
+    --info: #2C5F7A;
+    --shadow: 0 2px 20px rgba(28,26,23,0.08);
+    --shadow-lg: 0 8px 40px rgba(28,26,23,0.14);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink); font-size:15px; line-height:1.6; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position:fixed; left:0; top:0; bottom:0; width:240px;
+    background:var(--ink);
+    display:flex; flex-direction:column;
+    z-index:100;
+  }
+  .sidebar-logo {
+    padding:32px 24px 24px;
+    border-bottom:1px solid rgba(184,151,90,0.2);
+  }
+  .sidebar-logo h1 {
+    font-family:'Cormorant Garamond',serif;
+    font-size:22px; font-weight:400; color:var(--white); letter-spacing:0.03em;
+    line-height:1.2;
+  }
+  .sidebar-logo span { color:var(--gold); font-size:11px; letter-spacing:0.15em; text-transform:uppercase; display:block; margin-top:4px; }
+  .nav { padding:16px 0; flex:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 24px; cursor:pointer;
+    color:rgba(255,255,255,0.55); font-size:14px; font-weight:400;
+    transition:all .2s; border-left:3px solid transparent;
+    user-select:none;
+  }
+  .nav-item:hover { color:var(--white); background:rgba(255,255,255,0.05); }
+  .nav-item.active { color:var(--gold-light); border-left-color:var(--gold); background:rgba(184,151,90,0.08); }
+  .nav-item svg { flex-shrink:0; }
+  .sidebar-footer { padding:20px 24px; border-top:1px solid rgba(255,255,255,0.07); }
+  .sidebar-footer p { color:rgba(255,255,255,0.3); font-size:12px; }
+
+  /* MAIN */
+  .main { margin-left:240px; min-height:100vh; }
+  .topbar {
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:0 36px; height:64px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:50;
+  }
+  .topbar-title { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:400; color:var(--ink); }
+  .topbar-actions { display:flex; align-items:center; gap:12px; }
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:10px 20px; border-radius:6px; border:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    transition:all .2s; text-decoration:none;
+  }
+  .btn-primary { background:var(--gold); color:var(--white); }
+  .btn-primary:hover { background:#A5854A; }
+  .btn-outline { background:transparent; border:1px solid var(--border); color:var(--stone); }
+  .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+  .btn-danger { background:var(--danger); color:var(--white); }
+  .btn-danger:hover { background:#7A2D2D; }
+  .btn-success { background:var(--success); color:var(--white); }
+  .btn-success:hover { background:#3A6347; }
+  .btn-sm { padding:7px 14px; font-size:12px; }
+
+  .content { padding:32px 36px; }
+
+  /* SECTIONS */
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* STATS ROW */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:32px; }
+  .stat-card {
+    background:var(--white); border-radius:10px; padding:24px;
+    border:1px solid var(--border); box-shadow:var(--shadow);
+  }
+  .stat-card .label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ash); margin-bottom:8px; }
+  .stat-card .value { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:300; color:var(--ink); line-height:1; }
+  .stat-card .sub { font-size:12px; color:var(--ash); margin-top:6px; }
+  .stat-card .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+
+  /* TWO-COL */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+
+  /* CARD */
+  .card { background:var(--white); border-radius:10px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+  .card-header { padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between; }
+  .card-title { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--ink); }
+  .card-body { padding:20px 24px 24px; }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ash); font-weight:500; padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  td { padding:12px 14px; border-bottom:1px solid rgba(228,221,208,0.5); font-size:13px; color:var(--stone); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--cream); }
+
+  /* BADGE */
+  .badge {
+    display:inline-flex; align-items:center; padding:3px 10px;
+    border-radius:20px; font-size:11px; font-weight:500; letter-spacing:0.03em;
+  }
+  .badge-available { background:#E8F3EC; color:var(--success); }
+  .badge-occupied { background:#F9E8E8; color:var(--danger); }
+  .badge-maintenance { background:#FFF3E0; color:#B36A00; }
+  .badge-confirmed { background:#E3EEF5; color:var(--info); }
+  .badge-pending { background:#FFF8E1; color:#8B6914; }
+  .badge-cancelled { background:#F5E8E8; color:var(--danger); }
+  .badge-checked { background:#E8F3EC; color:var(--success); }
+
+  /* ROOM CARD */
+  .room-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .room-card { background:var(--white); border-radius:12px; border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow); transition:transform .2s,box-shadow .2s; cursor:pointer; }
+  .room-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+  .room-card img { width:100%; height:160px; object-fit:cover; display:block; }
+  .room-card-body { padding:16px; }
+  .room-card-body h3 { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--ink); }
+  .room-card-body .room-num { font-size:12px; color:var(--ash); margin-bottom:8px; }
+  .room-card-body .room-price { font-size:16px; font-weight:600; color:var(--gold); }
+  .room-card-body .room-price span { font-size:12px; font-weight:400; color:var(--ash); }
+  .room-card-footer { padding:12px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+
+  /* CATEGORY PILLS */
+  .cat-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+  .cat-pill {
+    padding:7px 18px; border-radius:30px; border:1px solid var(--border);
+    font-size:13px; cursor:pointer; transition:all .2s; background:var(--white);
+    color:var(--stone);
+  }
+  .cat-pill.active { background:var(--gold); color:var(--white); border-color:var(--gold); }
+  .cat-pill:hover:not(.active) { border-color:var(--gold-light); color:var(--gold); }
+
+  /* TARIFF CARDS */
+  .tariff-card { background:var(--white); border-radius:10px; border:1px solid var(--border); padding:20px; box-shadow:var(--shadow); }
+  .tariff-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; margin-bottom:4px; }
+  .tariff-price { font-size:26px; font-weight:600; color:var(--gold); }
+  .tariff-price sup { font-size:14px; }
+  .tariff-price small { font-size:13px; color:var(--ash); font-weight:400; }
+  .tariff-features { list-style:none; margin-top:12px; }
+  .tariff-features li { font-size:13px; color:var(--stone); padding:5px 0; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
+  .tariff-features li:last-child { border-bottom:none; }
+  .tariff-features li::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+
+  /* CALENDAR SECTION */
+  #cal-wrapper { background:var(--white); border-radius:10px; border:1px solid var(--border); padding:24px; box-shadow:var(--shadow); }
+  .flatpickr-calendar { box-shadow:none !important; border:none !important; width:100% !important; }
+  .flatpickr-days { width:100% !important; }
+  .dayContainer { width:100% !important; min-width:unset !important; max-width:unset !important; }
+  .flatpickr-day { height:42px; line-height:42px; font-size:14px; border-radius:6px; }
+  .flatpickr-day.selected { background:var(--gold) !important; border-color:var(--gold) !important; }
+  .flatpickr-day.inRange { background:var(--gold-pale) !important; border-color:var(--gold-pale) !important; }
+  .flatpickr-day.has-event { position:relative; }
+  .flatpickr-day.has-event::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--gold); }
+
+  /* RESERVATION TIMELINE */
+  .timeline { margin-top:20px; }
+  .timeline-item { display:flex; align-items:flex-start; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); }
+  .timeline-item:last-child { border-bottom:none; }
+  .timeline-date { min-width:52px; text-align:center; }
+  .timeline-date .day { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; line-height:1; color:var(--ink); }
+  .timeline-date .month { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ash); }
+  .timeline-bar { width:3px; background:var(--gold); border-radius:3px; min-height:50px; flex-shrink:0; margin-top:4px; }
+  .timeline-content { flex:1; }
+  .timeline-content h4 { font-weight:600; font-size:14px; color:var(--ink); }
+  .timeline-content p { font-size:13px; color:var(--ash); margin-top:2px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(28,26,23,0.55);
+    z-index:1000; align-items:center; justify-content:center;
+    backdrop-filter:blur(3px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--white); border-radius:14px; width:100%; max-width:560px;
+    max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg);
+    animation:modalIn .25s ease;
+  }
+  @keyframes modalIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .modal-header {
+    padding:24px 28px 20px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-header h2 { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; }
+  .modal-close { width:32px; height:32px; border-radius:50%; border:none; background:var(--cream); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--ash); transition:all .2s; }
+  .modal-close:hover { background:var(--border); color:var(--ink); }
+  .modal-body { padding:24px 28px; }
+  .modal-footer { padding:16px 28px 24px; display:flex; gap:10px; justify-content:flex-end; }
+
+  /* FORM */
+  .form-group { margin-bottom:18px; }
+  .form-label { display:block; font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--ash); margin-bottom:6px; }
+  .form-control {
+    width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:7px;
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+    background:var(--cream); transition:border .2s;
+    outline:none;
+  }
+  .form-control:focus { border-color:var(--gold); background:var(--white); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  select.form-control { cursor:pointer; }
+
+  /* GUEST AVATAR */
+  .guest-avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; }
+  .guest-info { display:flex; align-items:center; gap:10px; }
+  .guest-info strong { font-size:13px; color:var(--ink); display:block; }
+  .guest-info span { font-size:12px; color:var(--ash); }
+
+  /* ACTION ROW */
+  .action-row { display:flex; align-items:center; gap:6px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align:center; padding:60px 20px; color:var(--ash); }
+  .empty-state svg { opacity:0.3; margin-bottom:16px; }
+  .empty-state p { font-size:14px; }
+
+  /* NOTIFICATION */
+  .toast {
+    position:fixed; bottom:28px; right:28px; z-index:9999;
+    background:var(--ink); color:var(--white); padding:14px 20px;
+    border-radius:8px; font-size:13px; box-shadow:var(--shadow-lg);
+    display:flex; align-items:center; gap:10px;
+    transform:translateY(20px); opacity:0; transition:all .3s;
+    max-width:320px;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast .toast-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+
+  /* SEARCH */
+  .search-bar { position:relative; }
+  .search-bar input { padding-left:38px; }
+  .search-bar svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ash); pointer-events:none; }
+
+  /* SECTION HEADER */
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .section-header h2 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; }
+
+  /* RESPONSIVE BASIC */
+  @media(max-width:900px) {
+    .sidebar { width:200px; }
+    .main { margin-left:200px; }
+    .stats-row { grid-template-columns:1fr 1fr; }
+    .room-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Palacio del Sol</h1>
+    <span>Sistema de Gestión</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-section="dashboard">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Panel general
+    </div>
+    <div class="nav-item" data-section="categorias">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Categorías
+    </div>
+    <div class="nav-item" data-section="habitaciones">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Habitaciones
+    </div>
+    <div class="nav-item" data-section="tarifas">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Tarifas
+    </div>
+    <div class="nav-item" data-section="estadias">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Estadías
+    </div>
+    <div class="nav-item" data-section="reservas">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Reservas
+    </div>
+    <div class="nav-item" data-section="calendario">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      Calendario
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <p>v2.4 · Palacio del Sol</p>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Panel General</span>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" id="btn-nueva-reserva">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva reserva
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="dashboard">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="label">Habitaciones disponibles</div>
+          <div class="value">12</div>
+          <div class="sub"><span class="dot" style="background:var(--success)"></span>de 24 en total</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Reservas activas</div>
+          <div class="value">8</div>
+          <div class="sub"><span class="dot" style="background:var(--info)"></span>Próximas 7 días</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Ingresos del mes</div>
+          <div class="value" style="font-size:28px;">S/ 42,800</div>
+          <div class="sub"><span class="dot" style="background:var(--gold)"></span>+12% vs mes anterior</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Ocupación</div>
+          <div class="value">75%</div>
+          <div class="sub"><span class="dot" style="background:#B36A00"></span>18 de 24 hab.</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Próximas llegadas</span>
+            <span class="badge badge-confirmed">Hoy · 4 huéspedes</span>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>Huésped</th><th>Habitación</th><th>Check-in</th><th>Estado</th></tr></thead>
+              <tbody id="tb-llegadas"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Próximas salidas</span>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>Huésped</th><th>Habitación</th><th>Check-out</th><th>Estado</th></tr></thead>
+              <tbody id="tb-salidas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORÍAS -->
+    <section class="section" id="categorias">
+      <div class="section-header">
+        <h2>Categorías de habitación</h2>
+        <button class="btn btn-primary" onclick="openModal('modal-cat')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva categoría
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-top:24px">
+          <table>
+            <thead><tr><th>Nombre</th><th>Descripción</th><th>Capacidad</th><th>Habitaciones</th><th>Acciones</th></tr></thead>
+            <tbody id="tb-categorias"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- HABITACIONES -->
+    <section class="section" id="habitaciones">
+      <div class="section-header">
+        <h2>Habitaciones</h2>
+        <button class="btn btn-primary" onclick="openModal('modal-hab')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar habitación
+        </button>
+      </div>
+      <div class="cat-pills" id="filter-pills"></div>
+      <div class="room-grid" id="room-grid"></div>
+    </section>
+
+    <!-- TARIFAS -->
+    <section class="section" id="tarifas">
+      <div class="section-header">
+        <h2>Tarifas y planes</h2>
+        <button class="btn btn-primary" onclick="openModal('modal-tarifa')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva tarifa
+        </button>
+      </div>
+      <div class="three-col" id="tarifas-grid"></div>
+    </section>
+
+    <!-- ESTADÍAS -->
+    <section class="section" id="estadias">
+      <div class="section-header">
+        <h2>Estadías activas</h2>
+        <button class="btn btn-primary" onclick="openModal('modal-estadia')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar estadía
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-top:24px">
+          <table>
+            <thead><tr><th>Huésped</th><th>Habitación</th><th>Check-in</th><th>Check-out</th><th>Noches</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="tb-estadias"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESERVAS -->
+    <section class="section" id="reservas">
+      <div class="section-header">
+        <h2>Todas las reservas</h2>
+        <div style="display:flex;gap:10px;">
+          <div class="search-bar">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="form-control" id="search-reservas" placeholder="Buscar huésped o habitación..." style="width:240px;">
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-reserva')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva reserva
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-top:24px">
+          <table>
+            <thead><tr><th>#</th><th>Huésped</th><th>Habitación</th><th>Entrada</th><th>Salida</th><th>Tarifa</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="tb-reservas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALENDARIO -->
+    <section class="section" id="calendario">
+      <div class="section-header">
+        <h2>Calendario de ocupación</h2>
+      </div>
+      <div class="two-col" style="align-items:start">
+        <div id="cal-wrapper">
+          <div id="main-calendar"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Eventos del mes</span></div>
+          <div class="card-body">
+            <div class="timeline" id="cal-timeline"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ===== MODALS ===== -->
+
+<!-- MODAL CATEGORÍA -->
+<div class="modal-overlay" id="modal-cat">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nueva categoría</h2>
+      <button class="modal-close" onclick="closeModal('modal-cat')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre de categoría</label>
+        <input class="form-control" id="cat-nombre" placeholder="Ej: Suite Premium">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-control" id="cat-desc" rows="3" placeholder="Descripción detallada..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Capacidad máx.</label>
+          <input class="form-control" id="cat-cap" type="number" min="1" max="10" placeholder="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color identificador</label>
+          <input class="form-control" id="cat-color" type="color" value="#B8975A">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-cat')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCategoria()">Guardar categoría</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HABITACIÓN -->
+<div class="modal-overlay" id="modal-hab">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Agregar habitación</h2>
+      <button class="modal-close" onclick="closeModal('modal-hab')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Número / nombre</label>
+          <input class="form-control" id="hab-num" placeholder="Ej: 201">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <select class="form-control" id="hab-cat"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Piso</label>
+          <input class="form-control" id="hab-piso" type="number" min="1" placeholder="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado inicial</label>
+          <select class="form-control" id="hab-estado">
+            <option value="available">Disponible</option>
+            <option value="maintenance">En mantenimiento</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL de imagen</label>
+        <input class="form-control" id="hab-img" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción breve</label>
+        <textarea class="form-control" id="hab-desc" rows="2" placeholder="Vista al mar, balcón..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-hab')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarHabitacion()">Guardar habitación</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TARIFA -->
+<div class="modal-overlay" id="modal-tarifa">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nueva tarifa</h2>
+      <button class="modal-close" onclick="closeModal('modal-tarifa')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre de tarifa</label>
+          <input class="form-control" id="tar-nombre" placeholder="Ej: Plan Todo Incluido">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio por noche (S/)</label>
+          <input class="form-control" id="tar-precio" type="number" min="0" placeholder="350">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Aplica a categoría</label>
+        <select class="form-control" id="tar-cat">
+          <option value="Todas">Todas las categorías</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Incluye (uno por línea)</label>
+        <textarea class="form-control" id="tar-features" rows="4" placeholder="Desayuno incluido&#10;Wi-Fi gratuito&#10;Estacionamiento"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Vigencia desde</label>
+          <input class="form-control flatpickr-tar" id="tar-desde" placeholder="dd/mm/aaaa">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vigencia hasta</label>
+          <input class="form-control flatpickr-tar" id="tar-hasta" placeholder="dd/mm/aaaa">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-tarifa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTarifa()">Guardar tarifa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESTADÍA -->
+<div class="modal-overlay" id="modal-estadia">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar estadía</h2>
+      <button class="modal-close" onclick="closeModal('modal-estadia')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre del huésped</label>
+          <input class="form-control" id="est-huesped" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Documento / pasaporte</label>
+          <input class="form-control" id="est-doc" placeholder="12345678">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Habitación</label>
+          <select class="form-control" id="est-hab"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tarifa</label>
+          <select class="form-control" id="est-tarifa"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Check-in</label>
+          <input class="form-control" id="est-checkin" placeholder="dd/mm/aaaa">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Check-out</label>
+          <input class="form-control" id="est-checkout" placeholder="dd/mm/aaaa">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observaciones</label>
+        <textarea class="form-control" id="est-obs" rows="2" placeholder="Notas especiales..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-estadia')">Cancelar</button>
+      <button class="btn btn-success" onclick="guardarEstadia()">Registrar estadía</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESERVA -->
+<div class="modal-overlay" id="modal-reserva">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nueva reserva</h2>
+      <button class="modal-close" onclick="closeModal('modal-reserva')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre del huésped</label>
+          <input class="form-control" id="res-huesped" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" id="res-email" type="email" placeholder="correo@ejemplo.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-control" id="res-tel" placeholder="+51 999 999 999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° de huéspedes</label>
+          <input class="form-control" id="res-pax" type="number" min="1" max="6" placeholder="2">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Habitación</label>
+          <select class="form-control" id="res-hab"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tarifa</label>
+          <select class="form-control" id="res-tarifa"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha entrada</label>
+          <input class="form-control" id="res-entrada" placeholder="dd/mm/aaaa">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha salida</label>
+          <input class="form-control" id="res-salida" placeholder="dd/mm/aaaa">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Solicitudes especiales</label>
+        <textarea class="form-control" id="res-notas" rows="2" placeholder="Cama extra, piso alto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-reserva')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarReserva()">Confirmar reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ========== DATA ==========
+let state = {
+  categorias: [
+    { id:1, nombre:'Estándar', desc:'Confort moderno con todas las comodidades esenciales', cap:2, color:'#6B9E7A' },
+    { id:2, nombre:'Superior', desc:'Habitación amplia con vista panorámica y amenidades premium', cap:2, color:'#2C5F7A' },
+    { id:3, nombre:'Suite Junior', desc:'Suite con sala de estar independiente y jacuzzi', cap:3, color:'#B8975A' },
+    { id:4, nombre:'Suite Master', desc:'La experiencia más lujosa, con terraza privada y mayordomo', cap:4, color:'#9B3A3A' },
+  ],
+  habitaciones: [
+    { id:1, num:'101', catId:1, piso:1, estado:'available', img:'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80', desc:'Vista al jardín, cama doble' },
+    { id:2, num:'102', catId:1, piso:1, estado:'occupied', img:'https://images.unsplash.com/photo-1631049421450-348ccd7f8949?w=400&q=80', desc:'Vista interna, cama twin' },
+    { id:3, num:'201', catId:2, piso:2, estado:'available', img:'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&q=80', desc:'Vista al mar, balcón privado' },
+    { id:4, num:'202', catId:2, piso:2, estado:'available', img:'https://images.unsplash.com/photo-1592229505726-ca121723b8ef?w=400&q=80', desc:'Vista panorámica, cama king' },
+    { id:5, num:'301', catId:3, piso:3, estado:'occupied', img:'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&q=80', desc:'Suite con jacuzzi, terraza' },
+    { id:6, num:'401', catId:4, piso:4, estado:'available', img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&q=80', desc:'Suite presidencial, piscina privada' },
+    { id:7, num:'103', catId:1, piso:1, estado:'maintenance', img:'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=400&q=80', desc:'En remodelación' },
+    { id:8, num:'203', catId:2, piso:2, estado:'available', img:'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=400&q=80', desc:'Vista al pool, cama queen' },
+    { id:9, num:'302', catId:3, piso:3, estado:'available', img:'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&q=80', desc:'Suite familiar, 2 baños' },
+  ],
+  tarifas: [
+    { id:1, nombre:'Solo Habitación', precio:180, catId:'Todas', features:['Check-in 15:00','Check-out 12:00','Wi-Fi gratuito'], desde:'01/06/2025', hasta:'31/12/2025' },
+    { id:2, nombre:'Desayuno Incluido', precio:230, catId:'Todas', features:['Desayuno buffet','Wi-Fi premium','Estacionamiento gratuito','Agua mineral'], desde:'01/06/2025', hasta:'31/12/2025' },
+    { id:3, nombre:'Todo Incluido', precio:380, catId:'Suite Junior', features:['3 comidas al día','Bebidas ilimitadas','Spa (2 sesiones)','Traslado aeropuerto','Late check-out'], desde:'01/07/2025', hasta:'31/12/2025' },
+    { id:4, nombre:'Luna de Miel', precio:520, catId:'Suite Master', features:['Decoración romántica','Cena privada','Masaje en pareja','Champagne','Acceso VIP al spa'], desde:'01/01/2025', hasta:'31/12/2025' },
+  ],
+  estadias: [
+    { id:1, huesped:'Carlos Mendoza', doc:'45123789', habId:2, tarifaId:2, checkin:'05/06/2025', checkout:'09/06/2025', obs:'Solicita cama extra', estado:'checked' },
+    { id:2, huesped:'María Fernández', doc:'67891234', habId:5, tarifaId:3, checkin:'07/06/2025', checkout:'12/06/2025', obs:'', estado:'checked' },
+    { id:3, huesped:'Jorge Quispe', doc:'32145678', habId:3, tarifaId:1, checkin:'08/06/2025', checkout:'10/06/2025', obs:'Piso alto', estado:'checked' },
+  ],
+  reservas: [
+    { id:1, huesped:'Ana Torres', email:'ana@mail.com', tel:'+51 987 654 321', pax:2, habId:4, tarifaId:2, entrada:'15/06/2025', salida:'20/06/2025', notas:'Vista al mar', estado:'confirmed' },
+    { id:2, huesped:'Luis Vargas', email:'luis@mail.com', tel:'+51 912 345 678', pax:2, habId:6, tarifaId:4, entrada:'18/06/2025', salida:'22/06/2025', notas:'Luna de miel', estado:'confirmed' },
+    { id:3, huesped:'Sofía Castro', email:'sofia@mail.com', tel:'+51 934 567 890', pax:3, habId:9, tarifaId:3, entrada:'20/06/2025', salida:'25/06/2025', notas:'', estado:'pending' },
+    { id:4, huesped:'Roberto Silva', email:'rob@mail.com', tel:'+51 956 789 012', pax:1, habId:1, tarifaId:1, entrada:'22/06/2025', salida:'24/06/2025', notas:'', estado:'confirmed' },
+    { id:5, huesped:'Elena Paz', email:'elena@mail.com', tel:'+51 978 901 234', pax:2, habId:8, tarifaId:2, entrada:'10/06/2025', salida:'14/06/2025', notas:'Cumpleaños', estado:'cancelled' },
+  ],
+  nextId: { cat:5, hab:10, tar:5, est:4, res:6 }
+};
+
+const avatars = [
+  'https://i.pravatar.cc/36?img=1','https://i.pravatar.cc/36?img=5',
+  'https://i.pravatar.cc/36?img=9','https://i.pravatar.cc/36?img=12',
+  'https://i.pravatar.cc/36?img=15','https://i.pravatar.cc/36?img=20',
+  'https://i.pravatar.cc/36?img=25','https://i.pravatar.cc/36?img=33',
+];
+const getAvatar = idx => avatars[idx % avatars.length];
+
+// ========== HELPERS ==========
+const getCat = id => state.categorias.find(c=>c.id===id) || {};
+const getHab = id => state.habitaciones.find(h=>h.id===id) || {};
+const getTarifa = id => state.tarifas.find(t=>t.id===id) || {};
+const estadoBadge = e => ({
+  available:'<span class="badge badge-available">Disponible</span>',
+  occupied:'<span class="badge badge-occupied">Ocupada</span>',
+  maintenance:'<span class="badge badge-maintenance">Mantenimiento</span>',
+  confirmed:'<span class="badge badge-confirmed">Confirmada</span>',
+  pending:'<span class="badge badge-pending">Pendiente</span>',
+  cancelled:'<span class="badge badge-cancelled">Cancelada</span>',
+  checked:'<span class="badge badge-checked">Activa</span>',
+})[e] || '';
+
+function noches(desde, hasta) {
+  const [d1,m1,y1]=desde.split('/'); const [d2,m2,y2]=hasta.split('/');
+  const a=new Date(y1,m1-1,d1), b=new Date(y2,m2-1,d2);
+  return Math.max(1, Math.round((b-a)/(1000*60*60*24)));
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ========== MODALS ==========
+function openModal(id) {
+  if(id==='modal-hab'||id==='modal-estadia'||id==='modal-reserva') populateSelects();
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-tarifa') {
+    setTimeout(()=>{
+      flatpickr('#tar-desde',{dateFormat:'d/m/Y',locale:'es'});
+      flatpickr('#tar-hasta',{dateFormat:'d/m/Y',locale:'es'});
+    },50);
+  }
+  if(id==='modal-estadia') {
+    setTimeout(()=>{
+      flatpickr('#est-checkin',{dateFormat:'d/m/Y',locale:'es'});
+      flatpickr('#est-checkout',{dateFormat:'d/m/Y',locale:'es'});
+    },50);
+  }
+  if(id==='modal-reserva') {
+    setTimeout(()=>{
+      flatpickr('#res-entrada',{dateFormat:'d/m/Y',locale:'es'});
+      flatpickr('#res-salida',{dateFormat:'d/m/Y',locale:'es'});
+    },50);
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+function populateSelects() {
+  const cats = state.categorias.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  const habsAvail = state.habitaciones.filter(h=>h.estado!=='occupied').map(h=>`<option value="${h.id}">Hab. ${h.num} — ${getCat(h.catId).nombre}</option>`).join('');
+  const tarifas = state.tarifas.map(t=>`<option value="${t.id}">${t.nombre} — S/ ${t.precio}/noche</option>`).join('');
+  ['hab-cat','tar-cat'].forEach(id=>{ const el=document.getElementById(id); if(el){ if(id==='tar-cat') el.innerHTML='<option value="Todas">Todas</option>'+cats; else el.innerHTML=cats; }});
+  ['est-hab','res-hab'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=habsAvail; });
+  ['est-tarifa','res-tarifa'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=tarifas; });
+}
+
+// ========== GUARDAR ==========
+function guardarCategoria() {
+  const n=document.getElementById('cat-nombre').value.trim();
+  if(!n) return showToast('Ingresa un nombre');
+  state.categorias.push({ id:state.nextId.cat++, nombre:n, desc:document.getElementById('cat-desc').value, cap:parseInt(document.getElementById('cat-cap').value)||2, color:document.getElementById('cat-color').value });
+  closeModal('modal-cat'); renderCategorias(); showToast('Categoría creada correctamente');
+  ['cat-nombre','cat-desc','cat-cap'].forEach(id=>document.getElementById(id).value='');
+}
+
+function guardarHabitacion() {
+  const n=document.getElementById('hab-num').value.trim();
+  if(!n) return showToast('Ingresa un número de habitación');
+  const defaultImgs=['https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80','https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&q=80'];
+  state.habitaciones.push({ id:state.nextId.hab++, num:n, catId:parseInt(document.getElementById('hab-cat').value), piso:parseInt(document.getElementById('hab-piso').value)||1, estado:document.getElementById('hab-estado').value, img:document.getElementById('hab-img').value||defaultImgs[Math.floor(Math.random()*2)], desc:document.getElementById('hab-desc').value });
+  closeModal('modal-hab'); renderHabitaciones(); showToast('Habitación agregada');
+  ['hab-num','hab-piso','hab-img','hab-desc'].forEach(id=>document.getElementById(id).value='');
+}
+
+function guardarTarifa() {
+  const n=document.getElementById('tar-nombre').value.trim();
+  const p=parseFloat(document.getElementById('tar-precio').value);
+  if(!n||!p) return showToast('Completa nombre y precio');
+  const features=document.getElementById('tar-features').value.split('\n').filter(f=>f.trim());
+  state.tarifas.push({ id:state.nextId.tar++, nombre:n, precio:p, catId:document.getElementById('tar-cat').value||'Todas', features, desde:document.getElementById('tar-desde').value, hasta:document.getElementById('tar-hasta').value });
+  closeModal('modal-tarifa'); renderTarifas(); showToast('Tarifa guardada');
+  ['tar-nombre','tar-precio','tar-features','tar-desde','tar-hasta'].forEach(id=>document.getElementById(id).value='');
+}
+
+function guardarEstadia() {
+  const h=document.getElementById('est-huesped').value.trim();
+  if(!h) return showToast('Ingresa el nombre del huésped');
+  const habId=parseInt(document.getElementById('est-hab').value);
+  const hab=state.habitaciones.find(x=>x.id===habId);
+  if(hab) hab.estado='occupied';
+  state.estadias.push({ id:state.nextId.est++, huesped:h, doc:document.getElementById('est-doc').value, habId, tarifaId:parseInt(document.getElementById('est-tarifa').value), checkin:document.getElementById('est-checkin').value, checkout:document.getElementById('est-checkout').value, obs:document.getElementById('est-obs').value, estado:'checked' });
+  closeModal('modal-estadia'); renderEstadias(); renderHabitaciones(); renderDashboard(); showToast('Estadía registrada');
+  ['est-huesped','est-doc','est-obs'].forEach(id=>document.getElementById(id).value='');
+}
+
+function guardarReserva() {
+  const h=document.getElementById('res-huesped').value.trim();
+  if(!h) return showToast('Ingresa el nombre del huésped');
+  state.reservas.push({ id:state.nextId.res++, huesped:h, email:document.getElementById('res-email').value, tel:document.getElementById('res-tel').value, pax:parseInt(document.getElementById('res-pax').value)||1, habId:parseInt(document.getElementById('res-hab').value), tarifaId:parseInt(document.getElementById('res-tarifa').value), entrada:document.getElementById('res-entrada').value, salida:document.getElementById('res-salida').value, notas:document.getElementById('res-notas').value, estado:'confirmed' });
+  closeModal('modal-reserva'); renderReservas(); renderDashboard(); showToast('Reserva confirmada');
+  ['res-huesped','res-email','res-tel','res-pax','res-notas'].forEach(id=>document.getElementById(id).value='');
+}
+
+function cancelarReserva(id) {
+  const r=state.reservas.find(x=>x.id===id);
+  if(r) r.estado='cancelled';
+  renderReservas(); showToast('Reserva cancelada');
+}
+
+function eliminarEstadia(id) {
+  const est=state.estadias.find(x=>x.id===id);
+  if(est){ const hab=state.habitaciones.find(h=>h.id===est.habId); if(hab) hab.estado='available'; }
+  state.estadias=state.estadias.filter(x=>x.id!==id);
+  renderEstadias(); renderHabitaciones(); showToast('Estadía finalizada');
+}
+
+// ========== RENDER ==========
+function renderDashboard() {
+  const llegadas = state.reservas.filter(r=>r.estado==='confirmed').slice(0,4);
+  document.getElementById('tb-llegadas').innerHTML = llegadas.map((r,i)=>`
+    <tr><td><div class="guest-info"><img class="guest-avatar" src="${getAvatar(i)}" alt=""><div><strong>${r.huesped}</strong><span>${r.pax} pax</span></div></div></td>
+    <td>Hab. ${getHab(r.habId).num}</td><td>${r.entrada}</td><td>${estadoBadge(r.estado)}</td></tr>`).join('');
+
+  const salidas = state.estadias.slice(0,4);
+  document.getElementById('tb-salidas').innerHTML = salidas.map((e,i)=>`
+    <tr><td><div class="guest-info"><img class="guest-avatar" src="${getAvatar(i+4)}" alt=""><div><strong>${e.huesped}</strong></div></div></td>
+    <td>Hab. ${getHab(e.habId).num}</td><td>${e.checkout}</td><td>${estadoBadge(e.estado)}</td></tr>`).join('');
+}
+
+function renderCategorias() {
+  document.getElementById('tb-categorias').innerHTML = state.categorias.map(c=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div style="width:12px;height:12px;border-radius:50%;background:${c.color};flex-shrink:0"></div><strong>${c.nombre}</strong></div></td>
+      <td style="color:var(--ash);max-width:260px">${c.desc}</td>
+      <td><span class="badge badge-available">${c.cap} personas</span></td>
+      <td>${state.habitaciones.filter(h=>h.catId===c.id).length} hab.</td>
+      <td><div class="action-row"><button class="btn btn-outline btn-sm" onclick="showToast('Editar categoría próximamente')">Editar</button></div></td>
+    </tr>`).join('');
+}
+
+let filtroHab = 0;
+function renderHabitaciones() {
+  const pills = document.getElementById('filter-pills');
+  pills.innerHTML = `<div class="cat-pill ${filtroHab===0?'active':''}" onclick="filtroHab=0;renderHabitaciones()">Todas</div>` +
+    state.categorias.map(c=>`<div class="cat-pill ${filtroHab===c.id?'active':''}" onclick="filtroHab=${c.id};renderHabitaciones()">${c.nombre}</div>`).join('');
+  const habs = filtroHab ? state.habitaciones.filter(h=>h.catId===filtroHab) : state.habitaciones;
+  document.getElementById('room-grid').innerHTML = habs.map(h=>{
+    const cat=getCat(h.catId);
+    const tarifa=state.tarifas.find(t=>t.catId===cat.nombre||t.catId==='Todas');
+    return `<div class="room-card" onclick="showToast('Hab. ${h.num} — ${h.estado==='available'?'Disponible':'No disponible'}')">
+      <img src="${h.img}" alt="Hab ${h.num}" onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80'">
+      <div class="room-card-body">
+        <div class="room-num">Hab. ${h.num} · Piso ${h.piso}</div>
+        <h3>${cat.nombre}</h3>
+        <p style="font-size:12px;color:var(--ash);margin:4px 0 8px">${h.desc}</p>
+        <span class="room-price">${tarifa?'S/ '+tarifa.precio:'—'} <span>/ noche</span></span>
+      </div>
+      <div class="room-card-footer">${estadoBadge(h.estado)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTarifas() {
+  document.getElementById('tarifas-grid').innerHTML = state.tarifas.map(t=>`
+    <div class="tariff-card">
+      <div class="tariff-name">${t.nombre}</div>
+      <div style="font-size:12px;color:var(--ash);margin-bottom:8px">${t.catId==='Todas'?'Todas las categorías':t.catId}</div>
+      <div class="tariff-price"><sup>S/</sup>${t.precio}<small>/noche</small></div>
+      <ul class="tariff-features">${t.features.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <div style="margin-top:14px;font-size:11px;color:var(--ash)">Vigencia: ${t.desde} – ${t.hasta}</div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="showToast('Tarifa editada próximamente')">Editar</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderEstadias() {
+  const tb=document.getElementById('tb-estadias');
+  if(!state.estadias.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><p>Sin estadías activas</p></div></td></tr>'; return; }
+  tb.innerHTML = state.estadias.map((e,i)=>{
+    const hab=getHab(e.habId); const tar=getTarifa(e.tarifaId);
+    const nn=noches(e.checkin,e.checkout);
+    const total='S/ '+(nn*(tar.precio||0)).toLocaleString();
+    return `<tr>
+      <td><div class="guest-info"><img class="guest-avatar" src="${getAvatar(i)}" alt=""><div><strong>${e.huesped}</strong><span>${e.doc}</span></div></div></td>
+      <td>Hab. ${hab.num}</td><td>${e.checkin}</td><td>${e.checkout}</td>
+      <td>${nn} noche${nn>1?'s':''}</td><td><strong>${total}</strong></td>
+      <td>${estadoBadge(e.estado)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminarEstadia(${e.id})">Finalizar</button></td>
+    </tr>`;}).join('');
+}
+
+let searchTerm='';
+function renderReservas() {
+  const filtered = state.reservas.filter(r=>!searchTerm||(r.huesped+getHab(r.habId).num).toLowerCase().includes(searchTerm.toLowerCase()));
+  const tb=document.getElementById('tb-reservas');
+  if(!filtered.length){ tb.innerHTML='<tr><td colspan="9"><div class="empty-state"><p>No se encontraron reservas</p></div></td></tr>'; return; }
+  tb.innerHTML = filtered.map((r,i)=>{
+    const hab=getHab(r.habId); const tar=getTarifa(r.tarifaId);
+    const nn=noches(r.entrada,r.salida);
+    const total=r.entrada&&r.salida?'S/ '+(nn*(tar.precio||0)).toLocaleString():'—';
+    return `<tr>
+      <td style="color:var(--ash);font-size:12px">#${String(r.id).padStart(4,'0')}</td>
+      <td><div class="guest-info"><img class="guest-avatar" src="${getAvatar(i)}" alt=""><div><strong>${r.huesped}</strong><span>${r.email}</span></div></div></td>
+      <td>Hab. ${hab.num}</td><td>${r.entrada}</td><td>${r.salida}</td>
+      <td>${tar.nombre||'—'}</td><td><strong>${total}</strong></td>
+      <td>${estadoBadge(r.estado)}</td>
+      <td><div class="action-row">${r.estado!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelarReserva(${r.id})">Cancelar</button>`:'<span style="font-size:12px;color:var(--ash)">—</span>'}</div></td>
+    </tr>`;}).join('');
+}
+
+function renderCalendario() {
+  const timeline=document.getElementById('cal-timeline');
+  const eventos=[...state.reservas.filter(r=>r.estado!=='cancelled'),...state.estadias].slice(0,8);
+  timeline.innerHTML=eventos.map((e,i)=>{
+    const fecha=e.entrada||e.checkin;
+    const [dd,mm]=fecha?fecha.split('/'):['-','-'];
+    const meses=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `<div class="timeline-item">
+      <div class="timeline-date"><div class="day">${dd}</div><div class="month">${meses[parseInt(mm)]||mm}</div></div>
+      <div class="timeline-bar"></div>
+      <div class="timeline-content">
+        <h4>${e.huesped}</h4>
+        <p>Hab. ${getHab(e.habId).num} · ${e.entrada||e.checkin} → ${e.salida||e.checkout}</p>
+      </div>
+    </div>`;}).join('');
+}
+
+// ========== NAVIGATION ==========
+const titles = { dashboard:'Panel General', categorias:'Categorías', habitaciones:'Habitaciones', tarifas:'Tarifas', estadias:'Estadías', reservas:'Reservas', calendario:'Calendario' };
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const sec=item.dataset.section;
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(sec).classList.add('active');
+    document.getElementById('page-title').textContent=titles[sec]||sec;
+    if(sec==='calendario') renderCalendario();
+  });
+});
+
+document.getElementById('btn-nueva-reserva').addEventListener('click',()=>openModal('modal-reserva'));
+
+document.getElementById('search-reservas').addEventListener('input',e=>{
+  searchTerm=e.target.value; renderReservas();
+});
+
+// ========== FLATPICKR CALENDAR ==========
+flatpickr.localize(flatpickr.l10ns.es);
+flatpickr('#main-calendar',{
+  inline:true,
+  dateFormat:'d/m/Y',
+  locale:'es',
+  onReady: (_,__,fp) => {
+    fp.calendarContainer.style.width='100%';
+  }
+});
+
+// ========== INIT ==========
+renderDashboard();
+renderCategorias();
+renderHabitaciones();
+renderTarifas();
+renderEstadias();
+renderReservas();
+</script>
+</body>
+</html>

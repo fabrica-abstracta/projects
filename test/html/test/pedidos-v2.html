@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forno Napoli — Pizzería Artesanal</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts: Poppins + Bebas Neue + Libre Baskerville + Caveat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            p: {
+              bg: '#FAFAF7',
+              surface: '#FFFFFF',
+              card: '#F5F3EE',
+              border: '#E8E3D8',
+              red: '#C0392B',
+              redLight: '#E74C3C',
+              redPale: '#FDF0EE',
+              tomato: '#D63031',
+              orange: '#E67E22',
+              green: '#27AE60',
+              ink: '#1A1207',
+              muted: '#8C7B6B',
+              warm: '#6B5B4E',
+              cream: '#FFF8F0',
+            }
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            bebas: ['Bebas Neue', 'cursive'],
+            baskerville: ['Libre Baskerville', 'serif'],
+            caveat: ['Caveat', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #FAFAF7;
+      color: #1A1207;
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #F5F3EE;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #C0392B;
+      border-radius: 10px;
+    }
+
+    /* Texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='%23000'/%3E%3C/svg%3E");
+    }
+
+    /* Big display text */
+    .hero-title {
+      font-family: 'Bebas Neue', cursive;
+      line-height: 0.88;
+      letter-spacing: -0.01em;
+    }
+
+    /* Red underline accent */
+    .red-line {
+      text-decoration-line: underline;
+      text-decoration-color: #C0392B;
+      text-decoration-thickness: 4px;
+      text-underline-offset: 6px;
+    }
+
+    /* Card */
+    .pizza-card {
+      transition: transform 0.3s cubic-bezier(.25, .8, .25, 1),
+        box-shadow 0.3s ease;
+      border: 1.5px solid #E8E3D8;
+    }
+
+    .pizza-card:hover {
+      transform: translateY(-8px) rotate(-0.3deg);
+      box-shadow: 8px 16px 48px rgba(192, 57, 43, 0.14);
+      border-color: #C0392B;
+    }
+
+    .pizza-card:hover .pizza-img {
+      transform: scale(1.08) rotate(1deg);
+    }
+
+    .pizza-img {
+      transition: transform 0.5s ease;
+    }
+
+    /* Filter pill */
+    .fpill {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 99px;
+      border: 1.5px solid #E8E3D8;
+      color: #6B5B4E;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #FFFFFF;
+    }
+
+    .fpill:hover {
+      border-color: #C0392B;
+      color: #C0392B;
+    }
+
+    .fpill.active {
+      background: #C0392B;
+      border-color: #C0392B;
+      color: #FFFFFF;
+    }
+
+    /* Qty btns */
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid #E8E3D8;
+      background: #FAFAF7;
+      color: #C0392B;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .qty-btn:hover {
+      background: #C0392B;
+      color: #fff;
+      border-color: #C0392B;
+    }
+
+    /* Sidebar */
+    #cart-sidebar {
+      transition: transform 0.4s cubic-bezier(.77, 0, .18, 1);
+    }
+
+    #cart-sidebar.open {
+      transform: translateX(0);
+    }
+
+    #cart-sidebar.closed {
+      transform: translateX(100%);
+    }
+
+    /* Hero image clip */
+    .hero-img-wrap {
+      clip-path: polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    /* Badge bounce */
+    @keyframes bounce-in {
+      0% {
+        transform: scale(0);
+      }
+
+      60% {
+        transform: scale(1.3);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .badge-anim {
+      animation: bounce-in 0.4s ease;
+    }
+
+    /* Toast */
+    #toast {
+      transition: all 0.35s cubic-bezier(.25, .8, .25, 1);
+    }
+
+    /* Stagger fade */
+    .stagger {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    /* Diagonal section */
+    .diagonal-top {
+      clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
+      margin-top: -3rem;
+    }
+
+    .diagonal-bottom {
+      clip-path: polygon(0 0, 100% 0, 100% 94%, 0% 100%);
+      padding-bottom: 5rem;
+    }
+
+    /* Star */
+    .stars {
+      color: #E67E22;
+    }
+
+    /* Size selector */
+    .size-btn {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 99px;
+      border: 1.5px solid #E8E3D8;
+      color: #8C7B6B;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+
+    .size-btn.sel {
+      background: #C0392B;
+      border-color: #C0392B;
+      color: #fff;
+    }
+
+    /* Input focus */
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #C0392B !important;
+      box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+    }
+
+    /* Animated underline nav */
+    .nav-link {
+      position: relative;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1A1207;
+      transition: color 0.2s;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #C0392B;
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .nav-link:hover {
+      color: #C0392B;
+    }
+
+    /* Ribbon */
+    .ribbon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      background: #C0392B;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Dashed divider */
+    .dashed {
+      border-top: 2px dashed #E8E3D8;
+    }
+
+    /* Blob bg decoration */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    /* Handwritten accent */
+    .handwritten {
+      font-family: 'Caveat', cursive;
+    }
+
+    @keyframes spin-slow {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin-slow {
+      animation: spin-slow 18s linear infinite;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════
+     NAVBAR
+══════════════════════════════════ -->
+  <nav class="sticky top-0 z-50 bg-white/90 border-b border-p-border" style="backdrop-filter: blur(16px);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-p-red flex items-center justify-center shadow-lg">
+          <span style="font-family:'Bebas Neue';font-size:1.1rem;color:#fff;letter-spacing:0.05em;">FN</span>
+        </div>
+        <div>
+          <p style="font-family:'Bebas Neue'; font-size:1.35rem; color:#1A1207; line-height:1; letter-spacing:0.04em;">
+            Forno Napoli</p>
+          <p style="font-family:'Caveat'; font-size:0.75rem; color:#8C7B6B;">Pizzería artesanal · Desde 2003</p>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#menu" class="nav-link">Menú</a>
+        <a href="#especial" class="nav-link">Del día</a>
+        <a href="#nosotros" class="nav-link">Nosotros</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="cart-btn"
+          class="relative flex items-center gap-2 px-5 py-2.5 rounded-full bg-p-red text-white font-poppins text-sm font-semibold shadow-md hover:bg-p-redLight transition-all duration-200 hover:shadow-lg hover:scale-105">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Mi pedido</span>
+          <span id="cart-count"
+            class="absolute -top-2 -right-2 w-5 h-5 bg-p-ink text-white text-xs font-bold rounded-full items-center justify-center hidden badge-anim">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative overflow-hidden min-h-[92vh] flex items-center" style="background:#FAFAF7;">
+    <div class="blob w-96 h-96 bg-red-300 top-0 left-0" style="transform:translate(-40%,-30%);"></div>
+    <div class="blob w-80 h-80 bg-orange-300 bottom-0 right-0" style="transform:translate(30%,30%);"></div>
+    <div class="absolute top-16 right-10 hidden lg:block opacity-20" style="width:140px;height:140px;">
+      <svg viewBox="0 0 140 140" class="spin-slow w-full h-full">
+        <path id="circle-path" fill="none" d="M70,10 a60,60 0 1,1 -0.01,0 Z" />
+        <text fill="#C0392B" style="font-family:'Poppins';font-size:13px;font-weight:700;letter-spacing:4px;">
+          <textPath href="#circle-path">🍕 PIZZA ARTESANAL · HORNO DE LEÑA · </textPath>
+        </text>
+      </svg>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-12 items-center py-20">
+      <div>
+        <p class="handwritten text-p-red text-2xl mb-4" style="transform:rotate(-1deg); display:inline-block;">
+          ¡Bienvenido!
+        </p>
+        <h1 class="hero-title text-p-ink mb-6" style="font-size: clamp(4rem, 10vw, 7.5rem);">
+          LA MEJOR<br />
+          <span class="text-p-red">PIZZA</span><br />
+          DE LA CIUDAD
+        </h1>
+        <p class="font-baskerville italic text-p-muted text-lg mb-8 leading-relaxed max-w-md">
+          Masa madre fermentada 48 horas, tomate San Marzano importado y mozzarella fresca.
+          Cocida en horno de leña a 485 °C.
+        </p>
+
+        <div class="flex flex-wrap gap-4">
+          <a href="#menu"
+            class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-p-red text-white font-poppins text-sm font-bold shadow-xl hover:bg-p-redLight transition-all hover:scale-105 hover:shadow-2xl">
+            <i data-lucide="pizza" class="w-5 h-5"></i>
+            Ver el Menú
+          </a>
+          <a href="#nosotros"
+            class="inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 border-p-ink text-p-ink font-poppins text-sm font-bold hover:bg-p-ink hover:text-white transition-all">
+            Nuestra historia
+          </a>
+        </div>
+        <div class="flex gap-8 mt-12 pt-8 border-t border-p-border">
+          <div>
+            <p class="bebas text-3xl text-p-red" style="font-family:'Bebas Neue';">485°C</p>
+            <p class="font-poppins text-p-muted text-xs">Horno de leña</p>
+          </div>
+          <div>
+            <p style="font-family:'Bebas Neue'; font-size:1.9rem; color:#C0392B;">48 Hrs</p>
+            <p class="font-poppins text-p-muted text-xs">Fermentación</p>
+          </div>
+          <div>
+            <p style="font-family:'Bebas Neue'; font-size:1.9rem; color:#C0392B;">+30</p>
+            <p class="font-poppins text-p-muted text-xs">Variedades</p>
+          </div>
+        </div>
+      </div>
+      <div class="relative hidden lg:block">
+        <div class="hero-img-wrap rounded-3xl overflow-hidden shadow-2xl" style="height:580px;">
+          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=900&auto=format&fit=crop"
+            alt="Pizza napolitana" class="w-full h-full object-cover" />
+        </div>
+        <div
+          class="absolute -top-4 -right-4 bg-p-red text-white rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-xl">
+          <span style="font-family:'Caveat';font-size:0.85rem;font-weight:700;">Envío</span>
+          <span style="font-family:'Bebas Neue';font-size:1.4rem;">GRATIS</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="bg-p-red py-4 overflow-hidden">
+    <div class="flex items-center gap-12 animate-[slide_20s_linear_infinite]"
+      style="white-space:nowrap; animation: marquee 25s linear infinite;">
+      <div class="inline-flex items-center gap-3 px-6">
+        <i data-lucide="wheat" class="w-5 h-5 text-white/70"></i>
+        <span style="font-family:'Bebas Neue';letter-spacing:0.1em;color:white;font-size:1rem;">MASA MADRE 48H</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.3);font-size:1.5rem;">·</span>
+      <div class="inline-flex items-center gap-3 px-6">
+        <i data-lucide="flame" class="w-5 h-5 text-white/70"></i>
+        <span style="font-family:'Bebas Neue';letter-spacing:0.1em;color:white;font-size:1rem;">HORNO DE LEÑA
+          485°C</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.3);font-size:1.5rem;">·</span>
+      <div class="inline-flex items-center gap-3 px-6">
+        <i data-lucide="leaf" class="w-5 h-5 text-white/70"></i>
+        <span style="font-family:'Bebas Neue';letter-spacing:0.1em;color:white;font-size:1rem;">INGREDIENTES
+          FRESCOS</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.3);font-size:1.5rem;">·</span>
+      <div class="inline-flex items-center gap-3 px-6">
+        <i data-lucide="truck" class="w-5 h-5 text-white/70"></i>
+        <span style="font-family:'Bebas Neue';letter-spacing:0.1em;color:white;font-size:1rem;">ENVÍO RÁPIDO 30
+          MIN</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.3);font-size:1.5rem;">·</span>
+      <div class="inline-flex items-center gap-3 px-6">
+        <i data-lucide="award" class="w-5 h-5 text-white/70"></i>
+        <span style="font-family:'Bebas Neue';letter-spacing:0.1em;color:white;font-size:1rem;">RECETA NAPOLITANA
+          ORIGINAL</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.3);font-size:1.5rem;">·</span>
+    </div>
+  </div>
+  <style>
+    @keyframes marquee {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    #marquee-inner {
+      animation: marquee 25s linear infinite;
+    }
+  </style>
+
+
+  <!-- ══════════════════════════════════
+     MENU SECTION
+══════════════════════════════════ -->
+  <section id="menu" class="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+
+    <!-- Heading -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+      <div>
+        <p class="handwritten text-p-red text-xl mb-1">— nuestras especialidades —</p>
+        <h2 style="font-family:'Bebas Neue'; font-size: clamp(2.5rem,6vw,4.5rem); color:#1A1207; line-height:0.95;">
+          EL MENÚ
+        </h2>
+        <p class="font-baskerville italic text-p-muted mt-2">Elaborado con amor cada día</p>
+      </div>
+
+      <!-- Search -->
+      <div class="relative max-w-xs w-full">
+        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-p-muted"></i>
+        <input id="search-input" type="text" placeholder="Buscar pizza…"
+          class="w-full pl-11 pr-4 py-3 rounded-full font-poppins text-sm border border-p-border bg-white focus:outline-none transition-all"
+          style="color:#1A1207;" />
+      </div>
+    </div>
+
+    <!-- Filters + sort -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div class="flex flex-wrap gap-2" id="filter-pills">
+        <button class="fpill active" data-cat="todos">🍕 Todas</button>
+        <button class="fpill" data-cat="clasicas">Clásicas</button>
+        <button class="fpill" data-cat="gourmet">Gourmet</button>
+        <button class="fpill" data-cat="vegetarianas">Vegetarianas</button>
+        <button class="fpill" data-cat="calzones">Calzones</button>
+        <button class="fpill" data-cat="bebidas">Bebidas</button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <p class="font-poppins text-p-muted text-xs whitespace-nowrap"><span id="count">16</span> resultados</p>
+        <select id="sort-sel"
+          class="font-poppins text-xs border border-p-border rounded-full px-4 py-2 bg-white text-p-ink focus:outline-none">
+          <option value="default">Ordenar</option>
+          <option value="price-asc">Precio ↑</option>
+          <option value="price-desc">Precio ↓</option>
+          <option value="name">A-Z</option>
+          <option value="rating">Mejor valorados</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+    <!-- Empty -->
+    <div id="empty-state" class="hidden text-center py-24">
+      <div class="text-6xl mb-4">🍕</div>
+      <p style="font-family:'Bebas Neue';font-size:2rem;color:#1A1207;">Sin resultados</p>
+      <p class="font-poppins text-p-muted text-sm mt-2">Prueba con otro término o categoría</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+     PIZZA DEL DÍA BANNER
+══════════════════════════════════ -->
+  <section id="especial" class="diagonal-bottom" style="background:#1A1207; padding-top: 6rem;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <p class="handwritten text-p-red text-2xl mb-3">Oferta especial</p>
+        <h2 style="font-family:'Bebas Neue';font-size:clamp(2.5rem,7vw,5rem);color:#FAFAF7;line-height:0.92;">
+          PIZZA<br />DEL DÍA<br /><span class="text-p-red">CUATRO QUESOS</span>
+        </h2>
+        <p class="font-baskerville italic text-gray-400 mt-4 mb-6 leading-relaxed">
+          Mozzarella, gorgonzola, parmesano y provolone sobre base de crema de ajo. Horneada al momento en nuestro horno
+          napolitano.
+        </p>
+        <div class="flex items-end gap-4 mb-8">
+          <div>
+            <p class="font-poppins text-gray-500 text-xs line-through">$28.00</p>
+            <p style="font-family:'Bebas Neue';font-size:3.5rem;color:#C0392B;line-height:1;">$19.90</p>
+          </div>
+          <p class="handwritten text-gray-400 text-lg mb-3">¡Solo hoy!</p>
+        </div>
+        <button onclick="addSpecial()"
+          class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-p-red text-white font-poppins text-sm font-bold hover:bg-p-redLight transition-all hover:scale-105 shadow-xl">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          Agregar al pedido
+        </button>
+      </div>
+      <div class="relative">
+        <div class="rounded-3xl overflow-hidden shadow-2xl" style="height:420px;">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&auto=format&fit=crop"
+            alt="Pizza cuatro quesos" class="w-full h-full object-cover" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+     NOSOTROS
+══════════════════════════════════ -->
+  <section id="nosotros" class="max-w-7xl mx-auto px-4 sm:px-6 py-24">
+    <div class="grid md:grid-cols-5 gap-12 items-center">
+
+      <div class="md:col-span-3">
+        <p class="handwritten text-p-red text-xl mb-2">La historia detrás</p>
+        <h2 style="font-family:'Bebas Neue'; font-size:clamp(2.2rem,5vw,3.8rem); color:#1A1207; line-height:0.95;"
+          class="mb-6">
+          UN NAPOLITANO EN TU CIUDAD
+        </h2>
+        <p class="font-baskerville text-p-warm leading-relaxed mb-4">
+          En 2003, Gianni Russo trajo desde Nápoles su receta familiar de tres generaciones. La misma masa, el mismo
+          horno, la misma pasión. Hoy su hijo Marco continúa la tradición con el mismo fuego en los ojos.
+        </p>
+        <p class="font-baskerville text-p-warm leading-relaxed mb-8">
+          Cada pizza que sale de nuestro horno de leña es una pequeña obra de arte: bordes con leopardatura, masa ligera
+          y aireada, sabores auténticos que te transportan al golfo de Nápoles.
+        </p>
+        <div class="flex flex-wrap gap-6">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-p-redPale flex items-center justify-center">
+              <i data-lucide="award" class="w-4 h-4 text-p-red"></i>
+            </div>
+            <span class="font-poppins text-p-ink text-sm font-medium">Certificación AVPN</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-p-redPale flex items-center justify-center">
+              <i data-lucide="leaf" class="w-4 h-4 text-p-red"></i>
+            </div>
+            <span class="font-poppins text-p-ink text-sm font-medium">Ingredientes DOP</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-p-redPale flex items-center justify-center">
+              <i data-lucide="clock" class="w-4 h-4 text-p-red"></i>
+            </div>
+            <span class="font-poppins text-p-ink text-sm font-medium">+20 años de tradición</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-2 grid grid-cols-2 gap-4">
+        <img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=400&auto=format&fit=crop"
+          class="rounded-2xl h-48 w-full object-cover shadow-lg border border-p-border" alt="Pizzería" />
+        <img src="https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=400&auto=format&fit=crop"
+          class="rounded-2xl h-48 w-full object-cover shadow-lg border border-p-border mt-8" alt="Masa" />
+        <img src="https://images.unsplash.com/photo-1528137871618-79d2761e3fd5?w=400&auto=format&fit=crop"
+          class="rounded-2xl h-48 w-full object-cover shadow-lg border border-p-border -mt-4" alt="Horno" />
+        <img src="https://images.unsplash.com/photo-1606851091851-e8e8e7b89f8d?w=400&auto=format&fit=crop"
+          class="rounded-2xl h-48 w-full object-cover shadow-lg border border-p-border mt-4" alt="Pizza" />
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+  <footer class="border-t border-p-border" style="background:#1A1207;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid sm:grid-cols-3 gap-10">
+      <div>
+        <p style="font-family:'Bebas Neue';font-size:1.5rem;color:#FAFAF7;letter-spacing:0.05em;" class="mb-2">Forno
+          Napoli</p>
+        <p class="handwritten text-p-red text-base mb-3">Autentica pizza napoletana</p>
+        <p class="font-poppins text-gray-500 text-xs leading-relaxed">
+          La experiencia napolitana más auténtica, traída directamente desde Italia hasta tu puerta.
+        </p>
+      </div>
+      <div>
+        <p class="font-poppins text-white text-xs font-semibold uppercase tracking-widest mb-3">Horario</p>
+        <p class="font-poppins text-gray-500 text-xs">Lun – Jue: 12:00 – 22:30</p>
+        <p class="font-poppins text-gray-500 text-xs">Vie – Dom: 11:00 – 00:00</p>
+        <p class="font-poppins text-p-red text-xs mt-2 font-semibold">Delivery hasta las 23:00</p>
+      </div>
+      <div>
+        <p class="font-poppins text-white text-xs font-semibold uppercase tracking-widest mb-3">Contacto</p>
+        <p class="font-poppins text-gray-500 text-xs">Calle Napoli 458, Centro</p>
+        <p class="font-poppins text-gray-500 text-xs">+1 (555) 123-4567</p>
+        <p class="font-poppins text-p-red text-xs mt-1">ciao@fornonapoli.com</p>
+      </div>
+    </div>
+    <div
+      class="border-t border-white/10 max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p class="font-poppins text-gray-600 text-xs">© 2026 Forno Napoli. Tutti i diritti riservati.</p>
+      <p class="handwritten text-gray-600 text-base">Fatto con ❤️ e fuoco</p>
+    </div>
+  </footer>
+
+
+  <!-- ══════════════════════════════════
+     CART SIDEBAR
+══════════════════════════════════ -->
+  <div id="cart-backdrop" class="fixed inset-0 z-40 hidden"
+    style="background:rgba(26,18,7,0.5); backdrop-filter:blur(4px);" onclick="closeCart()"></div>
+
+  <aside id="cart-sidebar"
+    class="closed fixed top-0 right-0 h-full w-full sm:w-[420px] z-50 flex flex-col border-l border-p-border bg-white shadow-2xl">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-5 border-b border-p-border">
+      <div>
+        <p style="font-family:'Bebas Neue';font-size:1.6rem;color:#1A1207;letter-spacing:0.03em;">TU PEDIDO</p>
+        <p class="font-poppins text-p-muted text-xs" id="cart-sub">Nada por aquí todavía</p>
+      </div>
+      <button onclick="closeCart()"
+        class="w-9 h-9 rounded-full border border-p-border flex items-center justify-center text-p-muted hover:border-p-red hover:text-p-red transition-all">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-4 space-y-3"></div>
+    <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center px-6 text-center">
+      <div class="text-7xl mb-4">🛒</div>
+      <p style="font-family:'Bebas Neue';font-size:1.8rem;color:#1A1207;">CARRITO VACÍO</p>
+      <p class="font-baskerville italic text-p-muted text-sm mt-2">Agrega tus pizzas favoritas</p>
+    </div>
+
+    <div id="cart-footer" class="hidden border-t border-p-border px-6 py-5 space-y-4">
+      <div class="space-y-1.5 p-4 rounded-2xl" style="background:#FAFAF7;">
+        <div class="flex justify-between font-poppins text-xs text-p-muted">
+          <span>Subtotal</span><span id="sub">$0.00</span>
+        </div>
+        <div class="flex justify-between font-poppins text-xs text-p-muted">
+          <span>Envío</span><span class="text-p-green font-semibold">GRATIS</span>
+        </div>
+        <div class="flex justify-between font-poppins text-xs text-p-muted">
+          <span>IGV (10%)</span><span id="tax">$0.00</span>
+        </div>
+        <div class="dashed my-2"></div>
+        <div class="flex justify-between font-poppins text-sm font-bold text-p-ink">
+          <span>Total</span><span id="total" class="text-p-red">$0.00</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <p class="font-poppins text-p-ink text-xs font-semibold uppercase tracking-widest">Datos de entrega</p>
+        <input id="f-name" type="text" placeholder="Nombre completo"
+          class="w-full px-4 py-3 rounded-xl font-poppins text-sm border border-p-border focus:outline-none transition-all"
+          style="color:#1A1207;" />
+        <input id="f-phone" type="tel" placeholder="Teléfono / WhatsApp"
+          class="w-full px-4 py-3 rounded-xl font-poppins text-sm border border-p-border focus:outline-none transition-all"
+          style="color:#1A1207;" />
+        <input id="f-address" type="text" placeholder="Dirección de entrega"
+          class="w-full px-4 py-3 rounded-xl font-poppins text-sm border border-p-border focus:outline-none transition-all"
+          style="color:#1A1207;" />
+        <select id="f-pay"
+          class="w-full px-4 py-3 rounded-xl font-poppins text-sm border border-p-border focus:outline-none transition-all"
+          style="color:#1A1207;background:#fff;">
+          <option value="">Método de pago</option>
+          <option>💳 Tarjeta crédito / débito</option>
+          <option>💵 Efectivo al entregar</option>
+          <option>📱 Yape / Plin / Transferencia</option>
+        </select>
+      </div>
+
+      <button onclick="placeOrder()"
+        class="w-full py-4 rounded-xl bg-p-red text-white font-poppins text-sm font-bold hover:bg-p-redLight transition-all hover:scale-[1.02] active:scale-95 shadow-lg">
+        <span class="flex items-center justify-center gap-2">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+          Confirmar pedido
+        </span>
+      </button>
+      <button onclick="clearCart()"
+        class="w-full py-2 font-poppins text-xs text-p-muted hover:text-p-red transition-colors">
+        Vaciar carrito
+      </button>
+    </div>
+  </aside>
+
+  <div id="toast"
+    class="fixed bottom-6 left-1/2 z-[60] flex items-center gap-3 px-6 py-3 rounded-full font-poppins text-sm font-semibold shadow-2xl border border-p-border bg-white text-p-ink"
+    style="transform:translateX(-50%) translateY(20px); opacity:0; pointer-events:none; transition: all 0.35s ease;">
+    <span class="text-lg">🍕</span>
+    <span id="toast-msg">Agregado</span>
+  </div>
+
+  <div id="success-modal" class="fixed inset-0 z-[70] hidden items-center justify-center p-6">
+    <div class="absolute inset-0 bg-black/70" style="backdrop-filter:blur(8px);"></div>
+    <div class="relative z-10 max-w-sm w-full text-center bg-white rounded-3xl p-10 shadow-2xl border border-p-border">
+      <div class="text-6xl mb-4">🍕</div>
+      <p class="handwritten text-p-red text-2xl mb-1">¡Grazie mille!</p>
+      <p style="font-family:'Bebas Neue';font-size:2rem;color:#1A1207;" class="mb-4">PEDIDO CONFIRMADO</p>
+      <p class="font-baskerville italic text-p-muted text-sm mb-8 leading-relaxed">
+        Tu pizza está entrando al horno ahora mismo. La tendrás en tu puerta en aproximadamente <strong
+          class="text-p-red">30 minutos</strong>. ¡Buon appetito!
+      </p>
+      <button onclick="closeModal()"
+        class="px-8 py-3 rounded-full bg-p-red text-white font-poppins text-sm font-bold hover:bg-p-redLight transition-all hover:scale-105">
+        Hacer otro pedido
+      </button>
+    </div>
+  </div>
+  <script>
+    const PIZZAS = [
+      {
+        id: 1, name: "Margherita", cat: "clasicas", price: 18.00, rating: 4.9, reviews: 892,
+        desc: "Tomate San Marzano, mozzarella fior di latte, albahaca fresca, aceite de oliva EVO.",
+        img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&auto=format&fit=crop", tag: "Clásico"
+      },
+      {
+        id: 2, name: "Marinara", cat: "clasicas", price: 15.00, rating: 4.8, reviews: 445,
+        desc: "La más antigua: tomate, ajo, orégano y aceite de oliva. Sin queso. Pura tradición.",
+        img: "https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&auto=format&fit=crop", tag: null
+      },
+      {
+        id: 3, name: "Pepperoni Clásica", cat: "clasicas", price: 22.00, rating: 4.9, reviews: 1024,
+        desc: "Generosa cantidad de pepperoni artesanal sobre mozzarella fundida al horno de leña.",
+        img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&auto=format&fit=crop", tag: "Favorita"
+      },
+      {
+        id: 4, name: "Prosciutto e Funghi", cat: "clasicas", price: 24.00, rating: 4.7, reviews: 387,
+        desc: "Jamón serrano italiano, champiñones salteados, mozzarella y tomillo fresco.",
+        img: "https://images.unsplash.com/photo-1593246049226-ded77bf90326?w=600&auto=format&fit=crop", tag: null
+      },
+      {
+        id: 5, name: "Tartufo Nero", cat: "gourmet", price: 38.00, rating: 5.0, reviews: 156,
+        desc: "Base de crema de trufa, mozzarella de búfala, rúcula, parmesano y trufa negra rallada.",
+        img: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=600&auto=format&fit=crop", tag: "Premium"
+      },
+      {
+        id: 6, name: "Burrata & Bresaola", cat: "gourmet", price: 34.00, rating: 4.9, reviews: 203,
+        desc: "Tomate cherry, burrata cremosa, bresaola curada, pesto de albahaca y piñones tostados.",
+        img: "https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=600&auto=format&fit=crop", tag: "Chef's Pick"
+      },
+      {
+        id: 7, name: "Salmone & Capperi", cat: "gourmet", price: 32.00, rating: 4.8, reviews: 178,
+        desc: "Salmón ahumado noruego, alcaparras, cebolla morada, crema agria y eneldo fresco.",
+        img: "https://images.unsplash.com/photo-1530469912745-a215c6b256ea?w=600&auto=format&fit=crop", tag: null
+      },
+      {
+        id: 8, name: "Nduja Calabresa", cat: "gourmet", price: 29.00, rating: 4.9, reviews: 267,
+        desc: "Salame 'nduja picante calabrés, stracciatella, miel de flores y pimiento asado.",
+        img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&auto=format&fit=crop", tag: "Picante 🌶️"
+      },
+      {
+        id: 9, name: "Quattro Formaggi", cat: "vegetarianas", price: 26.00, rating: 4.8, reviews: 445,
+        desc: "Mozzarella, gorgonzola, parmesano y provolone. La combinación perfecta de cuatro quesos.",
+        img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop", tag: "Veggie ✓"
+      },
+      {
+        id: 10, name: "Ortolana", cat: "vegetarianas", price: 22.00, rating: 4.7, reviews: 298,
+        desc: "Berenjena a la plancha, calabacín, pimiento rojo, cebolla caramelizada y pesto.",
+        img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&auto=format&fit=crop", tag: "Veggie ✓"
+      },
+      {
+        id: 11, name: "Puttanesca Verde", cat: "vegetarianas", price: 20.00, rating: 4.6, reviews: 187,
+        desc: "Espinacas frescas, aceitunas negras, alcaparras, tomate cherry y pecorino rallado.",
+        img: "https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&auto=format&fit=crop", tag: "Veggie ✓"
+      },
+      {
+        id: 12, name: "Calzone Clásico", cat: "calzones", price: 20.00, rating: 4.8, reviews: 334,
+        desc: "Relleno de ricotta, mozzarella, jamón cocido y albahaca. Sellado y horneado al momento.",
+        img: "https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=600&auto=format&fit=crop", tag: null
+      },
+      {
+        id: 13, name: "Calzone Spinaci", cat: "calzones", price: 22.00, rating: 4.7, reviews: 198,
+        desc: "Espinacas salteadas, ricotta, piñones tostados y parmesano. Vegetariano y delicioso.",
+        img: "https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?w=600&auto=format&fit=crop", tag: "Veggie ✓"
+      },
+      {
+        id: 14, name: "Limonata Fresca", cat: "bebidas", price: 6.00, rating: 4.8, reviews: 523,
+        desc: "Limonada italiana artesanal con limones de Sicilia, menta y agua mineral con gas.",
+        img: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=600&auto=format&fit=crop", tag: null
+      },
+      {
+        id: 15, name: "Tiramisu Casero", cat: "bebidas", price: 9.00, rating: 4.9, reviews: 412,
+        desc: "Postre de la casa: mascarpone, espresso, savoiardi y cacao amargo. La receta de la nonna.",
+        img: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&auto=format&fit=crop", tag: "Postre"
+      },
+      {
+        id: 16, name: "Vino della Casa", cat: "bebidas", price: 12.00, rating: 4.7, reviews: 289,
+        desc: "Selección de vino tinto o blanco de la casa, importado directamente de las bodegas del Veneto.",
+        img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&auto=format&fit=crop", tag: null
+      },
+    ];
+    let cart = [];
+    let activeCat = 'todos';
+    let query = '';
+    let sortMode = 'default';
+    function getFiltered() {
+      let items = [...PIZZAS];
+      if (activeCat !== 'todos') items = items.filter(i => i.cat === activeCat);
+      if (query) {
+        const q = query.toLowerCase();
+        items = items.filter(i => i.name.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q));
+      }
+      if (sortMode === 'price-asc') items.sort((a, b) => a.price - b.price);
+      if (sortMode === 'price-desc') items.sort((a, b) => b.price - a.price);
+      if (sortMode === 'name') items.sort((a, b) => a.name.localeCompare(b.name));
+      if (sortMode === 'rating') items.sort((a, b) => b.rating - a.rating);
+      return items;
+    }
+
+    function renderMenu(items) {
+      const grid = document.getElementById('menu-grid');
+      const empty = document.getElementById('empty-state');
+      document.getElementById('count').textContent = items.length;
+
+      if (!items.length) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      grid.innerHTML = items.map((item, idx) => `
+    <div class="pizza-card rounded-2xl overflow-hidden flex flex-col bg-white"
+         style="animation: fadeUp 0.5s ${idx * 0.05}s ease both;">
+      <!-- Image -->
+      <div class="relative h-52 overflow-hidden bg-p-card">
+        <img src="${item.img}" alt="${item.name}"
+             class="pizza-img w-full h-full object-cover" loading="lazy" />
+        ${item.tag ? `<span class="ribbon">${item.tag}</span>` : ''}
+      </div>
+      <!-- Body -->
+      <div class="p-5 flex flex-col flex-1">
+        <p class="font-poppins text-p-muted text-xs uppercase tracking-widest mb-1">${item.cat}</p>
+        <h3 class="font-baskerville font-bold text-p-ink text-lg leading-tight mb-2">${item.name}</h3>
+        <p class="font-poppins text-p-muted text-xs leading-relaxed flex-1 mb-3">${item.desc}</p>
+        <!-- Rating -->
+        <div class="flex items-center gap-1 mb-4">
+          <span class="stars text-xs">★★★★★</span>
+          <span class="font-poppins text-p-muted text-xs">${item.rating} <span class="text-p-border">(${item.reviews})</span></span>
+        </div>
+        <!-- Price + CTA -->
+        <div class="flex items-center justify-between">
+          <p class="font-bebas text-p-red text-2xl" style="font-family:'Bebas Neue';">$${item.price.toFixed(2)}</p>
+          <button onclick="addToCart(${item.id})"
+                  class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-p-redPale text-p-red font-poppins text-xs font-semibold border border-red-200 hover:bg-p-red hover:text-white transition-all duration-200">
+            <i data-lucide="plus" class="w-3 h-3"></i>
+            Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+      lucide.createIcons();
+    }
+
+    document.querySelectorAll('.fpill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCat = btn.dataset.cat;
+        renderMenu(getFiltered());
+      });
+    });
+    document.getElementById('search-input').addEventListener('input', e => {
+      query = e.target.value.trim();
+      renderMenu(getFiltered());
+    });
+    document.getElementById('sort-sel').addEventListener('change', e => {
+      sortMode = e.target.value;
+      renderMenu(getFiltered());
+    });
+
+    // ─── CART ───────────────────────────
+    function addToCart(id) {
+      const item = PIZZAS.find(i => i.id === id);
+      if (!item) return;
+      const ex = cart.find(c => c.id === id);
+      if (ex) ex.qty++;
+      else cart.push({ ...item, qty: 1 });
+      updateCartUI();
+      showToast(`${item.name} agregada`);
+    }
+
+    function addSpecial() {
+      const sp = {
+        id: 99, name: "Pizza del Día: Cuatro Quesos", price: 19.90, cat: "especial",
+        img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&auto=format&fit=crop"
+      };
+      const ex = cart.find(c => c.id === 99);
+      if (ex) ex.qty++;
+      else cart.push({ ...sp, qty: 1 });
+      updateCartUI();
+      showToast("¡Pizza del día agregada!");
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(c => c.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+      updateCartUI();
+    }
+
+    function clearCart() {
+      cart = [];
+      updateCartUI();
+      showToast("Carrito vaciado");
+    }
+
+    function updateCartUI() {
+      const count = cart.reduce((s, c) => s + c.qty, 0);
+      const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
+      const tax = subtotal * 0.1;
+      const total = subtotal + tax;
+
+      const badge = document.getElementById('cart-count');
+      if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+      else { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+
+      document.getElementById('cart-sub').textContent =
+        count > 0 ? `${count} ítem${count > 1 ? 's' : ''} en tu pedido` : 'Nada por aquí todavía';
+
+      const itemsEl = document.getElementById('cart-items');
+      const emptyEl = document.getElementById('cart-empty');
+      const footerEl = document.getElementById('cart-footer');
+
+      if (!cart.length) {
+        itemsEl.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        footerEl.classList.add('hidden');
+      } else {
+        emptyEl.classList.add('hidden');
+        footerEl.classList.remove('hidden');
+        itemsEl.innerHTML = cart.map(c => `
+      <div class="flex items-center gap-3 p-3 rounded-xl border border-p-border bg-p-bg">
+        <img src="${c.img}" alt="${c.name}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-p-border" />
+        <div class="flex-1 min-w-0">
+          <p class="font-poppins text-p-ink text-xs font-semibold truncate">${c.name}</p>
+          <p class="font-poppins text-p-red text-sm font-bold">$${c.price.toFixed(2)}</p>
+          <div class="flex items-center gap-2 mt-1.5">
+            <button class="qty-btn" onclick="changeQty(${c.id},-1)">−</button>
+            <span class="font-poppins text-p-ink text-sm w-5 text-center">${c.qty}</span>
+            <button class="qty-btn" onclick="changeQty(${c.id},1)">+</button>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <p class="font-poppins text-p-ink text-xs font-bold">$${(c.price * c.qty).toFixed(2)}</p>
+          <button onclick="changeQty(${c.id},-99)" class="text-p-muted hover:text-p-red transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+        lucide.createIcons();
+      }
+
+      document.getElementById('sub').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // ─── CART OPEN/CLOSE ────────────────
+    function openCart() {
+      document.getElementById('cart-sidebar').classList.replace('closed', 'open');
+      document.getElementById('cart-backdrop').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCart() {
+      document.getElementById('cart-sidebar').classList.replace('open', 'closed');
+      document.getElementById('cart-backdrop').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('cart-btn').addEventListener('click', openCart);
+
+    // ─── PLACE ORDER ────────────────────
+    function placeOrder() {
+      const n = document.getElementById('f-name').value.trim();
+      const p = document.getElementById('f-phone').value.trim();
+      const a = document.getElementById('f-address').value.trim();
+      const m = document.getElementById('f-pay').value;
+      if (!n || !p || !a || !m) { showToast("Completa todos los campos"); return; }
+      if (!cart.length) { showToast("Tu carrito está vacío"); return; }
+      cart = [];
+      updateCartUI();
+      closeCart();
+      ['f-name', 'f-phone', 'f-address'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('f-pay').value = '';
+      document.getElementById('success-modal').style.display = 'flex';
+    }
+    function closeModal() {
+      document.getElementById('success-modal').style.display = 'none';
+    }
+
+    // ─── TOAST ──────────────────────────
+    let toastT = null;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+      t.style.pointerEvents = 'auto';
+      if (toastT) clearTimeout(toastT);
+      toastT = setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(-50%) translateY(20px)';
+        t.style.pointerEvents = 'none';
+      }, 2500);
+    }
+    renderMenu(PIZZAS);
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

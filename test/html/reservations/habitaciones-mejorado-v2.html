@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bosque Verde — Habitaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{ink:'#1C2321',paper:'#F6F4EF',teal:{DEFAULT:'#0E4B43',light:'#157A6E',dark:'#0A332E'},gold:'#C99A3F',ok:'#1F9D6D',busy:'#D6473C',clean:'#E0A92D',off:'#6B6B63'},fontFamily:{display:['Fraunces','serif'],sans:['Inter','sans-serif'],dato:['"IBM Plex Mono"','monospace']}}}}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>body{font-family:'Inter',sans-serif;background:#F6F4EF}[x-cloak]{display:none!important}</style>
+</head>
+<body class="text-ink" x-data="panelHabitaciones()" x-init="init()" x-cloak>
+<div class="flex min-h-screen">
+  <aside :class="sidebarOpen?'w-64':'w-20'" class="bg-teal-dark text-paper flex flex-col transition-all duration-300 shrink-0">
+    <div class="flex items-center gap-3 px-5 py-6 border-b border-white/10">
+      <div class="w-9 h-9 rounded-lg bg-gold flex items-center justify-center font-display font-bold text-teal-dark shrink-0">BV</div>
+      <span x-show="sidebarOpen" class="font-display text-lg font-semibold tracking-tight whitespace-nowrap">Bosque Verde</span>
+    </div>
+    <nav class="flex-1 px-3 py-6 space-y-1">
+      <a href="hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5Z"/></svg>
+        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap">Dashboard</span>
+      </a>
+      <a href="mis-hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 21V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M16 21v-9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9M8 8h0M8 11h0M8 14h0M11 8h0M11 11h0M11 14h0"/></svg>
+        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap">Mis Hoteles</span>
+      </a>
+      <a href="habitaciones.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10 text-white">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M4 13h16M7 13v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M4 20h16"/></svg>
+        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap">Habitaciones</span>
+      </a>
+      <a href="reservas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
+        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap">Reservas</span>
+      </a>
+      <a href="huespedes.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M14 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap">Huéspedes</span>
+      </a>
+    </nav>
+    <button @click="sidebarOpen=!sidebarOpen" class="mx-3 mb-5 flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/60 hover:bg-white/10 hover:text-white transition">
+      <svg class="w-5 h-5 shrink-0 transition-transform" :class="!sidebarOpen&&'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <span x-show="sidebarOpen" class="text-sm whitespace-nowrap">Contraer menú</span>
+    </button>
+  </aside>
+
+  <div class="flex-1 min-w-0">
+    <main class="px-8 py-8 space-y-7">
+      <section class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+        <div class="min-w-0">
+          <div class="flex items-center gap-3">
+            <a href="mis-hoteles.html" class="w-9 h-9 rounded-full border border-ink/10 bg-white flex items-center justify-center hover:bg-ink/5 transition shrink-0">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </a>
+            <div class="relative" @click.outside="selectorAbierto=false">
+              <button @click="selectorAbierto=!selectorAbierto" class="flex items-center gap-2 group">
+                <h1 class="font-display text-3xl font-semibold tracking-tight" x-text="hotelActual.nombre"></h1>
+                <svg class="w-5 h-5 text-ink/40 group-hover:text-ink/70 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <p class="text-sm text-ink/50 mt-0.5" x-text="hotelActual.ciudad+' · '+hotelActual.direccion"></p>
+              <div x-show="selectorAbierto" x-transition class="absolute left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-ink/10 p-1.5 z-30">
+                <template x-for="h in hoteles" :key="h.id">
+                  <button @click="cambiarHotel(h.id)" class="w-full flex items-center justify-between text-left px-3 py-2.5 rounded-xl text-sm hover:bg-paper transition" :class="h.id===hotelId&&'bg-paper'">
+                    <span>
+                      <span class="font-medium" x-text="h.nombre"></span>
+                      <span class="block text-xs text-ink/50" x-text="h.ciudad"></span>
+                    </span>
+                    <svg x-show="h.id===hotelId" class="w-4 h-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 7"/></svg>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button @click="abrirPanelCategorias()" class="px-4 py-2.5 rounded-full border border-ink/15 bg-white text-sm font-semibold hover:bg-ink/5 transition">Categorías</button>
+          <button @click="abrirPanelTarifas()" class="px-4 py-2.5 rounded-full border border-ink/15 bg-white text-sm font-semibold hover:bg-ink/5 transition">Tarifario</button>
+          <button @click="abrirHabitacion(null)" class="px-5 py-2.5 rounded-full bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Nueva habitación</button>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="bg-white border border-ink/10 rounded-2xl p-4"><p class="text-xs text-ink/50">Habitaciones</p><p class="font-dato text-2xl font-semibold mt-1" x-text="hotelActual.habitaciones.length"></p></div>
+        <div class="bg-white border border-ink/10 rounded-2xl p-4"><p class="text-xs text-ink/50">Disponibles</p><p class="font-dato text-2xl font-semibold mt-1 text-ok" x-text="conteo.disponible"></p></div>
+        <div class="bg-white border border-ink/10 rounded-2xl p-4"><p class="text-xs text-ink/50">Ocupadas</p><p class="font-dato text-2xl font-semibold mt-1 text-busy" x-text="conteo.ocupada"></p></div>
+        <div class="bg-white border border-ink/10 rounded-2xl p-4"><p class="text-xs text-ink/50">Limpieza</p><p class="font-dato text-2xl font-semibold mt-1 text-clean" x-text="conteo.limpieza"></p></div>
+        <div class="bg-white border border-ink/10 rounded-2xl p-4"><p class="text-xs text-ink/50">Ingreso vivo</p><p class="font-dato text-2xl font-semibold mt-1" x-text="moneda(ingresoVivo)"></p></div>
+      </section>
+
+      <section class="flex flex-wrap items-center gap-2">
+        <template x-for="item in filtros" :key="item.id">
+          <button @click="filtro=item.id" class="px-4 py-2 rounded-full text-sm font-semibold transition" :class="filtro===item.id?item.activo:item.normal">
+            <span x-text="item.label"></span> · <span x-text="item.id==='todas'?hotelActual.habitaciones.length:conteo[item.id]"></span>
+          </button>
+        </template>
+        <div class="relative ml-auto">
+          <svg class="w-4 h-4 text-ink/40 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z"/></svg>
+          <input x-model="busqueda" type="text" placeholder="Buscar habitación, categoría o huésped" class="w-72 pl-10 pr-4 py-2 rounded-full border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <template x-for="hab in habitacionesFiltradas" :key="hab.id">
+          <article class="bg-white rounded-[1.6rem] border border-ink/10 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col min-h-[285px]">
+            <div class="h-1.5" :class="colorEstado(hab.estado).bar"></div>
+            <div class="p-4 flex-1 flex flex-col">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-dato text-3xl font-semibold leading-none" x-text="hab.numero"></p>
+                  <p class="text-xs text-ink/45 mt-1" x-text="hab.categoria+' · piso '+hab.piso"></p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold" :class="colorEstado(hab.estado).badge" x-text="labelEstado(hab.estado)"></span>
+              </div>
+
+              <div class="mt-4 space-y-2">
+                <div class="flex items-end justify-between gap-3">
+                  <span class="text-xs text-ink/45">Tarifa base</span>
+                  <span class="font-dato text-sm font-semibold" x-text="moneda(hab.precioNoche)"></span>
+                </div>
+                <div class="flex items-end justify-between gap-3">
+                  <span class="text-xs text-ink/45">Capacidad</span>
+                  <span class="font-dato text-sm font-semibold" x-text="hab.capacidad+' huésped(es)'"></span>
+                </div>
+                <div class="flex items-start justify-between gap-3">
+                  <span class="text-xs text-ink/45">Camas</span>
+                  <span class="text-sm font-medium text-right leading-snug" x-text="hab.camas"></span>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5 mt-4">
+                <template x-for="a in hab.amenities.slice(0,3)" :key="a">
+                  <span class="px-2 py-1 rounded-full bg-paper border border-ink/10 text-[11px] text-ink/70" x-text="a"></span>
+                </template>
+              </div>
+
+              <div class="mt-auto pt-4">
+                <template x-if="hab.estado==='disponible'">
+                  <div class="rounded-2xl bg-ok/5 border border-ok/10 px-3 py-2.5">
+                    <p class="text-xs font-semibold text-ok">Lista para alojar ahora</p>
+                    <p class="text-[11px] text-ink/45 mt-0.5">Sin huésped activo ni saldo pendiente.</p>
+                  </div>
+                </template>
+                <template x-if="hab.estado==='ocupada'">
+                  <div class="rounded-2xl bg-busy/5 border border-busy/10 px-3 py-2.5 space-y-1.5">
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="text-xs font-semibold text-busy">Estadía activa</span>
+                      <span class="font-dato text-xs font-semibold" x-text="hab.estadia.noches+' noche(s)'"></span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="text-[11px] text-ink/45 truncate" x-text="hab.estadia.tarifa"></span>
+                      <span class="font-dato text-xs font-semibold" :class="saldoHabitacion(hab)>0?'text-busy':'text-ok'" x-text="moneda(saldoHabitacion(hab))"></span>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="hab.estado==='limpieza'">
+                  <div class="rounded-2xl bg-clean/5 border border-clean/20 px-3 py-2.5">
+                    <p class="text-xs font-semibold text-clean">Limpieza pendiente</p>
+                    <p class="text-[11px] text-ink/45 mt-0.5">Debe marcarse lista antes de alojar.</p>
+                  </div>
+                </template>
+                <template x-if="hab.estado==='mantenimiento'">
+                  <div class="rounded-2xl bg-off/5 border border-off/20 px-3 py-2.5">
+                    <p class="text-xs font-semibold text-off">Fuera de servicio</p>
+                    <p class="text-[11px] text-ink/45 mt-0.5">Reactivar cuando esté operativa.</p>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="border-t border-ink/10 px-3 py-2.5 flex items-center justify-between bg-paper/45">
+              <div class="flex items-center gap-1">
+                <button @click="abrirHabitacion(hab)" title="Editar habitación" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.4-9.4a2 2 0 1 1 2.8 2.8L11.8 15H9v-2.8l8.6-8.6Z"/></svg>
+                </button>
+                <button @click="eliminarHabitacion(hab)" title="Eliminar habitación" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-busy/10 hover:text-busy transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+
+              <template x-if="hab.estado==='disponible'">
+                <button @click="abrirAlojamiento(hab)" title="Alojar ahora" class="h-8 px-3 rounded-lg bg-teal text-paper text-xs font-semibold hover:bg-teal-light transition">Alojar</button>
+              </template>
+
+              <template x-if="hab.estado==='ocupada'">
+                <div class="flex items-center gap-1">
+                  <button @click="abrirRoomService(hab)" title="Room service" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm transition">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M6 7l1.2 12h9.6L18 7M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+                  </button>
+                  <button @click="abrirInvitados(hab)" title="Invitados" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm transition">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M14 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM20 19v-1a3.5 3.5 0 0 0-2.5-3.36"/></svg>
+                  </button>
+                  <button @click="abrirExtender(hab)" title="Extender estadía" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm transition">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                  <button @click="abrirEstadia(hab)" title="Pagos y check-out" class="w-8 h-8 rounded-lg bg-teal text-paper flex items-center justify-center hover:bg-teal-light transition">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2M14 12h7m0 0-3-3m3 3-3 3"/></svg>
+                  </button>
+                </div>
+              </template>
+
+              <template x-if="hab.estado==='limpieza' || hab.estado==='mantenimiento'">
+                <button @click="marcarDisponible(hab)" title="Marcar disponible" class="h-8 px-3 rounded-lg border border-ink/15 text-xs font-semibold hover:bg-white transition">Disponible</button>
+              </template>
+            </div>
+          </article>
+        </template>
+      </section>
+
+      <div x-show="habitacionesFiltradas.length===0" class="bg-white rounded-3xl border border-ink/10 p-16 text-center">
+        <p class="font-display text-xl font-semibold">No hay habitaciones para este filtro</p>
+        <p class="text-sm text-ink/50 mt-1">Cambia el filtro o registra una nueva habitación.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div x-show="formHabitacionAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="formHabitacionAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="w-full max-w-xl bg-paper h-full overflow-y-auto shadow-2xl flex flex-col">
+    <div class="sticky top-0 bg-paper z-10 border-b border-ink/10 px-6 py-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Habitaciones</p>
+        <h2 class="font-display text-2xl font-semibold" x-text="formHabitacion.id?'Editar habitación':'Nueva habitación'"></h2>
+      </div>
+      <button @click="formHabitacionAbierto=false" class="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 p-6 space-y-5">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Número <span class="text-busy">*</span></label>
+          <input x-model="formHabitacion.numero" type="text" placeholder="101" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Piso</label>
+          <input x-model.number="formHabitacion.piso" type="number" min="1" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Categoría <span class="text-busy">*</span></label>
+        <select x-model="formHabitacion.categoria" @change="aplicarCategoriaHabitacion()" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+          <option value="">Seleccionar categoría</option>
+          <template x-for="cat in hotelActual.categorias" :key="cat.id">
+            <option :value="cat.nombre" x-text="cat.nombre"></option>
+          </template>
+        </select>
+        <p class="text-xs text-ink/45 mt-1">Las categorías se crean y editan desde el botón Categorías.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Precio base por noche</label>
+          <input x-model.number="formHabitacion.precioNoche" type="number" min="0" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Capacidad</label>
+          <input x-model.number="formHabitacion.capacidad" type="number" min="1" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Camas</label>
+        <input x-model="formHabitacion.camas" type="text" placeholder="1 cama Queen, 2 camas individuales" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Características</label>
+        <input x-model="formHabitacion.amenitiesTexto" type="text" placeholder="WiFi, Netflix, Frigobar" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+        <p class="text-xs text-ink/45 mt-1">Separar con coma.</p>
+      </div>
+    </div>
+    <div class="sticky bottom-0 bg-paper border-t border-ink/10 px-6 py-5 flex gap-3">
+      <button @click="formHabitacionAbierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+      <button @click="guardarHabitacion()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Guardar</button>
+    </div>
+  </aside>
+</div>
+
+<div x-show="categoriasAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="categoriasAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside class="w-full max-w-lg bg-white h-full overflow-y-auto shadow-2xl p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Categorías</p>
+        <h2 class="font-display text-2xl font-semibold">Categorías del hotel</h2>
+        <p class="text-sm text-ink/50 mt-1">Crea Simple, Doble, Suite o cualquier categoría propia.</p>
+      </div>
+      <button @click="categoriasAbierto=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <button @click="abrirModalCategoria(null)" class="w-full mt-6 py-3 rounded-xl bg-teal text-paper font-semibold hover:bg-teal-light transition">Nueva categoría</button>
+    <div class="mt-6 divide-y divide-ink/10 border-y border-ink/10">
+      <template x-for="cat in hotelActual.categorias" :key="cat.id">
+        <div class="py-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-display text-lg font-semibold" x-text="cat.nombre"></p>
+              <p class="text-sm text-ink/50 mt-0.5" x-text="cat.descripcion"></p>
+              <p class="font-dato text-lg font-semibold text-teal mt-2" x-text="moneda(cat.precio)+'/ noche'"></p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button @click="abrirModalCategoria(cat)" class="w-8 h-8 rounded-lg border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.4-9.4a2 2 0 1 1 2.8 2.8L11.8 15H9v-2.8l8.6-8.6Z"/></svg>
+              </button>
+              <button @click="eliminarCategoria(cat)" class="w-8 h-8 rounded-lg border border-ink/10 flex items-center justify-center hover:bg-busy/10 hover:text-busy hover:border-busy/30 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </aside>
+</div>
+
+<div x-show="tarifarioAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="tarifarioAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside class="w-full max-w-2xl bg-white h-full overflow-y-auto shadow-2xl p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Tarifario</p>
+        <h2 class="font-display text-2xl font-semibold">Tarifas por categoría</h2>
+        <p class="text-sm text-ink/50 mt-1">Define paquetes como 3 noches por S/ 165 o 12 horas por S/ 70. Al alojar puedes repetir la tarifa.</p>
+      </div>
+      <button @click="tarifarioAbierto=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <button @click="abrirModalTarifa(null)" class="w-full mt-6 py-3 rounded-xl bg-teal text-paper font-semibold hover:bg-teal-light transition">Nueva tarifa</button>
+    <div class="mt-6 divide-y divide-ink/10 border-y border-ink/10">
+      <template x-for="tar in hotelActual.tarifas" :key="tar.id">
+        <div class="py-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-display text-lg font-semibold" x-text="tar.nombre"></p>
+              <p class="text-sm text-ink/50 mt-0.5" x-text="tar.categoria+' · '+tar.cantidad+' '+tar.unidad+(tar.cantidad>1?'s':'')"></p>
+              <p class="text-sm text-ink/45 mt-1" x-text="tar.descripcion"></p>
+              <p class="font-dato text-lg font-semibold text-teal mt-2" x-text="moneda(tar.precio)"></p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button @click="abrirModalTarifa(tar)" class="w-8 h-8 rounded-lg border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.4-9.4a2 2 0 1 1 2.8 2.8L11.8 15H9v-2.8l8.6-8.6Z"/></svg>
+              </button>
+              <button @click="eliminarTarifa(tar)" class="w-8 h-8 rounded-lg border border-ink/10 flex items-center justify-center hover:bg-busy/10 hover:text-busy hover:border-busy/30 transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </aside>
+</div>
+
+<div x-show="modalCategoria.abierto" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div @click="modalCategoria.abierto=false" class="absolute inset-0 bg-ink/50"></div>
+  <div class="relative bg-white rounded-3xl w-full max-w-md p-7 shadow-2xl">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Categoría</p>
+        <h2 class="font-display text-2xl font-semibold mt-1" x-text="formCategoria.id?'Editar categoría':'Nueva categoría'"></h2>
+      </div>
+      <button @click="modalCategoria.abierto=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="mt-6 space-y-4">
+      <input x-model="formCategoria.nombre" type="text" placeholder="Nombre de categoría" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      <input x-model.number="formCategoria.precio" type="number" min="0" placeholder="Precio por noche" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      <textarea x-model="formCategoria.descripcion" rows="3" placeholder="Descripción corta" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm"></textarea>
+      <div class="flex gap-3 pt-2">
+        <button @click="modalCategoria.abierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+        <button @click="guardarCategoria()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div x-show="modalTarifa.abierto" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div @click="modalTarifa.abierto=false" class="absolute inset-0 bg-ink/50"></div>
+  <div class="relative bg-white rounded-3xl w-full max-w-lg p-7 shadow-2xl">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Tarifa</p>
+        <h2 class="font-display text-2xl font-semibold mt-1" x-text="formTarifa.id?'Editar tarifa':'Nueva tarifa'"></h2>
+      </div>
+      <button @click="modalTarifa.abierto=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="mt-6 space-y-4">
+      <input x-model="formTarifa.nombre" type="text" placeholder="Nombre comercial" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      <select x-model="formTarifa.categoria" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+        <option value="">Seleccionar categoría</option>
+        <template x-for="cat in hotelActual.categorias" :key="cat.id">
+          <option :value="cat.nombre" x-text="cat.nombre"></option>
+        </template>
+      </select>
+      <div class="grid grid-cols-2 gap-3">
+        <input x-model.number="formTarifa.cantidad" type="number" min="1" placeholder="Cantidad" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+        <select x-model="formTarifa.unidad" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+          <option value="hora">hora</option>
+          <option value="noche">noche</option>
+          <option value="dia">día</option>
+        </select>
+      </div>
+      <input x-model.number="formTarifa.precio" type="number" min="0" placeholder="Precio total" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      <textarea x-model="formTarifa.descripcion" rows="3" placeholder="Ej. Paquete largo, ideal para estadías corporativas" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm"></textarea>
+      <div class="flex gap-3 pt-2">
+        <button @click="modalTarifa.abierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+        <button @click="guardarTarifa()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div x-show="alojamientoAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="alojamientoAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside class="w-full max-w-xl bg-paper h-full overflow-y-auto shadow-2xl flex flex-col">
+    <div class="sticky top-0 bg-paper z-10 border-b border-ink/10 px-6 py-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Alojamiento inmediato</p>
+        <h2 class="font-display text-2xl font-semibold">Habitación <span x-text="formAlojamiento.habitacion?.numero"></span></h2>
+      </div>
+      <button @click="alojamientoAbierto=false" class="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 p-6 space-y-5">
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Huésped principal <span class="text-busy">*</span></label>
+        <input x-model="formAlojamiento.huesped" type="text" placeholder="Nombre completo" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Documento</label>
+        <input x-model="formAlojamiento.documento" type="text" placeholder="DNI, CE o pasaporte" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Tarifa</label>
+        <select x-model.number="formAlojamiento.tarifaId" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+          <template x-for="tar in tarifasHabitacion(formAlojamiento.habitacion)" :key="tar.id">
+            <option :value="tar.id" x-text="tar.nombre+' · '+tar.cantidad+' '+tar.unidad+(tar.cantidad>1?'s':'')+' · '+moneda(tar.precio)"></option>
+          </template>
+        </select>
+        <p class="text-xs text-ink/45 mt-1">Ejemplo: una tarifa de 3 noches repetida 4 veces equivale a 12 noches.</p>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Veces que se aplica la tarifa</label>
+        <input x-model.number="formAlojamiento.veces" type="number" min="1" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm font-dato">
+      </div>
+      <div class="bg-white rounded-2xl border border-ink/10 p-5 space-y-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-ink/50">Tarifa seleccionada</span>
+          <span class="font-medium" x-text="tarifaAlojamiento?.nombre||'—'"></span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-ink/50">Duración total</span>
+          <span class="font-dato font-semibold" x-text="duracionAlojamientoTexto"></span>
+        </div>
+        <div class="flex items-center justify-between pt-3 border-t border-ink/10">
+          <span class="font-semibold">Total estadía</span>
+          <span class="font-dato text-2xl font-semibold text-teal" x-text="moneda(totalAlojamiento)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sticky bottom-0 bg-paper border-t border-ink/10 px-6 py-5 flex gap-3">
+      <button @click="alojamientoAbierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+      <button @click="confirmarAlojamiento()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Registrar estadía</button>
+    </div>
+  </aside>
+</div>
+
+<div x-show="invitadosAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="invitadosAbierto=false" class="absolute inset-0 bg-ink/50 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden">
+    <div class="px-6 py-5 border-b border-ink/10 flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Invitados</p>
+        <h2 class="font-display text-2xl font-semibold">Habitación <span x-text="habitacionInvitados?.numero"></span></h2>
+      </div>
+      <button @click="invitadosAbierto=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="p-6">
+      <div class="divide-y divide-ink/10 border-y border-ink/10">
+        <template x-for="(inv,i) in invitadosActuales" :key="i">
+          <div class="py-3 flex items-center justify-between gap-4">
+            <div>
+              <p class="font-semibold text-sm" x-text="inv.nombre"></p>
+              <p class="text-xs text-ink/50" x-text="inv.documento"></p>
+            </div>
+            <button @click="eliminarInvitado(i)" class="w-8 h-8 rounded-lg border border-ink/10 flex items-center justify-center hover:bg-busy/10 hover:text-busy transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+            </button>
+          </div>
+        </template>
+        <div x-show="invitadosActuales.length===0" class="py-8 text-sm text-ink/45 text-center">Aún no hay invitados agregados.</div>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-5 gap-2">
+        <input x-model="formInvitado.nombre" type="text" placeholder="Nombre completo" class="sm:col-span-2 px-4 py-3 rounded-xl border border-ink/15 bg-paper text-sm">
+        <input x-model="formInvitado.documento" type="text" placeholder="Documento" class="sm:col-span-2 px-4 py-3 rounded-xl border border-ink/15 bg-paper text-sm">
+        <button @click="agregarInvitado()" class="px-4 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div x-show="roomServiceAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="roomServiceAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside class="w-full max-w-xl bg-paper h-full overflow-y-auto shadow-2xl flex flex-col">
+    <div class="sticky top-0 bg-paper z-10 border-b border-ink/10 px-6 py-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Room service</p>
+        <h2 class="font-display text-2xl font-semibold">Habitación <span x-text="habitacionRoomService?.numero"></span></h2>
+      </div>
+      <button @click="roomServiceAbierto=false" class="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 p-6 space-y-6">
+      <section>
+        <p class="font-semibold mb-3">Productos rápidos</p>
+        <div class="divide-y divide-ink/10 border-y border-ink/10 bg-white rounded-2xl border-x border-ink/10 overflow-hidden">
+          <template x-for="item in menuRoomService" :key="item.id">
+            <button @click="agregarRoomItem(item)" class="w-full px-4 py-3 flex items-center justify-between gap-4 hover:bg-paper transition text-left">
+              <span>
+                <span class="block text-sm font-semibold" x-text="item.nombre"></span>
+                <span class="block text-xs text-ink/45" x-text="item.categoria"></span>
+              </span>
+              <span class="font-dato text-sm font-semibold text-teal" x-text="moneda(item.precio)"></span>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <section>
+        <p class="font-semibold mb-3">Carrito</p>
+        <div class="divide-y divide-ink/10 border-y border-ink/10">
+          <template x-for="(item,i) in carritoRoom" :key="item.id">
+            <div class="py-3 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold" x-text="item.nombre"></p>
+                <p class="text-xs text-ink/45" x-text="moneda(item.precio)+' x '+item.cantidad"></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="cambiarCantidadRoom(i,-1)" class="w-7 h-7 rounded-lg border border-ink/15 hover:bg-white">−</button>
+                <span class="font-dato text-sm w-5 text-center" x-text="item.cantidad"></span>
+                <button @click="cambiarCantidadRoom(i,1)" class="w-7 h-7 rounded-lg border border-ink/15 hover:bg-white">+</button>
+              </div>
+            </div>
+          </template>
+          <div x-show="carritoRoom.length===0" class="py-8 text-sm text-ink/45 text-center">Agrega productos para cargarlos a la estadía.</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="sticky bottom-0 bg-paper border-t border-ink/10 px-6 py-5">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-semibold">Total room service</span>
+        <span class="font-dato text-2xl font-semibold text-teal" x-text="moneda(totalRoomService)"></span>
+      </div>
+      <div class="flex gap-3">
+        <button @click="roomServiceAbierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+        <button @click="registrarRoomService()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Cargar a estadía</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div x-show="extenderAbierto" class="fixed inset-0 z-50 flex">
+  <div @click="extenderAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <aside class="w-full max-w-xl bg-paper h-full overflow-y-auto shadow-2xl flex flex-col">
+    <div class="sticky top-0 bg-paper z-10 border-b border-ink/10 px-6 py-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Extensión de estadía</p>
+        <h2 class="font-display text-2xl font-semibold">Habitación <span x-text="formExtension.habitacion?.numero"></span></h2>
+      </div>
+      <button @click="extenderAbierto=false" class="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 p-6 space-y-5">
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Tarifa para extender</label>
+        <select x-model.number="formExtension.tarifaId" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+          <template x-for="tar in tarifasHabitacion(formExtension.habitacion)" :key="tar.id">
+            <option :value="tar.id" x-text="tar.nombre+' · '+tar.cantidad+' '+tar.unidad+(tar.cantidad>1?'s':'')+' · '+moneda(tar.precio)"></option>
+          </template>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Veces que se extiende</label>
+        <input x-model.number="formExtension.veces" type="number" min="1" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm font-dato">
+      </div>
+      <div class="bg-white rounded-2xl border border-ink/10 p-5 space-y-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-ink/50">Tarifa</span>
+          <span class="font-medium" x-text="tarifaExtension?.nombre||'—'"></span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-ink/50">Extensión</span>
+          <span class="font-dato font-semibold" x-text="duracionExtensionTexto"></span>
+        </div>
+        <div class="flex items-center justify-between pt-3 border-t border-ink/10">
+          <span class="font-semibold">Costo adicional</span>
+          <span class="font-dato text-2xl font-semibold text-teal" x-text="moneda(totalExtension)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sticky bottom-0 bg-paper border-t border-ink/10 px-6 py-5 flex gap-3">
+      <button @click="extenderAbierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+      <button @click="confirmarExtension()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Extender</button>
+    </div>
+  </aside>
+</div>
+
+<div x-show="estadiaAbierta" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="estadiaAbierta=false" class="absolute inset-0 bg-ink/50 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden">
+    <div class="px-6 py-5 border-b border-ink/10 flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-ink/40 font-semibold">Pagos y check-out</p>
+        <h2 class="font-display text-2xl font-semibold">Habitación <span x-text="habitacionEstadia?.numero"></span></h2>
+        <p class="text-sm text-ink/50 mt-1" x-text="habitacionEstadia?.estadia?.tarifa+' · '+habitacionEstadia?.estadia?.noches+' noche(s)'"></p>
+      </div>
+      <button @click="estadiaAbierta=false" class="w-9 h-9 rounded-full hover:bg-ink/5 flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-4 border-b border-ink/10 bg-paper/55">
+      <div class="grid grid-cols-3 divide-x divide-ink/10 rounded-2xl overflow-hidden bg-white border border-ink/10">
+        <div class="px-4 py-3">
+          <p class="text-xs text-ink/45">Total</p>
+          <p class="font-dato text-xl font-semibold mt-0.5" x-text="moneda(totalHabitacion(habitacionEstadia))"></p>
+        </div>
+        <div class="px-4 py-3">
+          <p class="text-xs text-ink/45">Pagado</p>
+          <p class="font-dato text-xl font-semibold mt-0.5 text-ok" x-text="moneda(pagadoHabitacion(habitacionEstadia))"></p>
+        </div>
+        <div class="px-4 py-3">
+          <p class="text-xs text-ink/45">Saldo</p>
+          <p class="font-dato text-xl font-semibold mt-0.5" :class="saldoHabitacion(habitacionEstadia)>0?'text-busy':'text-ok'" x-text="moneda(saldoHabitacion(habitacionEstadia))"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 max-h-[55vh] overflow-y-auto">
+      <section>
+        <p class="font-semibold mb-3">Detalle de estadía</p>
+        <div class="divide-y divide-ink/10 border-y border-ink/10">
+          <div class="py-3 flex items-center justify-between text-sm">
+            <span>Alojamiento</span>
+            <span class="font-dato font-semibold" x-text="moneda(habitacionEstadia?.estadia?.totalTarifa||0)"></span>
+          </div>
+          <template x-for="(c,i) in consumosActuales" :key="i">
+            <div class="py-3 flex items-center justify-between text-sm">
+              <span x-text="c.desc"></span>
+              <span class="font-dato" x-text="moneda(c.monto)"></span>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <section>
+        <p class="font-semibold mb-3">Pagos registrados</p>
+        <div class="divide-y divide-ink/10 border-y border-ink/10">
+          <template x-for="(p,i) in pagosActuales" :key="i">
+            <div class="py-3 flex items-center justify-between text-sm">
+              <span x-text="p.metodo+' · '+p.fecha"></span>
+              <span class="font-dato" x-text="moneda(p.monto)"></span>
+            </div>
+          </template>
+          <div x-show="pagosActuales.length===0" class="py-8 text-sm text-ink/40 text-center">Sin pagos registrados.</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="px-6 py-5 border-t border-ink/10 bg-paper flex flex-col lg:flex-row gap-3 lg:items-center">
+      <input x-model.number="formPago.monto" type="number" placeholder="Monto" class="lg:w-36 px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+      <select x-model="formPago.metodo" class="lg:w-44 px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm">
+        <option>Efectivo</option>
+        <option>Tarjeta</option>
+        <option>Yape</option>
+        <option>Transferencia</option>
+      </select>
+      <button @click="agregarPago()" class="px-5 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">Registrar pago</button>
+      <button @click="pagarSaldo()" x-show="saldoHabitacion(habitacionEstadia)>0" class="px-5 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-white transition">Pagar saldo</button>
+      <button @click="registrarCheckout()" class="lg:ml-auto px-5 py-3 rounded-xl bg-busy text-paper text-sm font-semibold hover:bg-busy/90 transition">Check-out</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOTELES=[
+  {id:1,nombre:'Hotel Bosque Verde',ciudad:'Lima · San Isidro',direccion:'Av. Los Nogales 420',config:{moneda:'S/'},categorias:[
+    {id:1,nombre:'Simple',precio:60,descripcion:'Habitación individual compacta'},
+    {id:2,nombre:'Doble',precio:90,descripcion:'Dos camas o matrimonial estándar'},
+    {id:3,nombre:'Matrimonial',precio:100,descripcion:'Cama Queen y escritorio'},
+    {id:4,nombre:'Suite',precio:180,descripcion:'King, sala y jacuzzi'}
+  ],tarifas:[
+    {id:1,nombre:'Noche simple',categoria:'Simple',cantidad:1,unidad:'noche',precio:60,descripcion:'Tarifa base por noche'},
+    {id:2,nombre:'Pack 3 noches simple',categoria:'Simple',cantidad:3,unidad:'noche',precio:165,descripcion:'Descuento para estadía corta'},
+    {id:3,nombre:'Doble corporativa',categoria:'Doble',cantidad:2,unidad:'noche',precio:170,descripcion:'Dos noches con limpieza incluida'},
+    {id:4,nombre:'Suite fin de semana',categoria:'Suite',cantidad:2,unidad:'noche',precio:330,descripcion:'Viernes a domingo'}
+  ],habitaciones:[
+    {id:101,numero:'101',piso:1,categoria:'Simple',precioNoche:60,capacidad:1,camas:'1 cama individual',amenities:['WiFi','TV Cable','Aire acondicionado'],estado:'disponible'},
+    {id:102,numero:'102',piso:1,categoria:'Simple',precioNoche:60,capacidad:1,camas:'1 cama individual',amenities:['WiFi','Netflix','Aire acondicionado'],estado:'ocupada',estadia:{huesped:'María Fernanda Quispe',documento:'45821093',noches:3,tarifa:'Pack 3 noches simple',totalTarifa:165,invitados:[{nombre:'Claudia Quispe Ramos',documento:'70345612'}],consumos:[{desc:'Agua mineral',monto:8}],pagos:[{fecha:'26/06/2026',metodo:'Yape',monto:80}]}},
+    {id:103,numero:'103',piso:1,categoria:'Doble',precioNoche:90,capacidad:2,camas:'2 camas individuales',amenities:['WiFi','Netflix','Frigobar'],estado:'limpieza'},
+    {id:104,numero:'104',piso:1,categoria:'Doble',precioNoche:90,capacidad:2,camas:'1 cama Queen',amenities:['WiFi','Caja fuerte'],estado:'disponible'},
+    {id:105,numero:'105',piso:2,categoria:'Matrimonial',precioNoche:100,capacidad:2,camas:'1 cama Queen',amenities:['WiFi','Smart TV','Frigobar'],estado:'ocupada',estadia:{huesped:'Jorge Luis Medina Soto',documento:'41209887',noches:7,tarifa:'Precio base',totalTarifa:700,invitados:[],consumos:[{desc:'Servicio a la habitación',monto:35},{desc:'Minibar',monto:18}],pagos:[]}},
+    {id:106,numero:'106',piso:2,categoria:'Suite',precioNoche:180,capacidad:3,camas:'1 cama King + sofá cama',amenities:['WiFi','Jacuzzi','Desayuno incluido'],estado:'disponible'},
+    {id:107,numero:'107',piso:2,categoria:'Familiar',precioNoche:150,capacidad:4,camas:'2 camas Queen',amenities:['WiFi','Frigobar','Desayuno incluido'],estado:'mantenimiento'}
+  ]},
+  {id:2,nombre:'Hotel Mirador Andino',ciudad:'Cusco · Centro Histórico',direccion:'Calle Plateros 208',config:{moneda:'S/'},categorias:[
+    {id:1,nombre:'Simple',precio:75,descripcion:'Individual con calefacción'},
+    {id:2,nombre:'Doble',precio:110,descripcion:'Doble estándar'},
+    {id:3,nombre:'Suite',precio:220,descripcion:'Suite con vista al centro'}
+  ],tarifas:[
+    {id:1,nombre:'Simple andina',categoria:'Simple',cantidad:1,unidad:'noche',precio:75,descripcion:'Tarifa base'},
+    {id:2,nombre:'Doble 3 noches',categoria:'Doble',cantidad:3,unidad:'noche',precio:300,descripcion:'Para viajeros turísticos'},
+    {id:3,nombre:'Suite experiencia',categoria:'Suite',cantidad:2,unidad:'noche',precio:400,descripcion:'Incluye desayuno'}
+  ],habitaciones:[
+    {id:201,numero:'201',piso:1,categoria:'Simple',precioNoche:75,capacidad:1,camas:'1 cama individual',amenities:['WiFi','Calefacción'],estado:'disponible'},
+    {id:202,numero:'202',piso:1,categoria:'Doble',precioNoche:110,capacidad:2,camas:'2 camas individuales',amenities:['WiFi','Netflix','Calefacción'],estado:'ocupada',estadia:{huesped:'Hiroshi Tanaka',documento:'PJ4471092',noches:7,tarifa:'Doble base',totalTarifa:770,invitados:[{nombre:'Akemi Tanaka',documento:'PJ4471093'}],consumos:[{desc:'Tour coordinado',monto:50}],pagos:[{fecha:'26/06/2026',metodo:'Tarjeta',monto:820}]}},
+    {id:203,numero:'203',piso:2,categoria:'Suite',precioNoche:220,capacidad:2,camas:'1 cama King',amenities:['WiFi','Jacuzzi','Calefacción'],estado:'disponible'}
+  ]},
+  {id:3,nombre:'Hotel Costa Azul',ciudad:'Trujillo · Buenos Aires',direccion:'Malecón Grau 770',config:{moneda:'S/'},categorias:[
+    {id:1,nombre:'Simple',precio:55,descripcion:'Individual económica'},
+    {id:2,nombre:'Doble',precio:85,descripcion:'Doble con aire acondicionado'},
+    {id:3,nombre:'Matrimonial',precio:95,descripcion:'Queen estándar'}
+  ],tarifas:[
+    {id:1,nombre:'Simple playa',categoria:'Simple',cantidad:1,unidad:'noche',precio:55,descripcion:'Tarifa base'},
+    {id:2,nombre:'Doble semanal',categoria:'Doble',cantidad:7,unidad:'noche',precio:540,descripcion:'Precio promocional semanal'},
+    {id:3,nombre:'Uso 12 horas',categoria:'Matrimonial',cantidad:12,unidad:'hora',precio:70,descripcion:'Uso corto diurno'}
+  ],habitaciones:[
+    {id:301,numero:'301',piso:1,categoria:'Simple',precioNoche:55,capacidad:1,camas:'1 cama individual',amenities:['WiFi','Aire acondicionado'],estado:'disponible'},
+    {id:302,numero:'302',piso:1,categoria:'Doble',precioNoche:85,capacidad:2,camas:'2 camas individuales',amenities:['WiFi','TV Cable'],estado:'disponible'},
+    {id:303,numero:'303',piso:1,categoria:'Matrimonial',precioNoche:95,capacidad:2,camas:'1 cama Queen',amenities:['WiFi','Frigobar'],estado:'ocupada',estadia:{huesped:'Renzo Alonso Castillo Burga',documento:'72345890',noches:5,tarifa:'Precio base',totalTarifa:475,invitados:[],consumos:[{desc:'Lavandería',monto:15}],pagos:[{fecha:'26/06/2026',metodo:'Efectivo',monto:490}]}}
+  ]}
+];
+
+function hoyTexto(){return new Date().toLocaleDateString('es-PE')}
+function unidadesANoches(t,veces){if(!t)return 1;const total=t.cantidad*Number(veces||1);if(t.unidad==='hora')return Math.max(1,Math.ceil(total/24));return total}
+function panelHabitaciones(){
+  return {
+    sidebarOpen:true,
+    selectorAbierto:false,
+    categoriasAbierto:false,
+    tarifarioAbierto:false,
+    formHabitacionAbierto:false,
+    alojamientoAbierto:false,
+    invitadosAbierto:false,
+    roomServiceAbierto:false,
+    extenderAbierto:false,
+    estadiaAbierta:false,
+    hotelId:1,
+    filtro:'todas',
+    busqueda:'',
+    hoteles:HOTELES,
+    formHabitacion:{},
+    modalCategoria:{abierto:false},
+    modalTarifa:{abierto:false},
+    formCategoria:{},
+    formTarifa:{},
+    formAlojamiento:{habitacion:null,huesped:'',documento:'',tarifaId:null,veces:1},
+    formExtension:{habitacion:null,tarifaId:null,veces:1},
+    habitacionInvitados:null,
+    formInvitado:{nombre:'',documento:''},
+    habitacionRoomService:null,
+    carritoRoom:[],
+    menuRoomService:[
+      {id:1,nombre:'Agua mineral',categoria:'Bebidas',precio:8},
+      {id:2,nombre:'Gaseosa personal',categoria:'Bebidas',precio:7},
+      {id:3,nombre:'Sandwich mixto',categoria:'Comidas',precio:18},
+      {id:4,nombre:'Desayuno americano',categoria:'Comidas',precio:28},
+      {id:5,nombre:'Lavandería básica',categoria:'Servicios',precio:25},
+      {id:6,nombre:'Late check-out',categoria:'Servicios',precio:40}
+    ],
+    habitacionEstadia:null,
+    formConsumo:{desc:'',monto:''},
+    formPago:{monto:'',metodo:'Efectivo'},
+    filtros:[
+      {id:'todas',label:'Todas',activo:'bg-teal text-paper',normal:'bg-white border border-ink/10 text-ink/60 hover:bg-ink/5'},
+      {id:'disponible',label:'Disponibles',activo:'bg-ok text-paper',normal:'bg-white border border-ink/10 text-ink/60 hover:bg-ink/5'},
+      {id:'ocupada',label:'Ocupadas',activo:'bg-busy text-paper',normal:'bg-white border border-ink/10 text-ink/60 hover:bg-ink/5'},
+      {id:'limpieza',label:'Limpieza',activo:'bg-clean text-paper',normal:'bg-white border border-ink/10 text-ink/60 hover:bg-ink/5'},
+      {id:'mantenimiento',label:'Mantenimiento',activo:'bg-off text-paper',normal:'bg-white border border-ink/10 text-ink/60 hover:bg-ink/5'}
+    ],
+    init(){
+      const id=Number(new URLSearchParams(location.search).get('hotel'));
+      if(this.hoteles.some(h=>h.id===id))this.hotelId=id;
+    },
+    get hotelActual(){return this.hoteles.find(h=>h.id===this.hotelId)},
+    get conteo(){
+      const h=this.hotelActual.habitaciones;
+      return {
+        disponible:h.filter(x=>x.estado==='disponible').length,
+        ocupada:h.filter(x=>x.estado==='ocupada').length,
+        limpieza:h.filter(x=>x.estado==='limpieza').length,
+        mantenimiento:h.filter(x=>x.estado==='mantenimiento').length
+      }
+    },
+    get ingresoVivo(){return this.hotelActual.habitaciones.filter(h=>h.estado==='ocupada').reduce((s,h)=>s+this.totalHabitacion(h),0)},
+    get habitacionesFiltradas(){
+      const q=this.busqueda.toLowerCase();
+      return this.hotelActual.habitaciones.filter(h=>{
+        const f=this.filtro==='todas'||h.estado===this.filtro;
+        const t=!q||h.numero.toLowerCase().includes(q)||h.categoria.toLowerCase().includes(q)||(h.estadia&&h.estadia.huesped.toLowerCase().includes(q));
+        return f&&t;
+      })
+    },
+    get tarifaAlojamiento(){return this.hotelActual.tarifas.find(t=>t.id===Number(this.formAlojamiento.tarifaId))||null},
+    get totalAlojamiento(){return this.tarifaAlojamiento?this.tarifaAlojamiento.precio*Number(this.formAlojamiento.veces||1):0},
+    get nochesAlojamiento(){return unidadesANoches(this.tarifaAlojamiento,this.formAlojamiento.veces)},
+    get duracionAlojamientoTexto(){const t=this.tarifaAlojamiento;if(!t)return '—';const total=t.cantidad*Number(this.formAlojamiento.veces||1);return total+' '+t.unidad+(total>1?'s':'')+' · '+this.nochesAlojamiento+' noche(s)'},
+    get tarifaExtension(){return this.hotelActual.tarifas.find(t=>t.id===Number(this.formExtension.tarifaId))||null},
+    get totalExtension(){return this.tarifaExtension?this.tarifaExtension.precio*Number(this.formExtension.veces||1):0},
+    get nochesExtension(){return unidadesANoches(this.tarifaExtension,this.formExtension.veces)},
+    get duracionExtensionTexto(){const t=this.tarifaExtension;if(!t)return '—';const total=t.cantidad*Number(this.formExtension.veces||1);return total+' '+t.unidad+(total>1?'s':'')+' · '+this.nochesExtension+' noche(s)'},
+    get invitadosActuales(){return this.habitacionInvitados?.estadia?.invitados||[]},
+    get consumosActuales(){return this.habitacionEstadia?.estadia?.consumos||[]},
+    get pagosActuales(){return this.habitacionEstadia?.estadia?.pagos||[]},
+    get totalRoomService(){return this.carritoRoom.reduce((s,i)=>s+Number(i.precio||0)*Number(i.cantidad||0),0)},
+    moneda(n){return this.hotelActual.config.moneda+' '+Number(n||0).toFixed(2)},
+    labelEstado(e){return {disponible:'Disponible',ocupada:'Ocupada',limpieza:'En limpieza',mantenimiento:'Mantenimiento'}[e]},
+    colorEstado(e){return {disponible:{bar:'bg-ok',badge:'bg-ok/10 text-ok'},ocupada:{bar:'bg-busy',badge:'bg-busy/10 text-busy'},limpieza:{bar:'bg-clean',badge:'bg-clean/10 text-clean'},mantenimiento:{bar:'bg-off',badge:'bg-off/10 text-off'}}[e]},
+    toast(text,color='#0E4B43'){Toastify({text,duration:2200,gravity:'top',position:'right',style:{background:color}}).showToast()},
+    cambiarHotel(id){this.hotelId=id;this.filtro='todas';this.selectorAbierto=false;history.replaceState(null,'','habitaciones.html?hotel='+id);this.toast('Mostrando '+this.hotelActual.nombre)},
+    abrirPanelCategorias(){this.categoriasAbierto=true},
+    abrirPanelTarifas(){this.tarifarioAbierto=true},
+    tarifasHabitacion(h){if(!h)return[];const tarifas=this.hotelActual.tarifas.filter(t=>t.categoria===h.categoria);if(tarifas.length)return tarifas;return [{id:0,nombre:'Precio base',categoria:h.categoria,cantidad:1,unidad:'noche',precio:h.precioNoche,descripcion:'Tarifa base automática'}]},
+    abrirHabitacion(h){
+      this.formHabitacion=h?{...h,amenitiesTexto:h.amenities.join(', ')}:{id:null,numero:'',piso:1,categoria:'',precioNoche:0,capacidad:1,camas:'',amenitiesTexto:'WiFi, TV Cable'};
+      this.formHabitacionAbierto=true;
+    },
+    aplicarCategoriaHabitacion(){
+      const cat=this.hotelActual.categorias.find(c=>c.nombre===this.formHabitacion.categoria);
+      if(cat)this.formHabitacion.precioNoche=cat.precio;
+    },
+    guardarHabitacion(){
+      if(!this.formHabitacion.numero||!this.formHabitacion.categoria){this.toast('Completa número y categoría','#D6473C');return}
+      const data={...this.formHabitacion,amenities:(this.formHabitacion.amenitiesTexto||'').split(',').map(x=>x.trim()).filter(Boolean)};
+      delete data.amenitiesTexto;
+      if(data.id){
+        const i=this.hotelActual.habitaciones.findIndex(h=>h.id===data.id);
+        this.hotelActual.habitaciones[i]={...this.hotelActual.habitaciones[i],...data};
+      }else{
+        data.id=Date.now();
+        data.estado='disponible';
+        this.hotelActual.habitaciones.push(data);
+      }
+      this.formHabitacionAbierto=false;
+      this.toast('Habitación guardada');
+    },
+    eliminarHabitacion(h){
+      Swal.fire({title:'Eliminar habitación '+h.numero,text:'Esta acción solo afecta la maqueta visual.',icon:'warning',showCancelButton:true,confirmButtonText:'Eliminar',cancelButtonText:'Cancelar',confirmButtonColor:'#D6473C'}).then(r=>{
+        if(r.isConfirmed){this.hotelActual.habitaciones=this.hotelActual.habitaciones.filter(x=>x.id!==h.id);this.toast('Habitación eliminada','#D6473C')}
+      })
+    },
+    abrirModalCategoria(c){this.formCategoria=c?{...c}:{id:null,nombre:'',precio:0,descripcion:''};this.modalCategoria.abierto=true},
+    guardarCategoria(){
+      if(!this.formCategoria.nombre){this.toast('Escribe el nombre de la categoría','#D6473C');return}
+      if(this.formCategoria.id){
+        const i=this.hotelActual.categorias.findIndex(c=>c.id===this.formCategoria.id);
+        this.hotelActual.categorias[i]={...this.formCategoria};
+      }else{
+        this.hotelActual.categorias.push({...this.formCategoria,id:Date.now()});
+      }
+      this.modalCategoria.abierto=false;
+      this.toast('Categoría guardada');
+    },
+    eliminarCategoria(c){
+      Swal.fire({title:'Eliminar categoría '+c.nombre,text:'No se eliminarán habitaciones existentes en esta maqueta.',icon:'warning',showCancelButton:true,confirmButtonText:'Eliminar',cancelButtonText:'Cancelar',confirmButtonColor:'#D6473C'}).then(r=>{
+        if(r.isConfirmed){this.hotelActual.categorias=this.hotelActual.categorias.filter(x=>x.id!==c.id);this.toast('Categoría eliminada','#D6473C')}
+      })
+    },
+    abrirModalTarifa(t){this.formTarifa=t?{...t}:{id:null,nombre:'',categoria:this.hotelActual.categorias[0]?.nombre||'',cantidad:1,unidad:'noche',precio:0,descripcion:''};this.modalTarifa.abierto=true},
+    guardarTarifa(){
+      if(!this.formTarifa.nombre||!this.formTarifa.categoria){this.toast('Completa nombre y categoría','#D6473C');return}
+      if(this.formTarifa.id){
+        const i=this.hotelActual.tarifas.findIndex(t=>t.id===this.formTarifa.id);
+        this.hotelActual.tarifas[i]={...this.formTarifa};
+      }else{
+        this.hotelActual.tarifas.push({...this.formTarifa,id:Date.now()});
+      }
+      this.modalTarifa.abierto=false;
+      this.toast('Tarifa guardada');
+    },
+    eliminarTarifa(t){
+      Swal.fire({title:'Eliminar tarifa '+t.nombre,text:'La tarifa dejará de estar disponible para nuevos alojamientos.',icon:'warning',showCancelButton:true,confirmButtonText:'Eliminar',cancelButtonText:'Cancelar',confirmButtonColor:'#D6473C'}).then(r=>{
+        if(r.isConfirmed){this.hotelActual.tarifas=this.hotelActual.tarifas.filter(x=>x.id!==t.id);this.toast('Tarifa eliminada','#D6473C')}
+      })
+    },
+    abrirAlojamiento(h){
+      const tarifas=this.tarifasHabitacion(h);
+      this.formAlojamiento={habitacion:h,huesped:'',documento:'',tarifaId:tarifas[0]?.id||0,veces:1};
+      this.alojamientoAbierto=true;
+    },
+    confirmarAlojamiento(){
+      if(!this.formAlojamiento.huesped.trim()){this.toast('Ingresa el huésped principal','#D6473C');return}
+      const h=this.formAlojamiento.habitacion;
+      h.estado='ocupada';
+      h.estadia={huesped:this.formAlojamiento.huesped,documento:this.formAlojamiento.documento||'—',noches:this.nochesAlojamiento,tarifa:this.tarifaAlojamiento?.nombre||'Precio base',totalTarifa:this.totalAlojamiento,invitados:[],consumos:[],pagos:[]};
+      this.alojamientoAbierto=false;
+      Swal.fire({title:'Estadía registrada',html:'Habitación '+h.numero+' · '+h.estadia.huesped+' · '+this.moneda(h.estadia.totalTarifa),icon:'success',confirmButtonColor:'#0E4B43'});
+    },
+    abrirInvitados(h){this.habitacionInvitados=h;this.formInvitado={nombre:'',documento:''};this.invitadosAbierto=true},
+    agregarInvitado(){
+      if(!this.formInvitado.nombre.trim()){this.toast('Escribe el nombre del invitado','#D6473C');return}
+      this.habitacionInvitados.estadia.invitados.push({...this.formInvitado});
+      this.formInvitado={nombre:'',documento:''};
+      this.toast('Invitado agregado');
+    },
+    eliminarInvitado(i){this.habitacionInvitados.estadia.invitados.splice(i,1);this.toast('Invitado eliminado','#D6473C')},
+    abrirRoomService(h){this.habitacionRoomService=h;this.carritoRoom=[];this.roomServiceAbierto=true},
+    agregarRoomItem(item){
+      const actual=this.carritoRoom.find(x=>x.id===item.id);
+      if(actual)actual.cantidad+=1;
+      else this.carritoRoom.push({...item,cantidad:1});
+    },
+    cambiarCantidadRoom(i,delta){
+      this.carritoRoom[i].cantidad+=delta;
+      if(this.carritoRoom[i].cantidad<=0)this.carritoRoom.splice(i,1);
+    },
+    registrarRoomService(){
+      if(!this.habitacionRoomService?.estadia){this.toast('La habitación no tiene estadía activa','#D6473C');return}
+      if(this.carritoRoom.length===0){this.toast('Agrega productos al carrito','#D6473C');return}
+      this.carritoRoom.forEach(item=>{
+        this.habitacionRoomService.estadia.consumos.push({desc:'Room service · '+item.nombre+' x'+item.cantidad,monto:Number(item.precio)*Number(item.cantidad)});
+      });
+      this.roomServiceAbierto=false;
+      this.toast('Room service cargado a la estadía','#1F9D6D');
+    },
+    abrirExtender(h){
+      const tarifas=this.tarifasHabitacion(h);
+      this.formExtension={habitacion:h,tarifaId:tarifas[0]?.id||0,veces:1};
+      this.extenderAbierto=true;
+    },
+    confirmarExtension(){
+      const h=this.formExtension.habitacion;
+      h.estadia.noches+=this.nochesExtension;
+      h.estadia.totalTarifa+=this.totalExtension;
+      h.estadia.tarifa=h.estadia.tarifa+' + extensión';
+      this.extenderAbierto=false;
+      Swal.fire({title:'Estadía extendida',html:'Se agregaron '+this.duracionExtensionTexto+' por '+this.moneda(this.totalExtension),icon:'success',confirmButtonColor:'#0E4B43'});
+    },
+    abrirEstadia(h){this.habitacionEstadia=h;this.formConsumo={desc:'',monto:''};this.formPago={monto:this.saldoHabitacion(h),metodo:'Efectivo'};this.estadiaAbierta=true},
+    totalHabitacion(h){if(!h||!h.estadia)return 0;return Number(h.estadia.totalTarifa||0)+(h.estadia.consumos||[]).reduce((s,c)=>s+Number(c.monto||0),0)},
+    pagadoHabitacion(h){if(!h||!h.estadia)return 0;return (h.estadia.pagos||[]).reduce((s,p)=>s+Number(p.monto||0),0)},
+    saldoHabitacion(h){return Math.max(0,this.totalHabitacion(h)-this.pagadoHabitacion(h))},
+    agregarConsumo(){
+      if(!this.formConsumo.desc||!Number(this.formConsumo.monto)){this.toast('Completa consumo y monto','#D6473C');return}
+      this.habitacionEstadia.estadia.consumos.push({desc:this.formConsumo.desc,monto:Number(this.formConsumo.monto)});
+      this.formConsumo={desc:'',monto:''};
+      this.formPago.monto=this.saldoHabitacion(this.habitacionEstadia);
+      this.toast('Consumo agregado');
+    },
+    agregarPago(){
+      if(!Number(this.formPago.monto)){this.toast('Ingresa un monto válido','#D6473C');return}
+      this.habitacionEstadia.estadia.pagos.push({fecha:hoyTexto(),metodo:this.formPago.metodo,monto:Number(this.formPago.monto)});
+      this.formPago.monto=this.saldoHabitacion(this.habitacionEstadia);
+      this.toast('Pago registrado','#1F9D6D');
+    },
+    pagarSaldo(){
+      const saldo=this.saldoHabitacion(this.habitacionEstadia);
+      if(saldo<=0)return;
+      this.habitacionEstadia.estadia.pagos.push({fecha:hoyTexto(),metodo:this.formPago.metodo,monto:saldo});
+      this.formPago.monto=0;
+      this.toast('Saldo cancelado','#1F9D6D');
+    },
+    registrarCheckout(){
+      const saldo=this.saldoHabitacion(this.habitacionEstadia);
+      if(saldo>0){this.toast('Hay saldo pendiente antes del check-out','#D6473C');return}
+      Swal.fire({title:'Registrar check-out',text:'La habitación pasará a limpieza.',icon:'question',showCancelButton:true,confirmButtonText:'Registrar',cancelButtonText:'Cancelar',confirmButtonColor:'#0E4B43'}).then(r=>{
+        if(r.isConfirmed){
+          this.habitacionEstadia.estado='limpieza';
+          this.habitacionEstadia.estadia=null;
+          this.estadiaAbierta=false;
+          this.toast('Check-out registrado. Habitación enviada a limpieza.');
+        }
+      })
+    },
+    marcarDisponible(h){h.estado='disponible';this.toast('Habitación disponible','#1F9D6D')}
+  }
+}
+</script>
+</body>
+</html>

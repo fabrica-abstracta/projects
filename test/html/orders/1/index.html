@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTO · Panel Principal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen">
+
+<header class="resto-topbar sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[var(--copper)] flex items-center justify-center">
+        <i class="fa-solid fa-fire text-[var(--carbon-950)] text-sm"></i>
+      </div>
+      <span class="f-display text-lg tracking-widest">RESTO</span>
+    </div>
+    <nav class="flex items-center gap-6 text-sm f-display tracking-wide">
+      <a href="index.html" class="nav-link active pb-1">Panel</a>
+      <a href="productos.html" class="nav-link pb-1">Productos</a>
+      <a href="pos.html" class="nav-link pb-1">Punto de Venta</a>
+      <a href="cocina.html" class="nav-link pb-1">Cocina</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-10">
+  <div class="flex items-end justify-between flex-wrap gap-4 mb-8">
+    <div>
+      <p class="f-mono text-xs text-[var(--copper-dark)] tracking-widest mb-1" id="fecha-hoy">CARGANDO FECHA…</p>
+      <h1 class="f-display text-3xl md:text-4xl">Elige tu local</h1>
+      <p class="text-[var(--ink-soft)] mt-1">Cada local gestiona su propio stock, comandas y cocina.</p>
+    </div>
+  </div>
+
+  <div id="locales-grid" class="grid md:grid-cols-3 gap-5 mb-12"></div>
+
+  <div class="rounded-xl overflow-hidden ticket-edge bg-[var(--carbon-950)] text-[var(--cream)] p-6 md:p-8">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="f-display text-xl">Resumen de hoy — <span id="local-activo-nombre" class="text-[var(--copper)]"></span></h2>
+      <span class="f-mono text-xs text-[var(--cream)]/50" id="reloj"></span>
+    </div>
+    <div class="grid sm:grid-cols-4 gap-4">
+      <div class="bg-[var(--carbon-900)] rounded-lg p-4 border border-[var(--line-dark)]">
+        <p class="f-mono text-xs text-[var(--cream)]/50 mb-1">PEDIDOS ACTIVOS</p>
+        <p class="f-display text-3xl" id="stat-activos">0</p>
+      </div>
+      <div class="bg-[var(--carbon-900)] rounded-lg p-4 border border-[var(--line-dark)]">
+        <p class="f-mono text-xs text-[var(--cream)]/50 mb-1">EN COCINA</p>
+        <p class="f-display text-3xl text-[var(--copper)]" id="stat-cocina">0</p>
+      </div>
+      <div class="bg-[var(--carbon-900)] rounded-lg p-4 border border-[var(--line-dark)]">
+        <p class="f-mono text-xs text-[var(--cream)]/50 mb-1">PRODUCTOS AGOTADOS</p>
+        <p class="f-display text-3xl text-[var(--ember)]" id="stat-agotados">0</p>
+      </div>
+      <div class="bg-[var(--carbon-900)] rounded-lg p-4 border border-[var(--line-dark)]">
+        <p class="f-mono text-xs text-[var(--cream)]/50 mb-1">VENTA DEL DÍA</p>
+        <p class="f-display text-3xl text-[var(--sage)]" id="stat-venta">S/ 0</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-5 mt-8">
+    <a href="productos.html" class="card-hover rounded-xl bg-white border border-[var(--line)] p-6 block">
+      <i class="fa-solid fa-boxes-stacked text-2xl text-[var(--copper)] mb-3"></i>
+      <h3 class="f-display text-lg mb-1">Gestionar productos</h3>
+      <p class="text-sm text-[var(--ink-soft)]">Crea, edita y activa el stock del día para cada plato o bebida.</p>
+    </a>
+    <a href="pos.html" class="card-hover rounded-xl bg-white border border-[var(--line)] p-6 block">
+      <i class="fa-solid fa-cash-register text-2xl text-[var(--copper)] mb-3"></i>
+      <h3 class="f-display text-lg mb-1">Punto de venta</h3>
+      <p class="text-sm text-[var(--ink-soft)]">Registra pedidos para mesa, para llevar, o desde canal online.</p>
+    </a>
+    <a href="cocina.html" class="card-hover rounded-xl bg-white border border-[var(--line)] p-6 block">
+      <i class="fa-solid fa-kitchen-set text-2xl text-[var(--copper)] mb-3"></i>
+      <h3 class="f-display text-lg mb-1">Pantalla de cocina</h3>
+      <p class="text-sm text-[var(--ink-soft)]">Sigue las comandas desde que entran hasta que salen del pase.</p>
+    </a>
+  </div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+  function fmtFecha(){
+    const d = new Date();
+    const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+    document.getElementById('fecha-hoy').textContent = d.toLocaleDateString('es-PE', opts).toUpperCase();
+  }
+  function tickReloj(){
+    document.getElementById('reloj').textContent = new Date().toLocaleTimeString('es-PE');
+  }
+  fmtFecha(); tickReloj(); setInterval(tickReloj, 1000);
+
+  function render(){
+    const locales = RESTO_DB.getLocales();
+    const activoId = RESTO_DB.getLocalActivo();
+    const grid = document.getElementById('locales-grid');
+    grid.innerHTML = locales.map(loc => {
+      const pedidos = RESTO_DB.getPedidos(loc.id);
+      const activos = pedidos.filter(p => p.estado !== 'entregado').length;
+      const selected = loc.id === activoId;
+      return `
+        <button onclick="elegirLocal('${loc.id}')"
+          class="text-left rounded-xl p-5 border-2 transition ${selected ? 'border-[var(--copper)] bg-[var(--carbon-950)] text-[var(--cream)]' : 'border-[var(--line)] bg-white hover:border-[var(--copper)]'}">
+          <div class="flex items-center justify-between mb-3">
+            <i class="fa-solid fa-store ${selected ? 'text-[var(--copper)]' : 'text-[var(--ink-soft)]'}"></i>
+            ${selected ? '<span class="badge badge-listo">ACTIVO</span>' : ''}
+          </div>
+          <h3 class="f-display text-lg">${loc.nombre}</h3>
+          <p class="text-sm ${selected ? 'text-[var(--cream)]/60' : 'text-[var(--ink-soft)]'} mt-1">${loc.direccion}</p>
+          <p class="f-mono text-xs mt-3 ${selected ? 'text-[var(--copper)]' : 'text-[var(--ink-soft)]'}">${activos} pedido(s) activo(s) hoy</p>
+        </button>`;
+    }).join('');
+
+    const loc = locales.find(l => l.id === activoId);
+    document.getElementById('local-activo-nombre').textContent = loc ? loc.nombre : '';
+
+    const pedidos = RESTO_DB.getPedidos(activoId);
+    const productos = RESTO_DB.getProductos(activoId);
+    document.getElementById('stat-activos').textContent = pedidos.filter(p => p.estado !== 'entregado').length;
+    document.getElementById('stat-cocina').textContent = pedidos.filter(p => p.estado === 'pendiente' || p.estado === 'preparacion').length;
+    document.getElementById('stat-agotados').textContent = productos.filter(p => !p.activoHoy || p.stockHoy <= 0).length;
+    const venta = pedidos.reduce((s,p) => s + (p.total || 0), 0);
+    document.getElementById('stat-venta').textContent = 'S/ ' + venta.toFixed(0);
+  }
+  function elegirLocal(id){ RESTO_DB.setLocalActivo(id); render(); }
+  render();
+</script>
+</body>
+</html>

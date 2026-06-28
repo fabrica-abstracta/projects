@@ -1,0 +1,133 @@
+# ==========================================
+# Archivos Globales del Sistema y Editores
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs y Editores de Código
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.bak
+
+# ==========================================
+# Node.js (Express, React, Next.js)
+# ==========================================
+# Dependencias
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Compilación y Salidas (React / Next.js)
+/build/
+/dist/
+/.next/
+/out/
+.next-env.d.ts
+
+# Caché de herramientas
+.turbo/
+.cache/
+.npm/
+
+# ==========================================
+# Flutter / Dart
+# ==========================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Archivos generados por Flutter
+**/android/local.properties
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/lib/generated_plugin_registrant.dart
+
+# Salida de compilación Flutter
+build/
+
+# ==========================================
+# Android Studio / Gradle
+# ==========================================
+.gradle/
+captures/
+**/android/.gradle/
+**/android/captures/
+**/android/build/
+*.apk
+*.aar
+*.bundle
+
+# ==========================================
+# Java / Maven / Gradle (Proyectos Java Puros)
+# ==========================================
+# Compilados de Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Carpetas de construcción de herramientas Java
+target/
+bin/
+.metadata/
+
+# ==========================================
+# Variables de Entorno y Secretos (¡CRÍTICO!)
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Sorteo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { cream:'#FDF6EC', caramel:'#C8872A', choco:'#3B1F0E', rose:'#E8929A', gold:'#F0C060' } } }
+}
+</script>
+<style>
+body { background: linear-gradient(135deg, #1a0a3e 0%, #3b1f6e 50%, #1a0a3e 100%); font-family: 'Georgia', serif; min-height:100vh; }
+.ticket { background: white; border-radius:12px; padding:10px 16px; display:inline-flex; align-items:center; gap:8px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.drum { width:280px; height:280px; border-radius:50%; background: conic-gradient(#C8872A 0% 25%, #F0C060 25% 50%, #E8929A 50% 75%, #3B1F0E 75% 100%); display:flex; align-items:center; justify-content:center; position:relative; box-shadow: 0 0 60px rgba(200,135,42,0.4); }
+@keyframes spin-drum { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes winner-glow { 0%,100%{box-shadow:0 0 20px rgba(240,192,96,0.5)} 50%{box-shadow:0 0 60px rgba(240,192,96,1)} }
+.spinning { animation: spin-drum 0.15s linear infinite; }
+.winner-card { animation: winner-glow 1s ease-in-out infinite; }
+.star { position:absolute; color:gold; font-size:14px; }
+@keyframes float-star { 0%{transform:translateY(0) rotate(0)} 100%{transform:translateY(-80px) rotate(360deg); opacity:0} }
+.float-up { animation: float-star 1.5s ease-out forwards; }
+</style>
+</head>
+<body x-data="sorteoApp()" class="min-h-screen text-white">
+
+<nav class="flex items-center justify-between px-8 py-4 border-b border-white/10">
+  <a href="juegos.html" class="flex items-center gap-2 text-white/70 hover:text-white transition text-sm">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Juegos
+  </a>
+  <div class="flex items-center gap-3">
+    <span class="text-gold font-bold text-xl">🍰 SweetStamp</span>
+    <span class="bg-purple-500 text-white text-xs px-3 py-1 rounded-full">Sorteo de Premios</span>
+  </div>
+  <div class="text-sm text-white/50">Pastelería La Dulce Época</div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div class="grid grid-cols-5 gap-8">
+    <div class="col-span-2 space-y-4">
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-5">
+        <h3 class="font-bold text-gold mb-3 uppercase text-xs tracking-widest">Premio del Sorteo</h3>
+        <div class="bg-white/10 rounded-xl p-4 flex items-center gap-3 mb-3">
+          <span class="text-3xl" x-text="premioActual.emoji"></span>
+          <div>
+            <p class="font-bold" x-text="premioActual.nombre"></p>
+            <p class="text-xs text-white/60" x-text="premioActual.descripcion"></p>
+          </div>
+        </div>
+        <button @click="cambiarPremio()" class="w-full border border-white/20 text-white/70 py-2 rounded-lg text-xs hover:bg-white/10 transition">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> Cambiar Premio
+        </button>
+      </div>
+
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gold uppercase text-xs tracking-widest">Participantes</h3>
+          <button @click="agregarParticipante()" class="bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-400 transition">+ Agregar</button>
+        </div>
+        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+          <template x-for="(p, i) in participantes" :key="p.id">
+            <div class="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 bg-purple-500 rounded-full text-xs flex items-center justify-center font-bold" x-text="i+1"></span>
+                <span class="text-sm" x-text="p.nombre"></span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full" x-text="p.tickets + ' ticket' + (p.tickets>1?'s':'')"></span>
+                <button @click="participantes.splice(i,1)" class="text-white/30 hover:text-red-400 text-xs ml-1"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="mt-3 pt-3 border-t border-white/10 text-xs text-white/50">
+          <span x-text="participantes.reduce((a,p)=>a+p.tickets,0) + ' tickets totales · ' + participantes.length + ' participantes'"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-3 flex flex-col items-center">
+      <h2 class="text-2xl font-bold text-center mb-6 text-gold">🎟️ GRAN SORTEO</h2>
+
+      <div class="relative mb-6">
+        <div :class="sorteando ? 'spinning' : ''" class="drum" id="drum">
+          <div class="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center z-10 shadow-lg">
+            <span class="text-4xl" x-text="ganadorActual ? ganadorActual.emoji : '🎟️'"></span>
+            <span x-show="ganadorActual" class="text-xs font-bold text-choco text-center px-2 mt-1" x-text="ganadorActual?.nombre?.split(' ')[0]"></span>
+          </div>
+        </div>
+        <div id="stars-container" class="absolute inset-0 pointer-events-none overflow-visible"></div>
+      </div>
+
+      <div x-show="!sorteando && !ganadorActual" class="text-center mb-6">
+        <p class="text-white/60 text-sm" x-text="participantes.length + ' participantes listos'"></p>
+      </div>
+
+      <div x-show="ganadorActual && !sorteando" x-transition class="winner-card bg-gradient-to-r from-gold/20 to-caramel/20 border border-gold rounded-2xl p-6 text-center mb-6 w-full max-w-sm">
+        <p class="text-gold text-sm font-bold uppercase tracking-widest mb-2">🏆 GANADOR</p>
+        <p class="text-3xl font-bold" x-text="ganadorActual?.nombre"></p>
+        <p class="text-white/60 text-sm mt-1" x-text="ganadorActual?.telefono"></p>
+        <div class="mt-3 bg-white/10 rounded-xl p-3 flex items-center justify-center gap-2">
+          <span class="text-2xl" x-text="premioActual.emoji"></span>
+          <span class="font-semibold" x-text="premioActual.nombre"></span>
+        </div>
+        <button @click="confirmarEntrega()" class="mt-4 w-full bg-gold text-choco py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition">
+          <i class="fa-solid fa-check mr-1"></i> Confirmar Entrega de Premio
+        </button>
+      </div>
+
+      <div class="flex gap-4">
+        <button
+          @click="iniciarSorteo()"
+          :disabled="sorteando || participantes.length < 2"
+          :class="sorteando ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'"
+          class="bg-gradient-to-r from-purple-500 to-purple-700 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg transition">
+          <span x-text="sorteando ? '🎲 Sorteando...' : '🎯 ¡INICIAR SORTEO!'"></span>
+        </button>
+        <button x-show="ganadorActual" @click="reiniciar()" class="border border-white/30 text-white px-6 py-4 rounded-2xl font-semibold text-sm hover:bg-white/10 transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Nuevo Sorteo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 bg-white/10 backdrop-blur rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-gold text-lg uppercase tracking-wide">🏅 Tabla de Ganadores</h3>
+      <span class="text-white/50 text-sm" x-text="ganadores.length + ' sorteos realizados'"></span>
+    </div>
+    <div x-show="ganadores.length === 0" class="text-center py-8 text-white/40">
+      <i class="fa-solid fa-trophy text-4xl mb-3 block"></i>
+      <p>Los ganadores aparecerán aquí</p>
+    </div>
+    <div x-show="ganadores.length > 0" class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/20 text-white/50 text-left">
+            <th class="pb-2">#</th>
+            <th class="pb-2">Ganador</th>
+            <th class="pb-2">Premio</th>
+            <th class="pb-2">Fecha</th>
+            <th class="pb-2">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/10">
+          <template x-for="(g, i) in ganadoresDisplay" :key="g.id">
+            <tr class="hover:bg-white/5 transition">
+              <td class="py-3 text-gold font-bold" x-text="'#' + (i+1)"></td>
+              <td class="py-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold" x-text="g.nombre.split(' ').map(n=>n[0]).join('').slice(0,2)"></div>
+                  <div>
+                    <p class="font-medium" x-text="g.nombre"></p>
+                    <p class="text-xs text-white/40" x-text="g.telefono"></p>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3">
+                <span class="flex items-center gap-1">
+                  <span x-text="g.premioEmoji"></span>
+                  <span x-text="g.premio"></span>
+                </span>
+              </td>
+              <td class="py-3 text-white/50 text-xs" x-text="g.fecha"></td>
+              <td class="py-3">
+                <span :class="g.entregado ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'" class="px-2 py-0.5 rounded-full text-xs" x-text="g.entregado ? '✅ Entregado' : '⏳ Pendiente'"></span>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+function sorteoApp() {
+  return {
+    sorteando: false,
+    ganadorActual: null,
+    premioActual: { nombre:'Torta Familiar Entera', descripcion:'Torta de 2kg a elección', emoji:'🎂' },
+    participantes: [
+      {id:1, nombre:'Valentina Rojas', telefono:'+56 9 7831 2244', tickets:2, emoji:'V'},
+      {id:2, nombre:'Camilo Herrera', telefono:'+56 9 6512 9983', tickets:1, emoji:'C'},
+      {id:3, nombre:'Isabella Moreno', telefono:'+56 9 9210 5566', tickets:1, emoji:'I'},
+      {id:4, nombre:'Rodrigo Fuentes', telefono:'+56 9 8843 1120', tickets:3, emoji:'R'},
+      {id:5, nombre:'Sofía Castillo', telefono:'+56 9 7123 4456', tickets:1, emoji:'S'},
+    ],
+    ganadores: [
+      {id:1, nombre:'Andrea Vidal', telefono:'+56 9 6678 3312', premio:'Caja de Alfajores', premioEmoji:'🍫', fecha:'22 Jun 2025 – 15:30', entregado:true},
+      {id:2, nombre:'Tomás Bravo', telefono:'+56 9 5531 8874', premio:'Taza + Galletas', premioEmoji:'🫖', fecha:'20 Jun 2025 – 11:00', entregado:true},
+      {id:3, nombre:'Natalia Pinto', telefono:'+56 9 9901 2233', premio:'Torta Familiar', premioEmoji:'🎂', fecha:'15 Jun 2025 – 18:00', entregado:false},
+    ],
+    get ganadoresDisplay() { return this.ganadores; },
+    iniciarSorteo() {
+      if (this.participantes.length < 2) return;
+      this.ganadorActual = null;
+      this.sorteando = true;
+      let pool = [];
+      this.participantes.forEach(p => { for(let i=0; i<p.tickets; i++) pool.push(p); });
+      let count = 0;
+      const total = 25 + Math.floor(Math.random()*20);
+      const interval = setInterval(() => {
+        const idx = Math.floor(Math.random()*pool.length);
+        const drum = document.getElementById('drum');
+        count++;
+        if (count >= total) {
+          clearInterval(interval);
+          this.sorteando = false;
+          this.ganadorActual = pool[idx];
+          this.lanzarEstrellas();
+          Swal.fire({
+            title:'🎉 ¡Tenemos Ganador!',
+            html:`<p class="text-2xl font-bold">${this.ganadorActual.nombre}</p><p class="text-gray-500">Ha ganado: ${this.premioActual.emoji} ${this.premioActual.nombre}</p>`,
+            icon:'success', confirmButtonColor:'#C8872A', confirmButtonText:'¡Increíble!', timer:5000, timerProgressBar:true
+          });
+        }
+      }, 120);
+    },
+    lanzarEstrellas() {
+      const c = document.getElementById('stars-container');
+      for(let i=0;i<12;i++) {
+        setTimeout(()=>{
+          const s = document.createElement('div');
+          s.className='star float-up';
+          s.textContent='⭐';
+          s.style.left = (Math.random()*100)+'%';
+          s.style.top = (30+Math.random()*40)+'%';
+          s.style.fontSize = (12+Math.random()*16)+'px';
+          c.appendChild(s);
+          setTimeout(()=>s.remove(),1500);
+        }, i*120);
+      }
+    },
+    confirmarEntrega() {
+      const g = this.ganadorActual;
+      Swal.fire({title:'Confirmar Entrega', html:`<p>¿Entregar <strong>${this.premioActual.emoji} ${this.premioActual.nombre}</strong> a <strong>${g.nombre}</strong>?</p>`, showCancelButton:true, confirmButtonColor:'#C8872A', confirmButtonText:'✅ Confirmar Entrega'})
+      .then(r => {
+        if(r.isConfirmed) {
+          const now = new Date();
+          const fecha = `${now.getDate()} Jun 2025 – ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+          this.ganadores.unshift({ id:Date.now(), nombre:g.nombre, telefono:g.telefono, premio:this.premioActual.nombre, premioEmoji:this.premioActual.emoji, fecha, entregado:true });
+          this.ganadorActual = null;
+          Toastify({text:'🏆 Premio entregado a ' + g.nombre, duration:3500, style:{background:'#C8872A'}}).showToast();
+        }
+      });
+    },
+    reiniciar() {
+      this.ganadorActual = null;
+    },
+    cambiarPremio() {
+      const premios = [
+        {nombre:'Torta Familiar Entera', descripcion:'Torta de 2kg', emoji:'🎂'},
+        {nombre:'Caja de Alfajores', descripcion:'x12 alfajores premium', emoji:'🍫'},
+        {nombre:'Taza + Galletas', descripcion:'Set personalizado', emoji:'🫖'},
+        {nombre:'Descuento 50%', descripcion:'En próxima compra', emoji:'🏷️'},
+        {nombre:'Torta de Cumpleaños', descripcion:'Diseño personalizado', emoji:'🎉'},
+      ];
+      Swal.fire({
+        title:'Seleccionar Premio',
+        html:'<select id="sp" class="swal2-input">' + premios.map((p,i)=>`<option value="${i}">${p.emoji} ${p.nombre}</option>`).join('') + '</select>',
+        showCancelButton:true, confirmButtonColor:'#7C3AED', confirmButtonText:'Seleccionar'
+      }).then(r => { if(r.isConfirmed) { this.premioActual = premios[+document.getElementById('sp').value]; Toastify({text:'🎁 Premio actualizado: ' + this.premioActual.nombre, duration:2500, style:{background:'#7C3AED'}}).showToast(); }});
+    },
+    agregarParticipante() {
+      Swal.fire({
+        title:'Agregar Participante',
+        html:'<select id="ap" class="swal2-input"><option>Valentina Rojas</option><option>Andrea Vidal</option><option>Felipe Morales</option><option>Carla Soto</option></select><input id="at" type="number" min="1" max="5" value="1" class="swal2-input" placeholder="Nº de tickets">',
+        showCancelButton:true, confirmButtonColor:'#7C3AED', confirmButtonText:'Agregar'
+      }).then(r => {
+        if(r.isConfirmed) {
+          const nombre = document.getElementById('ap').value;
+          const tickets = +document.getElementById('at').value || 1;
+          this.participantes.push({id:Date.now(), nombre, telefono:'+56 9 0000 0000', tickets, emoji:nombre[0]});
+          Toastify({text:'✅ ' + nombre + ' agregado con ' + tickets + ' ticket(s)', duration:2500, style:{background:'#7C3AED'}}).showToast();
+        }
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>

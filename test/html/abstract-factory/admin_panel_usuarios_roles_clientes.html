@@ -1,0 +1,491 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body,html{font-family:'Inter',sans-serif}
+  :root{
+    --indigo:#6366f1;--indigo-l:#eef2ff;--indigo-d:#4338ca;
+    --rose:#f43f5e;--rose-l:#fff1f2;--rose-d:#be123c;
+    --emerald:#10b981;--emerald-l:#ecfdf5;--emerald-d:#065f46;
+    --amber:#f59e0b;--amber-l:#fffbeb;
+    --violet:#8b5cf6;--violet-l:#f5f3ff;
+    --slate:#64748b;--slate-l:#f8fafc;--slate-100:#f1f5f9;--slate-200:#e2e8f0;--slate-300:#cbd5e1;--slate-700:#334155;
+  }
+  .app{display:flex;height:100vh;min-height:600px;background:#f1f5f9}
+  .sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;padding:0}
+  .sb-logo{padding:20px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f1f5f9}
+  .sb-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .sb-logo-icon i{color:#fff;font-size:16px}
+  .sb-logo-text{font-size:14px;font-weight:600;color:#1e293b;letter-spacing:-.3px}
+  .sb-logo-sub{font-size:10px;color:#94a3b8;font-weight:400}
+  .sb-section{padding:16px 12px 4px;font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase}
+  .sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 8px;border-radius:9px;cursor:pointer;font-size:13px;color:#64748b;font-weight:400;transition:all .15s;position:relative}
+  .sb-item:hover{background:#f1f5f9;color:#334155}
+  .sb-item.active{background:#eef2ff;color:#4338ca;font-weight:500}
+  .sb-item.active i{color:#6366f1}
+  .sb-item i{font-size:16px;width:18px;text-align:center}
+  .sb-badge{margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+  .badge-ind{background:#eef2ff;color:#4338ca}
+  .badge-rose{background:#fff1f2;color:#be123c}
+  .badge-em{background:#ecfdf5;color:#065f46}
+  .sb-footer{margin-top:auto;padding:12px;border-top:1px solid #f1f5f9}
+  .sb-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;background:#f8fafc}
+  .sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0}
+  .sb-uname{font-size:12px;font-weight:500;color:#334155}
+  .sb-urole{font-size:10px;color:#94a3b8}
+  .content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  .topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 28px;height:56px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+  .topbar-title{font-size:16px;font-weight:600;color:#1e293b;margin-right:auto}
+  .topbar-search{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:7px 12px;min-width:220px}
+  .topbar-search i{color:#94a3b8;font-size:15px}
+  .topbar-search input{border:none;background:none;outline:none;font-size:13px;color:#334155;width:100%;font-family:'Inter',sans-serif}
+  .topbar-search input::placeholder{color:#94a3b8}
+  .topbar-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;transition:all .15s}
+  .btn-primary{background:#6366f1;color:#fff}
+  .btn-primary:hover{background:#4f46e5}
+  .btn-ghost{background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
+  .btn-ghost:hover{background:#f1f5f9}
+  .page{display:none;flex:1;overflow-y:auto;padding:28px}
+  .page.active{display:block}
+  .filters-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+  .filter-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;transition:all .15s;font-family:'Inter',sans-serif}
+  .filter-chip:hover{border-color:#6366f1;color:#6366f1}
+  .filter-chip.selected{background:#eef2ff;border-color:#6366f1;color:#4338ca}
+  .filter-chip i{font-size:13px}
+  .filter-select{padding:7px 14px;border-radius:9px;border:1.5px solid #e2e8f0;font-size:12px;color:#64748b;background:#fff;cursor:pointer;outline:none;font-family:'Inter',sans-serif}
+  .filter-select:focus{border-color:#6366f1}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+  .stat-card{background:#fff;border-radius:14px;padding:18px 20px;border:1px solid #e2e8f0;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 14px 0 80px;opacity:.06}
+  .stat-c1::before{background:#6366f1}
+  .stat-c2::before{background:#f43f5e}
+  .stat-c3::before{background:#10b981}
+  .stat-c4::before{background:#f59e0b}
+  .stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+  .ic-ind{background:#eef2ff}.ic-ind i{color:#6366f1}
+  .ic-rose{background:#fff1f2}.ic-rose i{color:#f43f5e}
+  .ic-em{background:#ecfdf5}.ic-em i{color:#10b981}
+  .ic-amb{background:#fffbeb}.ic-amb i{color:#f59e0b}
+  .stat-icon i{font-size:18px}
+  .stat-val{font-size:24px;font-weight:600;color:#1e293b;margin-bottom:2px}
+  .stat-lbl{font-size:12px;color:#94a3b8;font-weight:400}
+  .stat-trend{font-size:11px;font-weight:500;margin-top:6px}
+  .trend-up{color:#10b981}.trend-dn{color:#f43f5e}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .section-title{font-size:14px;font-weight:600;color:#1e293b}
+  .section-sub{font-size:12px;color:#94a3b8;margin-top:1px}
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .user-card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;transition:all .2s;cursor:pointer;position:relative}
+  .user-card:hover{border-color:#c7d2fe;box-shadow:0 4px 20px rgba(99,102,241,.08);transform:translateY(-1px)}
+  .uc-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+  .uc-avatar{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+  .av-a{background:#eef2ff;color:#4338ca}
+  .av-b{background:#fff1f2;color:#be123c}
+  .av-c{background:#ecfdf5;color:#065f46}
+  .av-d{background:#f5f3ff;color:#6d28d9}
+  .av-e{background:#fffbeb;color:#92400e}
+  .uc-name{font-size:14px;font-weight:600;color:#1e293b}
+  .uc-email{font-size:12px;color:#94a3b8;margin-top:2px}
+  .uc-badge{position:absolute;top:16px;right:16px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .status-active{background:#ecfdf5;color:#065f46}
+  .status-inactive{background:#f1f5f9;color:#64748b}
+  .status-pending{background:#fffbeb;color:#92400e}
+  .uc-divider{height:1px;background:#f1f5f9;margin-bottom:14px}
+  .uc-meta{display:flex;flex-direction:column;gap:6px}
+  .uc-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b}
+  .uc-row i{font-size:13px;color:#94a3b8;width:14px}
+  .uc-actions{display:flex;gap:8px;margin-top:16px}
+  .uc-btn{flex:1;padding:7px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:500;color:#64748b;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .uc-btn:hover{border-color:#6366f1;color:#6366f1;background:#eef2ff}
+  .uc-btn.danger:hover{border-color:#f43f5e;color:#f43f5e;background:#fff1f2}
+  .role-card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;transition:all .2s;cursor:pointer}
+  .role-card:hover{border-color:#c7d2fe;box-shadow:0 4px 20px rgba(99,102,241,.08);transform:translateY(-1px)}
+  .rc-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .rc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .rc-icon i{font-size:20px}
+  .rc-name{font-size:14px;font-weight:600;color:#1e293b}
+  .rc-count{font-size:12px;color:#94a3b8;margin-top:2px}
+  .rc-perms{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .perm-tag{font-size:10px;font-weight:500;padding:3px 9px;border-radius:6px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
+  .perm-tag.green{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+  .perm-tag.red{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+  .perm-tag.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+  .rc-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;padding-top:14px}
+  .rc-level{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .lv-high{background:#fff1f2;color:#be123c}
+  .lv-mid{background:#fffbeb;color:#92400e}
+  .lv-low{background:#ecfdf5;color:#065f46}
+  .client-card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+  .client-card:hover{border-color:#c7d2fe;box-shadow:0 4px 20px rgba(99,102,241,.08);transform:translateY(-1px)}
+  .client-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+  .cc-gold::after{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+  .cc-silver::after{background:linear-gradient(90deg,#94a3b8,#cbd5e1)}
+  .cc-bronze::after{background:linear-gradient(90deg,#c2410c,#ea580c)}
+  .cc-basic::after{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+  .cc-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .cc-logo{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+  .cc-name{font-size:14px;font-weight:600;color:#1e293b}
+  .cc-industry{font-size:12px;color:#94a3b8;margin-top:2px}
+  .cc-tier{position:absolute;top:16px;right:16px}
+  .tier-gold{background:#fffbeb;color:#92400e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .tier-silver{background:#f1f5f9;color:#475569;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .tier-bronze{background:#fff7ed;color:#c2410c;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .tier-basic{background:#eef2ff;color:#4338ca;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .cc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .cc-stat{background:#f8fafc;border-radius:8px;padding:10px 12px}
+  .cc-stat-val{font-size:15px;font-weight:600;color:#1e293b}
+  .cc-stat-lbl{font-size:10px;color:#94a3b8;margin-top:1px}
+  .cc-contact{display:flex;align-items:center;gap:7px;font-size:12px;color:#64748b;margin-bottom:6px}
+  .cc-contact i{font-size:13px;color:#94a3b8}
+  .pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:28px}
+  .pg-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;transition:all .15s}
+  .pg-btn:hover{border-color:#6366f1;color:#6366f1}
+  .pg-btn.active{background:#6366f1;border-color:#6366f1;color:#fff}
+  .empty{text-align:center;padding:60px 20px;color:#94a3b8}
+  .empty i{font-size:40px;margin-bottom:12px;display:block}
+  .empty p{font-size:14px}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon"><i class="ti ti-layout-dashboard"></i></div>
+      <div>
+        <div class="sb-logo-text">AdminPanel</div>
+        <div class="sb-logo-sub">v2.4 · workspace</div>
+      </div>
+    </div>
+    <div class="sb-section">Principal</div>
+    <div class="sb-item" onclick="showPage('usuarios')">
+      <i class="ti ti-users"></i> Usuarios <span class="sb-badge badge-ind">247</span>
+    </div>
+    <div class="sb-item" onclick="showPage('roles')">
+      <i class="ti ti-shield-check"></i> Roles <span class="sb-badge badge-rose">8</span>
+    </div>
+    <div class="sb-item" onclick="showPage('clientes')">
+      <i class="ti ti-building-store"></i> Clientes <span class="sb-badge badge-em">94</span>
+    </div>
+    <div class="sb-section">Configuración</div>
+    <div class="sb-item"><i class="ti ti-settings"></i> Ajustes</div>
+    <div class="sb-item"><i class="ti ti-bell"></i> Notificaciones</div>
+    <div class="sb-item"><i class="ti ti-help-circle"></i> Soporte</div>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar">AV</div>
+        <div>
+          <div class="sb-uname">Admin Vera</div>
+          <div class="sb-urole">Super admin</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="content">
+    <!-- TOPBAR -->
+    <div class="topbar" id="topbar">
+      <div class="topbar-title" id="page-title">Usuarios</div>
+      <div class="topbar-search">
+        <i class="ti ti-search"></i>
+        <input type="text" id="search-input" placeholder="Buscar..." oninput="handleSearch(this.value)">
+      </div>
+      <button class="topbar-btn btn-ghost"><i class="ti ti-filter"></i> Filtros</button>
+      <button class="topbar-btn btn-primary" id="add-btn"><i class="ti ti-plus"></i> <span id="add-label">Agregar</span></button>
+    </div>
+
+    <!-- ====== PÁGINA USUARIOS ====== -->
+    <div class="page active" id="page-usuarios">
+      <div class="stats-row">
+        <div class="stat-card stat-c1">
+          <div class="stat-icon ic-ind"><i class="ti ti-users"></i></div>
+          <div class="stat-val">247</div>
+          <div class="stat-lbl">Total usuarios</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +12 este mes</div>
+        </div>
+        <div class="stat-card stat-c2">
+          <div class="stat-icon ic-rose"><i class="ti ti-user-check"></i></div>
+          <div class="stat-val">198</div>
+          <div class="stat-lbl">Activos</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +5 esta semana</div>
+        </div>
+        <div class="stat-card stat-c3">
+          <div class="stat-icon ic-em"><i class="ti ti-user-off"></i></div>
+          <div class="stat-val">31</div>
+          <div class="stat-lbl">Inactivos</div>
+          <div class="stat-trend trend-dn"><i class="ti ti-trending-down"></i> -3 este mes</div>
+        </div>
+        <div class="stat-card stat-c4">
+          <div class="stat-icon ic-amb"><i class="ti ti-clock"></i></div>
+          <div class="stat-val">18</div>
+          <div class="stat-lbl">Pendientes</div>
+          <div class="stat-trend" style="color:#94a3b8">Sin cambios</div>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-chip selected" onclick="filterU(this,'all')"><i class="ti ti-layout-grid"></i> Todos</div>
+        <div class="filter-chip" onclick="filterU(this,'activo')"><i class="ti ti-check"></i> Activos</div>
+        <div class="filter-chip" onclick="filterU(this,'inactivo')"><i class="ti ti-x"></i> Inactivos</div>
+        <div class="filter-chip" onclick="filterU(this,'pendiente')"><i class="ti ti-clock"></i> Pendientes</div>
+        <select class="filter-select" onchange="filterURole(this.value)">
+          <option value="">Todos los roles</option>
+          <option>Administrador</option>
+          <option>Editor</option>
+          <option>Viewer</option>
+          <option>Soporte</option>
+        </select>
+        <select class="filter-select">
+          <option>Más recientes</option>
+          <option>Más antiguos</option>
+          <option>A-Z</option>
+        </select>
+      </div>
+      <div class="section-header">
+        <div><div class="section-title">Directorio de usuarios</div><div class="section-sub">Mostrando 247 resultados</div></div>
+      </div>
+      <div class="cards-grid" id="users-grid"></div>
+      <div class="pagination">
+        <button class="pg-btn"><i class="ti ti-chevron-left"></i></button>
+        <button class="pg-btn active">1</button>
+        <button class="pg-btn">2</button>
+        <button class="pg-btn">3</button>
+        <button class="pg-btn">…</button>
+        <button class="pg-btn">21</button>
+        <button class="pg-btn"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- ====== PÁGINA ROLES ====== -->
+    <div class="page" id="page-roles">
+      <div class="stats-row">
+        <div class="stat-card stat-c1">
+          <div class="stat-icon ic-ind"><i class="ti ti-shield"></i></div>
+          <div class="stat-val">8</div>
+          <div class="stat-lbl">Roles activos</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +1 este mes</div>
+        </div>
+        <div class="stat-card stat-c2">
+          <div class="stat-icon ic-rose"><i class="ti ti-key"></i></div>
+          <div class="stat-val">64</div>
+          <div class="stat-lbl">Permisos totales</div>
+          <div class="stat-trend" style="color:#94a3b8">Estable</div>
+        </div>
+        <div class="stat-card stat-c3">
+          <div class="stat-icon ic-em"><i class="ti ti-user-shield"></i></div>
+          <div class="stat-val">3</div>
+          <div class="stat-lbl">Roles admin</div>
+          <div class="stat-trend" style="color:#94a3b8">Sin cambios</div>
+        </div>
+        <div class="stat-card stat-c4">
+          <div class="stat-icon ic-amb"><i class="ti ti-eye"></i></div>
+          <div class="stat-val">5</div>
+          <div class="stat-lbl">Roles lectura</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +1 nuevo</div>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-chip selected" onclick="filterChip(this)"><i class="ti ti-layout-grid"></i> Todos</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-shield-lock"></i> Alto nivel</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-shield-half"></i> Medio</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-shield-check"></i> Básico</div>
+      </div>
+      <div class="section-header">
+        <div><div class="section-title">Roles del sistema</div><div class="section-sub">Gestión de permisos y accesos</div></div>
+      </div>
+      <div class="cards-grid" id="roles-grid"></div>
+    </div>
+
+    <!-- ====== PÁGINA CLIENTES ====== -->
+    <div class="page" id="page-clientes">
+      <div class="stats-row">
+        <div class="stat-card stat-c1">
+          <div class="stat-icon ic-ind"><i class="ti ti-building-store"></i></div>
+          <div class="stat-val">94</div>
+          <div class="stat-lbl">Total clientes</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +7 este mes</div>
+        </div>
+        <div class="stat-card stat-c2">
+          <div class="stat-icon ic-rose"><i class="ti ti-star"></i></div>
+          <div class="stat-val">$128k</div>
+          <div class="stat-lbl">MRR total</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +18% vs anterior</div>
+        </div>
+        <div class="stat-card stat-c3">
+          <div class="stat-icon ic-em"><i class="ti ti-crown"></i></div>
+          <div class="stat-val">12</div>
+          <div class="stat-lbl">Tier Gold</div>
+          <div class="stat-trend trend-up"><i class="ti ti-trending-up"></i> +2 nuevos</div>
+        </div>
+        <div class="stat-card stat-c4">
+          <div class="stat-icon ic-amb"><i class="ti ti-clock"></i></div>
+          <div class="stat-val">6</div>
+          <div class="stat-lbl">Por renovar</div>
+          <div class="stat-trend trend-dn"><i class="ti ti-alert-circle"></i> Atención requerida</div>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-chip selected" onclick="filterChip(this)"><i class="ti ti-layout-grid"></i> Todos</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-crown"></i> Gold</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-medal"></i> Silver</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-award"></i> Bronze</div>
+        <div class="filter-chip" onclick="filterChip(this)"><i class="ti ti-package"></i> Basic</div>
+        <select class="filter-select">
+          <option value="">Industria</option>
+          <option>Tecnología</option>
+          <option>Finanzas</option>
+          <option>Salud</option>
+          <option>Retail</option>
+        </select>
+      </div>
+      <div class="section-header">
+        <div><div class="section-title">Cartera de clientes</div><div class="section-sub">Mostrando 94 clientes activos</div></div>
+      </div>
+      <div class="cards-grid" id="clients-grid"></div>
+      <div class="pagination">
+        <button class="pg-btn"><i class="ti ti-chevron-left"></i></button>
+        <button class="pg-btn active">1</button>
+        <button class="pg-btn">2</button>
+        <button class="pg-btn">3</button>
+        <button class="pg-btn">4</button>
+        <button class="pg-btn"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const users=[
+  {name:'Alejandro Vega',email:'a.vega@empresa.com',role:'Administrador',status:'activo',dept:'Ingeniería',joined:'12 ene 2024',av:'AV',avc:'av-a'},
+  {name:'Sofía Mendoza',email:'s.mendoza@empresa.com',role:'Editor',status:'activo',dept:'Marketing',joined:'3 mar 2024',av:'SM',avc:'av-b'},
+  {name:'Carlos Ruiz',email:'c.ruiz@empresa.com',role:'Viewer',status:'inactivo',dept:'Ventas',joined:'20 feb 2023',av:'CR',avc:'av-c'},
+  {name:'Valentina Torres',email:'v.torres@empresa.com',role:'Soporte',status:'activo',dept:'Soporte',joined:'8 jun 2024',av:'VT',avc:'av-d'},
+  {name:'Miguel Ángel Salas',email:'m.salas@empresa.com',role:'Editor',status:'pendiente',dept:'Producto',joined:'15 ago 2024',av:'MS',avc:'av-e'},
+  {name:'Lucía Fernández',email:'l.fernandez@empresa.com',role:'Administrador',status:'activo',dept:'Dirección',joined:'1 ene 2023',av:'LF',avc:'av-a'},
+  {name:'Rodrigo Castillo',email:'r.castillo@empresa.com',role:'Viewer',status:'activo',dept:'Legal',joined:'22 abr 2024',av:'RC',avc:'av-b'},
+  {name:'Isabella Mora',email:'i.mora@empresa.com',role:'Editor',status:'inactivo',dept:'Diseño',joined:'10 oct 2023',av:'IM',avc:'av-c'},
+];
+const roles=[
+  {name:'Super Admin',count:3,icon:'ti-crown',ic:'ic-rose',level:'high',perms:['Todos los permisos','Panel de control','Config. global','Usuarios','Roles','Clientes'],color:'rc-rose'},
+  {name:'Administrador',count:18,icon:'ti-shield-lock',ic:'ic-ind',level:'high',perms:['Usuarios','Roles','Clientes','Reportes','Config. básica'],color:'rc-ind'},
+  {name:'Editor',count:54,icon:'ti-edit',ic:'ic-amb',level:'mid',perms:['Clientes','Contenido','Reportes (lectura)'],color:'rc-amb'},
+  {name:'Soporte',count:31,icon:'ti-headset',ic:'ic-em',level:'mid',perms:['Clientes (lectura)','Tickets','Chat interno'],color:'rc-em'},
+  {name:'Viewer',count:89,icon:'ti-eye',ic:'ic-ind',level:'low',perms:['Dashboard (lectura)','Reportes básicos'],color:'rc-ind'},
+  {name:'Auditor',count:7,icon:'ti-file-analytics',ic:'ic-amb',level:'mid',perms:['Logs','Reportes full','Historial'],color:'rc-amb'},
+];
+const clients=[
+  {name:'Nextech Solutions',industry:'Tecnología',tier:'gold',contact:'Elena Rios',email:'e.rios@nextech.com',mrr:'$4,200',users:28,since:'2021',logo:'NS',lc:'av-a'},
+  {name:'Banco Continental',industry:'Finanzas',tier:'gold',contact:'José Paredes',email:'j.paredes@bancoc.com',mrr:'$8,900',users:65,since:'2020',logo:'BC',lc:'av-b'},
+  {name:'ClinicaVida',industry:'Salud',tier:'silver',contact:'Ana López',email:'a.lopez@cvida.com',mrr:'$2,100',users:14,since:'2022',logo:'CV',lc:'av-c'},
+  {name:'RetailMax',industry:'Retail',tier:'bronze',contact:'Pedro Núñez',email:'p.nunez@rmax.com',mrr:'$950',users:8,since:'2023',logo:'RM',lc:'av-d'},
+  {name:'AgroTech Perú',industry:'Agroindustria',tier:'silver',contact:'María Guzmán',email:'m.guzman@atp.pe',mrr:'$1,800',users:11,since:'2022',logo:'AP',lc:'av-e'},
+  {name:'LogiCar',industry:'Logística',tier:'basic',contact:'Roberto Díaz',email:'r.diaz@logicar.com',mrr:'$450',users:4,since:'2024',logo:'LC',lc:'av-a'},
+  {name:'EdusArt',industry:'Educación',tier:'bronze',contact:'Carmen Vidal',email:'c.vidal@edusart.com',mrr:'$700',users:6,since:'2023',logo:'EA',lc:'av-b'},
+  {name:'CloudMesh',industry:'Tecnología',tier:'gold',contact:'Andrés Flores',email:'a.flores@cloudmesh.io',mrr:'$6,400',users:42,since:'2020',logo:'CM',lc:'av-c'},
+];
+
+function statusClass(s){return s==='activo'?'status-active':s==='inactivo'?'status-inactive':'status-pending'}
+function levelClass(l){return l==='high'?'lv-high':l==='mid'?'lv-mid':'lv-low'}
+function levelLabel(l){return l==='high'?'Alto nivel':l==='mid'?'Nivel medio':'Básico'}
+function tierClass(t){return 'tier-'+t}
+function tierLabel(t){return t==='gold'?'⭐ Gold':t==='silver'?'◆ Silver':t==='bronze'?'▲ Bronze':'● Basic'}
+function ccClass(t){return 'cc-'+t}
+
+function renderUsers(arr){
+  document.getElementById('users-grid').innerHTML=arr.map(u=>`
+    <div class="user-card">
+      <div class="uc-header">
+        <div class="uc-avatar ${u.avc}">${u.av}</div>
+        <div><div class="uc-name">${u.name}</div><div class="uc-email">${u.email}</div></div>
+      </div>
+      <span class="uc-badge ${statusClass(u.status)}">${u.status.charAt(0).toUpperCase()+u.status.slice(1)}</span>
+      <div class="uc-divider"></div>
+      <div class="uc-meta">
+        <div class="uc-row"><i class="ti ti-shield-half"></i>${u.role}</div>
+        <div class="uc-row"><i class="ti ti-building"></i>${u.dept}</div>
+        <div class="uc-row"><i class="ti ti-calendar"></i>Desde ${u.joined}</div>
+      </div>
+      <div class="uc-actions">
+        <button class="uc-btn"><i class="ti ti-edit" style="font-size:13px"></i> Editar</button>
+        <button class="uc-btn"><i class="ti ti-mail" style="font-size:13px"></i> Mensaje</button>
+        <button class="uc-btn danger"><i class="ti ti-trash" style="font-size:13px"></i></button>
+      </div>
+    </div>`).join('')
+}
+
+function renderRoles(arr){
+  document.getElementById('roles-grid').innerHTML=arr.map(r=>`
+    <div class="role-card">
+      <div class="rc-top">
+        <div class="rc-icon ${r.ic}"><i class="ti ${r.icon}" style="color:inherit"></i></div>
+        <div><div class="rc-name">${r.name}</div><div class="rc-count">${r.count} usuarios asignados</div></div>
+      </div>
+      <div class="rc-perms">${r.perms.map((p,i)=>`<span class="perm-tag ${i===0?'green':i===1?'blue':''}">${p}</span>`).join('')}</div>
+      <div class="rc-footer">
+        <span class="rc-level ${levelClass(r.level)}">${levelLabel(r.level)}</span>
+        <div style="display:flex;gap:8px">
+          <button class="uc-btn" style="flex:none;padding:6px 12px;font-size:11px"><i class="ti ti-edit" style="font-size:12px"></i> Editar</button>
+          <button class="uc-btn" style="flex:none;padding:6px 12px;font-size:11px"><i class="ti ti-users" style="font-size:12px"></i> Ver usuarios</button>
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+function renderClients(arr){
+  document.getElementById('clients-grid').innerHTML=arr.map(c=>`
+    <div class="client-card ${ccClass(c.tier)}">
+      <div class="cc-header">
+        <div class="cc-logo ${c.lc}">${c.logo}</div>
+        <div><div class="cc-name">${c.name}</div><div class="cc-industry">${c.industry}</div></div>
+      </div>
+      <span class="cc-tier"><span class="${tierClass(c.tier)}">${tierLabel(c.tier)}</span></span>
+      <div class="cc-stats">
+        <div class="cc-stat"><div class="cc-stat-val">${c.mrr}</div><div class="cc-stat-lbl">MRR</div></div>
+        <div class="cc-stat"><div class="cc-stat-val">${c.users}</div><div class="cc-stat-lbl">Usuarios</div></div>
+      </div>
+      <div class="cc-contact"><i class="ti ti-user"></i>${c.contact}</div>
+      <div class="cc-contact"><i class="ti ti-mail"></i>${c.email}</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="uc-btn"><i class="ti ti-eye" style="font-size:12px"></i> Ver detalle</button>
+        <button class="uc-btn"><i class="ti ti-edit" style="font-size:12px"></i> Editar</button>
+      </div>
+    </div>`).join('')
+}
+
+let currentFilter='all';
+function filterU(el,f){
+  document.querySelectorAll('#page-usuarios .filter-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentFilter=f;
+  const arr=f==='all'?users:users.filter(u=>u.status===f);
+  renderUsers(arr);
+}
+function filterURole(v){
+  const arr=v?users.filter(u=>u.role===v):users;
+  renderUsers(arr);
+}
+function filterChip(el){
+  el.closest('.filters-bar').querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function handleSearch(v){
+  const q=v.toLowerCase();
+  const p=document.querySelector('.page.active').id;
+  if(p==='page-usuarios') renderUsers(users.filter(u=>u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)));
+  if(p==='page-clientes') renderClients(clients.filter(c=>c.name.toLowerCase().includes(q)));
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const labels={usuarios:'Usuarios',roles:'Roles del sistema',clientes:'Clientes'};
+  const addLabels={usuarios:'Nuevo usuario',roles:'Nuevo rol',clientes:'Nuevo cliente'};
+  document.getElementById('page-title').textContent=labels[id];
+  document.getElementById('add-label').textContent=addLabels[id];
+  document.getElementById('search-input').value='';
+  event.currentTarget.classList.add('active');
+}
+
+renderUsers(users);
+renderRoles(roles);
+renderClients(clients);
+</script>

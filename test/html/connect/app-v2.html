@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conecta — Buscar empleo</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0B1120;
+    --ink-soft:#1C2433;
+    --mint:#16D9A3;
+    --mint-dim:#0F9A76;
+    --coral:#FF6B6B;
+    --bone:#F5F3EE;
+    --indigo:#7C7FF2;
+    --line:#ECE8DC;
+  }
+  *{ -webkit-font-smoothing:antialiased; }
+  body{ font-family:'Inter',sans-serif; background:var(--bone); }
+  .font-display{ font-family:'Fraunces',serif; }
+  .font-mono{ font-family:'JetBrains Mono',monospace; }
+  [x-cloak]{ display:none !important; }
+
+  ::-webkit-scrollbar{ width:7px; height:7px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#ddd8cc; border-radius:8px; }
+
+  .job-row{ transition: all .15s ease; border-left:3px solid transparent; cursor:pointer; }
+  .job-row:hover{ background:#FBFAF7; }
+  .job-row.active{ background:#FFFFFF; border-left-color:var(--mint); box-shadow:0 1px 2px rgba(11,17,32,.04); }
+
+  .chip{ transition:all .15s ease; }
+  .chip.active{ background:var(--ink); color:#fff; }
+
+  input:focus, select:focus{ outline:none; box-shadow:0 0 0 3px rgba(22,217,163,.18); border-color:var(--mint-dim); }
+
+  .acc-trigger{ cursor:pointer; user-select:none; }
+  .acc-body{ overflow:hidden; transition: max-height .25s ease; }
+
+  .detail-enter{ animation: detailIn .25s cubic-bezier(.2,.8,.2,1); }
+  @keyframes detailIn{ from{opacity:0; transform:translateX(8px);} to{opacity:1; transform:translateX(0);} }
+
+  .toast-enter{ animation: toastIn .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px) translateX(-50%);} to{opacity:1; transform:translateY(0) translateX(-50%);} }
+
+  .salary-tag{ background:linear-gradient(135deg, rgba(22,217,163,.12), rgba(22,217,163,.04)); }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+
+<body x-data="buscarEmpleo()" x-init="init()" class="text-[var(--ink)] h-screen overflow-hidden flex flex-col">
+
+  <!-- TOP BAR -->
+  <header class="h-16 shrink-0 bg-[var(--ink)] flex items-center gap-4 px-5 lg:px-7 z-30">
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-[var(--mint)] flex items-center justify-center">
+        <i data-lucide="zap" class="w-4 h-4 text-[var(--ink)]"></i>
+      </div>
+      <p class="font-display text-lg text-white tracking-tight hidden sm:block">Conecta</p>
+    </div>
+
+    <div class="flex-1 flex items-center gap-2 max-w-3xl">
+      <div class="relative flex-1">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input x-model="q" @input="applyFilters()" type="text" placeholder="Puesto, palabra clave o empresa" class="w-full bg-white/95 rounded-lg pl-10 pr-3 py-2.5 text-sm border border-transparent" />
+      </div>
+      <div class="relative flex-1 hidden md:block">
+        <i data-lucide="map-pin" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input x-model="qLocation" @input="applyFilters()" type="text" placeholder="Ciudad o región" class="w-full bg-white/95 rounded-lg pl-10 pr-3 py-2.5 text-sm border border-transparent" />
+      </div>
+      <button @click="applyFilters()" class="bg-[var(--mint)] text-[var(--ink)] font-semibold text-sm px-5 py-2.5 rounded-lg hover:brightness-95 transition shrink-0">Buscar</button>
+    </div>
+
+    <div class="ml-auto flex items-center gap-3 shrink-0">
+      <button class="relative w-9 h-9 rounded-lg hover:bg-white/10 flex items-center justify-center text-white">
+        <i data-lucide="bell" class="w-[18px] h-[18px]"></i>
+        <span class="absolute top-1.5 right-2 w-1.5 h-1.5 bg-[var(--coral)] rounded-full"></span>
+      </button>
+      <img src="https://i.pravatar.cc/100?img=47" class="w-9 h-9 rounded-lg object-cover ring-1 ring-white/20" />
+    </div>
+  </header>
+
+  <!-- RESULT META BAR -->
+  <div class="shrink-0 bg-white border-b border-[var(--line)] px-5 lg:px-7 py-3 flex items-center justify-between flex-wrap gap-2">
+    <div>
+      <p class="text-sm">
+        <span class="font-display text-lg" x-text="filtered.length"></span>
+        <span class="text-slate-500">vacantes encontradas</span>
+        <span class="text-slate-400" x-show="q || qLocation"> para "<span x-text="q || qLocation"></span>"</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-400 hidden sm:inline">Ordenar por</span>
+      <select x-model="sortBy" @change="applyFilters()" class="bg-[var(--bone)] rounded-lg px-3 py-2 text-xs font-semibold border border-transparent">
+        <option value="relevancia">Relevancia</option>
+        <option value="reciente">Más reciente</option>
+        <option value="salario">Mayor salario</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- ===== COLUMNA FILTROS ===== -->
+    <aside class="w-72 shrink-0 bg-white border-r border-[var(--line)] overflow-y-auto hidden lg:block">
+      <div class="p-5 space-y-6">
+
+        <div class="flex items-center justify-between">
+          <p class="font-display text-lg">Filtros</p>
+          <button @click="resetFilters()" class="text-xs font-semibold text-[var(--coral)] hover:underline">Limpiar todo</button>
+        </div>
+
+        <!-- Chips activos -->
+        <div x-show="activeChips.length" class="flex flex-wrap gap-1.5">
+          <template x-for="c in activeChips" :key="c.key+c.value">
+            <button @click="removeChip(c)" class="flex items-center gap-1.5 bg-[var(--ink)] text-white text-[11px] font-semibold pl-2.5 pr-1.5 py-1 rounded-full">
+              <span x-text="c.value"></span>
+              <i data-lucide="x" class="w-3 h-3"></i>
+            </button>
+          </template>
+        </div>
+
+        <!-- Modalidad -->
+        <div class="border-t border-[var(--line)] pt-5">
+          <p class="acc-trigger flex items-center justify-between text-sm font-semibold mb-3" @click="acc.modalidad=!acc.modalidad">
+            Modalidad
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition" :class="acc.modalidad ? 'rotate-180' : ''"></i>
+          </p>
+          <div class="acc-body space-y-2" :style="acc.modalidad ? 'max-height:300px' : 'max-height:0'">
+            <template x-for="m in ['Tiempo completo','Medio tiempo','Remoto','Freelance']" :key="m">
+              <label class="flex items-center gap-2.5 text-sm text-slate-600 cursor-pointer hover:text-[var(--ink)]">
+                <input type="checkbox" :value="m" @change="toggleFilter('modalidad', m)" :checked="filters.modalidad.includes(m)" class="w-4 h-4 rounded accent-[var(--mint-dim)]" />
+                <span x-text="m"></span>
+                <span class="ml-auto text-xs text-slate-400 font-mono" x-text="countFor('modalidad', m)"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+        <!-- Salario -->
+        <div class="border-t border-[var(--line)] pt-5">
+          <p class="acc-trigger flex items-center justify-between text-sm font-semibold mb-3" @click="acc.salario=!acc.salario">
+            Salario mínimo
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition" :class="acc.salario ? 'rotate-180' : ''"></i>
+          </p>
+          <div class="acc-body space-y-2" :style="acc.salario ? 'max-height:300px' : 'max-height:0'">
+            <template x-for="s in ['S/ 1,000+','S/ 2,000+','S/ 3,500+','S/ 5,000+']" :key="s">
+              <label class="flex items-center gap-2.5 text-sm text-slate-600 cursor-pointer hover:text-[var(--ink)]">
+                <input type="radio" name="salario" :value="s" @change="setSalario(s)" :checked="filters.salario===s" class="w-4 h-4 accent-[var(--mint-dim)]" />
+                <span x-text="s"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+        <!-- Experiencia -->
+        <div class="border-t border-[var(--line)] pt-5">
+          <p class="acc-trigger flex items-center justify-between text-sm font-semibold mb-3" @click="acc.experiencia=!acc.experiencia">
+            Experiencia
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition" :class="acc.experiencia ? 'rotate-180' : ''"></i>
+          </p>
+          <div class="acc-body space-y-2" :style="acc.experiencia ? 'max-height:300px' : 'max-height:0'">
+            <template x-for="e in ['Sin experiencia','1-2 años','3-5 años','5+ años']" :key="e">
+              <label class="flex items-center gap-2.5 text-sm text-slate-600 cursor-pointer hover:text-[var(--ink)]">
+                <input type="checkbox" :value="e" @change="toggleFilter('experiencia', e)" :checked="filters.experiencia.includes(e)" class="w-4 h-4 rounded accent-[var(--mint-dim)]" />
+                <span x-text="e"></span>
+                <span class="ml-auto text-xs text-slate-400 font-mono" x-text="countFor('experiencia', e)"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+        <!-- Categoría -->
+        <div class="border-t border-[var(--line)] pt-5">
+          <p class="acc-trigger flex items-center justify-between text-sm font-semibold mb-3" @click="acc.categoria=!acc.categoria">
+            Categoría
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition" :class="acc.categoria ? 'rotate-180' : ''"></i>
+          </p>
+          <div class="acc-body space-y-2" :style="acc.categoria ? 'max-height:300px' : 'max-height:0'">
+            <template x-for="c in ['Tecnología','Diseño','Marketing','Administración','Ventas']" :key="c">
+              <label class="flex items-center gap-2.5 text-sm text-slate-600 cursor-pointer hover:text-[var(--ink)]">
+                <input type="checkbox" :value="c" @change="toggleFilter('categoria', c)" :checked="filters.categoria.includes(c)" class="w-4 h-4 rounded accent-[var(--mint-dim)]" />
+                <span x-text="c"></span>
+                <span class="ml-auto text-xs text-slate-400 font-mono" x-text="countFor('categoria', c)"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+        <!-- Publicación -->
+        <div class="border-t border-[var(--line)] pt-5">
+          <p class="acc-trigger flex items-center justify-between text-sm font-semibold mb-3" @click="acc.fecha=!acc.fecha">
+            Fecha de publicación
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition" :class="acc.fecha ? 'rotate-180' : ''"></i>
+          </p>
+          <div class="acc-body space-y-2" :style="acc.fecha ? 'max-height:300px' : 'max-height:0'">
+            <template x-for="f in ['Últimas 24h','Últimos 7 días','Últimos 30 días']" :key="f">
+              <label class="flex items-center gap-2.5 text-sm text-slate-600 cursor-pointer hover:text-[var(--ink)]">
+                <input type="radio" name="fecha" :value="f" @change="filters.fecha=f; applyFilters()" :checked="filters.fecha===f" class="w-4 h-4 accent-[var(--mint-dim)]" />
+                <span x-text="f"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ===== COLUMNA LISTA ===== -->
+    <section class="w-full lg:w-[420px] shrink-0 border-r border-[var(--line)] overflow-y-auto bg-[var(--bone)]/40">
+      <template x-if="filtered.length===0">
+        <div class="flex flex-col items-center justify-center text-center py-20 px-6">
+          <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mb-3"></i>
+          <p class="font-display text-lg mb-1">Sin resultados</p>
+          <p class="text-sm text-slate-400 mb-4">Ajusta tus filtros o intenta con otra palabra clave.</p>
+          <button @click="resetFilters()" class="text-sm font-semibold text-[var(--mint-dim)] hover:underline">Limpiar filtros</button>
+        </div>
+      </template>
+
+      <template x-for="job in filtered" :key="job.id">
+        <article @click="selectJob(job)" class="job-row px-5 py-4 border-b border-[var(--line)]" :class="selected?.id===job.id ? 'active' : ''">
+          <div class="flex items-start gap-3">
+            <div class="w-11 h-11 rounded-lg flex items-center justify-center text-white font-display text-lg shrink-0" :style="`background:${job.color}`" x-text="job.company[0]"></div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <p class="font-semibold text-sm leading-snug" x-text="job.title"></p>
+                <button @click.stop="toggleSave(job)" class="shrink-0 text-slate-300 hover:text-[var(--indigo)] transition" :class="job.saved ? 'text-[var(--indigo)]' : ''">
+                  <i data-lucide="bookmark" class="w-4 h-4" :class="job.saved ? 'fill-[var(--indigo)]' : ''"></i>
+                </button>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5" x-text="job.company + ' · ' + job.location"></p>
+              <p class="salary-tag inline-block text-xs font-semibold text-[var(--mint-dim)] px-2 py-1 rounded-md mt-2" x-text="job.salario"></p>
+              <div class="flex items-center gap-2 mt-2.5 flex-wrap">
+                <span class="text-[10px] font-mono bg-white text-slate-500 px-2 py-0.5 rounded-full border border-[var(--line)]" x-text="job.modalidad"></span>
+                <span class="text-[10px] text-slate-400" x-text="job.time"></span>
+                <span x-show="job.postuladoFacil" class="text-[10px] font-semibold text-[var(--mint-dim)] flex items-center gap-1">
+                  <i data-lucide="zap" class="w-3 h-3"></i> Postula fácil
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </template>
+    </section>
+
+    <!-- ===== COLUMNA DETALLE ===== -->
+    <section class="flex-1 overflow-y-auto hidden lg:block bg-white">
+      <template x-if="!selected">
+        <div class="h-full flex flex-col items-center justify-center text-center px-6">
+          <i data-lucide="briefcase" class="w-10 h-10 text-slate-200 mb-3"></i>
+          <p class="text-sm text-slate-400">Selecciona una vacante para ver el detalle</p>
+        </div>
+      </template>
+
+      <template x-if="selected">
+        <div class="detail-enter max-w-2xl mx-auto px-8 py-8" :key="selected.id">
+
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-display text-2xl shrink-0" :style="`background:${selected.color}`" x-text="selected.company[0]"></div>
+            <div class="flex-1">
+              <p class="font-display text-2xl leading-tight" x-text="selected.title"></p>
+              <p class="text-sm text-slate-500 mt-1" x-text="selected.company + ' · ' + selected.location"></p>
+              <div class="flex items-center gap-2 mt-3 flex-wrap">
+                <span class="text-xs font-mono bg-[var(--bone)] px-2.5 py-1 rounded-full border border-[var(--line)]" x-text="selected.modalidad"></span>
+                <span class="text-xs font-mono bg-[var(--bone)] px-2.5 py-1 rounded-full border border-[var(--line)]" x-text="selected.experiencia"></span>
+                <span class="text-xs text-slate-400" x-text="'Publicado ' + selected.time"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-3 mb-6">
+            <div class="salary-tag rounded-xl p-3.5">
+              <p class="text-[10px] font-mono uppercase text-slate-500 mb-1">Salario</p>
+              <p class="font-display text-lg text-[var(--mint-dim)]" x-text="selected.salario"></p>
+            </div>
+            <div class="bg-[var(--bone)] rounded-xl p-3.5">
+              <p class="text-[10px] font-mono uppercase text-slate-500 mb-1">Postulantes</p>
+              <p class="font-display text-lg" x-text="selected.postulantes"></p>
+            </div>
+            <div class="bg-[var(--bone)] rounded-xl p-3.5">
+              <p class="text-[10px] font-mono uppercase text-slate-500 mb-1">Vacantes</p>
+              <p class="font-display text-lg" x-text="selected.vacantesDisp"></p>
+            </div>
+          </div>
+
+          <div class="flex gap-3 mb-8">
+            <button @click="postular(selected)" :disabled="selected.postulado" class="flex-1 flex items-center justify-center gap-2 font-semibold py-3 rounded-xl transition" :class="selected.postulado ? 'bg-[var(--mint)]/15 text-[var(--mint-dim)] cursor-default' : 'bg-[var(--ink)] text-white hover:bg-[var(--ink-soft)]'">
+              <i :data-lucide="selected.postulado ? 'check' : 'send'" class="w-4 h-4"></i>
+              <span x-text="selected.postulado ? 'Ya postulaste' : 'Postularme ahora'"></span>
+            </button>
+            <button @click="toggleSave(selected)" class="w-12 h-12 rounded-xl border border-[var(--line)] flex items-center justify-center hover:bg-[var(--bone)] transition shrink-0" :class="selected.saved ? 'text-[var(--indigo)] border-[var(--indigo)]' : 'text-slate-400'">
+              <i data-lucide="bookmark" class="w-4 h-4" :class="selected.saved ? 'fill-[var(--indigo)]' : ''"></i>
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            <div>
+              <p class="font-display text-lg mb-2">Descripción del puesto</p>
+              <p class="text-sm text-slate-600 leading-relaxed" x-text="selected.descLarga"></p>
+            </div>
+
+            <div>
+              <p class="font-display text-lg mb-3">Requisitos</p>
+              <ul class="space-y-2">
+                <template x-for="r in selected.requisitos" :key="r">
+                  <li class="flex items-start gap-2.5 text-sm text-slate-600">
+                    <i data-lucide="check" class="w-4 h-4 text-[var(--mint-dim)] mt-0.5 shrink-0"></i>
+                    <span x-text="r"></span>
+                  </li>
+                </template>
+              </ul>
+            </div>
+
+            <div>
+              <p class="font-display text-lg mb-3">Habilidades clave</p>
+              <div class="flex flex-wrap gap-1.5">
+                <template x-for="tag in selected.skills" :key="tag">
+                  <span class="text-xs font-medium bg-[var(--bone)] text-slate-600 px-2.5 py-1.5 rounded-full" x-text="tag"></span>
+                </template>
+              </div>
+            </div>
+
+            <div class="border-t border-[var(--line)] pt-6">
+              <p class="text-xs font-mono uppercase text-slate-400 mb-3">Sobre la empresa</p>
+              <p class="text-sm text-slate-600 leading-relaxed" x-text="selected.sobreEmpresa"></p>
+            </div>
+          </div>
+        </div>
+      </template>
+    </section>
+  </div>
+
+  <!-- TOAST -->
+  <div x-show="toastMsg" x-cloak class="fixed bottom-6 left-1/2 z-[60] toast-enter">
+    <div class="bg-[var(--ink)] text-white text-sm font-medium px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5">
+      <i data-lucide="check-circle" class="w-4 h-4 text-[var(--mint)]"></i>
+      <span x-text="toastMsg"></span>
+    </div>
+  </div>
+
+<script>
+function buscarEmpleo(){
+  return {
+    q:'', qLocation:'', sortBy:'relevancia', toastMsg:'',
+    selected:null,
+    acc:{modalidad:true, salario:true, experiencia:false, categoria:false, fecha:false},
+    filters:{modalidad:[], salario:'', experiencia:[], categoria:[], fecha:''},
+
+    jobs:[
+      {id:1,title:'Diseñador/a UX/UI Senior',company:'Bytewave Studio',location:'Remoto',modalidad:'Remoto',categoria:'Diseño',experiencia:'5+ años',salario:'S/ 5,500 - 7,000',salarioMin:5500,time:'hace 2h',color:'#7C7FF2',postulantes:34,vacantesDisp:2,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Buscamos una persona apasionada por la investigación de usuarios y los sistemas de diseño escalables para liderar el rediseño de nuestra plataforma fintech. Trabajarás junto a producto e ingeniería en un equipo 100% remoto.',
+       requisitos:['5+ años de experiencia en diseño de producto','Dominio avanzado de Figma y prototipado','Experiencia liderando design systems','Inglés intermedio-avanzado'],
+       skills:['Figma','Research','Design Systems','Prototipado'],
+       sobreEmpresa:'Bytewave Studio es un estudio de producto digital que trabaja con startups fintech de Latinoamérica desde 2019.'},
+
+      {id:2,title:'Desarrollador/a Backend Node.js',company:'Cusco Tech Labs',location:'Lima, PE',modalidad:'Tiempo completo',categoria:'Tecnología',experiencia:'3-5 años',salario:'S/ 4,000 - 5,500',salarioMin:4000,time:'hace 5h',color:'#16D9A3',postulantes:51,vacantesDisp:1,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Únete a un equipo distribuido construyendo el motor de pagos más rápido de la región. Trabajarás en microservicios de alta disponibilidad usados por más de 500 mil usuarios.',
+       requisitos:['3+ años con Node.js en producción','Experiencia con PostgreSQL y Redis','Conocimientos de Docker y CI/CD','Deseable experiencia en sistemas de pago'],
+       skills:['Node.js','PostgreSQL','Docker','AWS'],
+       sobreEmpresa:'Cusco Tech Labs desarrolla infraestructura de pagos para comercios pequeños y medianos en el Perú.'},
+
+      {id:3,title:'Product Manager',company:'Andina Marketplace',location:'Remoto',modalidad:'Remoto',categoria:'Administración',experiencia:'5+ años',salario:'S/ 6,000 - 8,000',salarioMin:6000,time:'hace 1 día',color:'#FF6B6B',postulantes:22,vacantesDisp:1,postuladoFacil:false,saved:true,postulado:false,
+       descLarga:'Lidera el roadmap de producto para más de 2M de usuarios activos mensuales. Coordinarás con diseño, tecnología y negocio para priorizar el backlog trimestral.',
+       requisitos:['Experiencia previa como PM en marketplaces','Manejo de metodologías ágiles','Capacidad de análisis de datos con SQL','Habilidades de comunicación con stakeholders'],
+       skills:['Roadmapping','Agile','SQL','A/B Testing'],
+       sobreEmpresa:'Andina Marketplace conecta compradores y vendedores independientes en 6 países de la región.'},
+
+      {id:4,title:'Analista Contable',company:'Grupo Selva Norte',location:'Moyobamba, PE',modalidad:'Medio tiempo',categoria:'Administración',experiencia:'1-2 años',salario:'S/ 1,800 - 2,200',salarioMin:1800,time:'hace 1 día',color:'#0B1120',postulantes:9,vacantesDisp:1,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Apoyarás el cierre contable mensual y la gestión tributaria de la empresa, en coordinación directa con la gerencia de finanzas.',
+       requisitos:['Bachiller o titulado en Contabilidad','Manejo de NIIF básico','Conocimiento de SUNAT y tributación local','Excel intermedio'],
+       skills:['NIIF','Tributación','Excel'],
+       sobreEmpresa:'Grupo Selva Norte es una empresa agroindustrial con operaciones en San Martín desde hace 15 años.'},
+
+      {id:5,title:'Especialista en Marketing Digital',company:'Raíz Agencia Creativa',location:'Remoto',modalidad:'Freelance',categoria:'Marketing',experiencia:'1-2 años',salario:'S/ 2,500 - 3,200',salarioMin:2500,time:'hace 2 días',color:'#7C7FF2',postulantes:17,vacantesDisp:3,postuladoFacil:true,saved:false,postulado:true,
+       descLarga:'Gestionarás campañas de performance multicanal para clientes del sector retail, optimizando presupuesto y reportando resultados semanalmente.',
+       requisitos:['Experiencia con Meta Ads y Google Ads','Manejo de Google Analytics','Capacidad de reportar KPIs a cliente','Disponibilidad part-time'],
+       skills:['SEO','Meta Ads','Analytics'],
+       sobreEmpresa:'Raíz Agencia Creativa trabaja con marcas de consumo masivo en Perú, Colombia y Ecuador.'},
+
+      {id:6,title:'Frontend Developer React',company:'Bytewave Studio',location:'Remoto',modalidad:'Tiempo completo',categoria:'Tecnología',experiencia:'3-5 años',salario:'S/ 4,500 - 6,000',salarioMin:4500,time:'hace 3 días',color:'#16D9A3',postulantes:40,vacantesDisp:2,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Construirás componentes reutilizables para nuestro design system interno, trabajando en estrecha colaboración con el equipo de diseño de producto.',
+       requisitos:['3+ años con React y TypeScript','Experiencia con Tailwind CSS','Familiaridad con testing (Jest/RTL)','Buenas prácticas de accesibilidad'],
+       skills:['React','Tailwind','TypeScript'],
+       sobreEmpresa:'Bytewave Studio es un estudio de producto digital que trabaja con startups fintech de Latinoamérica desde 2019.'},
+
+      {id:7,title:'Diseñador/a Gráfico',company:'Norte Creativo',location:'Moyobamba, PE',modalidad:'Tiempo completo',categoria:'Diseño',experiencia:'Sin experiencia',salario:'S/ 1,500 - 2,000',salarioMin:1500,time:'hace 4 días',color:'#FF6B6B',postulantes:12,vacantesDisp:1,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Apoyarás en la creación de piezas gráficas para redes sociales y material POP de clientes locales. Ideal para egresados recientes.',
+       requisitos:['Manejo de Illustrator y Photoshop','Portafolio con al menos 5 piezas','Disponibilidad presencial en Moyobamba','Actitud proactiva y de aprendizaje'],
+       skills:['Illustrator','Branding','Redes sociales'],
+       sobreEmpresa:'Norte Creativo es una agencia local que atiende negocios y municipalidades de la región San Martín.'},
+
+      {id:8,title:'Ejecutivo/a de Ventas',company:'Comercial Amazonas',location:'Moyobamba, PE',modalidad:'Tiempo completo',categoria:'Ventas',experiencia:'1-2 años',salario:'S/ 1,600 + comisiones',salarioMin:1600,time:'hace 5 días',color:'#0B1120',postulantes:28,vacantesDisp:4,postuladoFacil:true,saved:false,postulado:false,
+       descLarga:'Buscamos personas con actitud comercial para gestionar cartera de clientes y captar nuevos negocios en la zona norte de San Martín.',
+       requisitos:['Experiencia en ventas de campo','Licencia de conducir deseable','Buena comunicación interpersonal','Orientación a resultados'],
+       skills:['Negociación','Atención al cliente','CRM'],
+       sobreEmpresa:'Comercial Amazonas distribuye productos de consumo masivo a bodegas y minimarkets de la región.'},
+    ],
+
+    init(){
+      this.filtered = [...this.jobs];
+      this.$nextTick(()=> lucide.createIcons());
+    },
+    filtered:[],
+
+    get activeChips(){
+      const chips = [];
+      this.filters.modalidad.forEach(v=> chips.push({key:'modalidad', value:v}));
+      this.filters.experiencia.forEach(v=> chips.push({key:'experiencia', value:v}));
+      this.filters.categoria.forEach(v=> chips.push({key:'categoria', value:v}));
+      if(this.filters.salario) chips.push({key:'salario', value:this.filters.salario});
+      if(this.filters.fecha) chips.push({key:'fecha', value:this.filters.fecha});
+      return chips;
+    },
+
+    toggleFilter(key, value){
+      const arr = this.filters[key];
+      const idx = arr.indexOf(value);
+      if(idx>-1) arr.splice(idx,1); else arr.push(value);
+      this.applyFilters();
+    },
+    setSalario(s){
+      this.filters.salario = this.filters.salario===s ? '' : s;
+      this.applyFilters();
+    },
+    removeChip(c){
+      if(c.key==='salario' || c.key==='fecha'){ this.filters[c.key]=''; }
+      else { this.filters[c.key] = this.filters[c.key].filter(v=>v!==c.value); }
+      this.applyFilters();
+    },
+    resetFilters(){
+      this.filters = {modalidad:[], salario:'', experiencia:[], categoria:[], fecha:''};
+      this.q=''; this.qLocation='';
+      this.applyFilters();
+    },
+
+    countFor(key, value){
+      return this.jobs.filter(j=>{
+        if(key==='modalidad') return j.modalidad===value;
+        if(key==='experiencia') return j.experiencia===value;
+        if(key==='categoria') return j.categoria===value;
+        return false;
+      }).length;
+    },
+
+    applyFilters(){
+      let res = this.jobs.filter(j=>{
+        const text = (j.title+j.company).toLowerCase().includes(this.q.toLowerCase());
+        const loc = j.location.toLowerCase().includes(this.qLocation.toLowerCase());
+        const modOk = this.filters.modalidad.length ? this.filters.modalidad.includes(j.modalidad) : true;
+        const expOk = this.filters.experiencia.length ? this.filters.experiencia.includes(j.experiencia) : true;
+        const catOk = this.filters.categoria.length ? this.filters.categoria.includes(j.categoria) : true;
+        const salOk = this.filters.salario ? j.salarioMin >= parseInt(this.filters.salario.replace(/\D/g,'')) : true;
+        return text && loc && modOk && expOk && catOk && salOk;
+      });
+
+      if(this.sortBy==='reciente'){
+        res = res.slice().sort((a,b)=> a.id - b.id ? 0 : 0); // mock order preserved
+      } else if(this.sortBy==='salario'){
+        res = res.slice().sort((a,b)=> b.salarioMin - a.salarioMin);
+      }
+
+      this.filtered = res;
+      this.$nextTick(()=> lucide.createIcons());
+    },
+
+    selectJob(job){
+      this.selected = job;
+      this.$nextTick(()=> lucide.createIcons());
+    },
+    toggleSave(job){
+      job.saved = !job.saved;
+      this.toast(job.saved ? 'Vacante guardada' : 'Vacante removida de guardados');
+    },
+    postular(job){
+      job.postulado = true;
+      this.toast('Postulación enviada a '+job.company);
+    },
+
+    toast(msg){
+      this.toastMsg = msg;
+      clearTimeout(this._t);
+      this._t = setTimeout(()=> this.toastMsg='', 2600);
+    }
+  }
+}
+</script>
+
+</body>
+</html>

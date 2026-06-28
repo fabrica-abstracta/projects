@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SweetStamp – Clientes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { cream:'#FDF6EC', caramel:'#C8872A', choco:'#3B1F0E', blush:'#F2C4C4', rose:'#E8929A', gold:'#F0C060' } } }
+}
+</script>
+<style>
+body { background-color: #FDF6EC; font-family: 'Georgia', serif; }
+.sidebar-link:hover { background: rgba(200,135,42,0.15); }
+.sello-btn { width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; font-size:16px; }
+.sello-filled { background:#C8872A; box-shadow:0 0 0 2px #F0C060; }
+.sello-empty { background:#F3E8D0; border:2px dashed #C8872A; }
+.sello-filled:hover { transform:scale(1.15); }
+.sello-empty:hover { background:#F0C060; transform:scale(1.1); }
+</style>
+</head>
+<body x-data="app()" class="flex min-h-screen">
+
+<aside :class="sidebarOpen ? 'w-64' : 'w-16'" class="bg-choco text-cream flex flex-col transition-all duration-300 min-h-screen fixed z-20">
+  <div class="flex items-center justify-between p-4 border-b border-yellow-900">
+    <span x-show="sidebarOpen" class="text-gold font-bold text-lg tracking-wide">🍰 SweetStamp</span>
+    <button @click="sidebarOpen = !sidebarOpen" class="text-gold hover:text-white transition">
+      <i :class="sidebarOpen ? 'fa-solid fa-angles-left' : 'fa-solid fa-angles-right'"></i>
+    </button>
+  </div>
+  <nav class="flex-1 py-4 space-y-1">
+    <a href="index.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-house w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Dashboard</span>
+    </a>
+    <a href="clientes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gold rounded mx-2 bg-yellow-900/30">
+      <i class="fa-solid fa-users w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm font-medium">Clientes & Cartillas</span>
+    </a>
+    <a href="premios.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-gift w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Premios</span>
+    </a>
+    <a href="juegos.html" class="sidebar-link flex items-center gap-3 px-4 py-3 text-cream rounded mx-2">
+      <i class="fa-solid fa-dice w-5 text-center"></i>
+      <span x-show="sidebarOpen" class="text-sm">Juegos</span>
+    </a>
+  </nav>
+</aside>
+
+<div :class="sidebarOpen ? 'ml-64' : 'ml-16'" class="flex-1 transition-all duration-300">
+  <header class="bg-white shadow-sm px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+    <div>
+      <h1 class="text-2xl font-bold text-choco">Clientes & Cartillas</h1>
+      <p class="text-sm text-gray-500" x-text="clientes.length + ' clientes registrados'"></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <input x-model="busqueda" type="text" placeholder="Buscar cliente..." class="border border-gray-200 rounded-lg px-4 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-caramel w-64">
+        <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+      </div>
+      <button @click="abrirNuevoCliente()" class="bg-caramel text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-yellow-700 transition flex items-center gap-2">
+        <i class="fa-solid fa-user-plus"></i> Nuevo Cliente
+      </button>
+    </div>
+  </header>
+
+  <main class="p-8">
+    <div class="grid grid-cols-1 gap-4">
+      <template x-for="c in clientesFiltrados" :key="c.id">
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" :style="'background:' + c.color">
+                <span x-text="c.nombre.split(' ').map(n=>n[0]).join('').slice(0,2)"></span>
+              </div>
+              <div>
+                <h3 class="font-bold text-choco text-base" x-text="c.nombre"></h3>
+                <p class="text-xs text-gray-400" x-text="c.telefono + ' · ' + c.email"></p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs text-gray-400">Cartilla</span>
+                  <span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600" x-text="c.cartillaId"></span>
+                  <span x-show="c.sellos === c.maxSellos" class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold">✅ Completa</span>
+                  <span x-show="c.sellos < c.maxSellos" class="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full" x-text="(c.maxSellos - c.sellos) + ' sellos para completar'"></span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button @click="verCartilla(c)" class="border border-caramel text-caramel px-3 py-1.5 rounded-lg text-xs hover:bg-caramel hover:text-white transition">
+                <i class="fa-solid fa-stamp mr-1"></i> Gestionar
+              </button>
+              <button @click="editarCliente(c)" class="border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button @click="eliminarCliente(c)" class="border border-red-200 text-red-400 px-3 py-1.5 rounded-lg text-xs hover:bg-red-50 transition">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-gray-50">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-gray-400 mr-1">Progreso:</span>
+              <template x-for="i in c.maxSellos" :key="i">
+                <button
+                  @click="toggleSello(c, i)"
+                  :class="i <= c.sellos ? 'sello-filled' : 'sello-empty'"
+                  class="sello-btn"
+                  :title="i <= c.sellos ? 'Quitar sello ' + i : 'Agregar sello ' + i"
+                >
+                  <span x-text="i <= c.sellos ? '🔖' : ''"></span>
+                </button>
+              </template>
+              <span class="ml-2 text-sm font-bold" :class="c.sellos === c.maxSellos ? 'text-green-600' : 'text-caramel'" x-text="c.sellos + '/' + c.maxSellos"></span>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </main>
+</div>
+
+<div x-show="modalCartilla" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="modalCartilla=false">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg" x-show="clienteActivo">
+    <div class="p-6 border-b">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-choco" x-text="clienteActivo?.nombre"></h2>
+          <p class="text-sm text-gray-400" x-text="'Cartilla ' + clienteActivo?.cartillaId"></p>
+        </div>
+        <button @click="modalCartilla=false" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="text-center mb-6">
+        <p class="text-4xl font-bold text-caramel" x-text="clienteActivo?.sellos + '/' + clienteActivo?.maxSellos"></p>
+        <p class="text-sm text-gray-500 mt-1">sellos acumulados</p>
+        <div class="w-full bg-gray-100 rounded-full h-3 mt-3">
+          <div class="bg-caramel h-3 rounded-full transition-all" :style="'width:' + (clienteActivo?.sellos / clienteActivo?.maxSellos * 100) + '%'"></div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center mb-6">
+        <template x-for="i in clienteActivo?.maxSellos" :key="i">
+          <button @click="toggleSello(clienteActivo, i)"
+            :class="i <= clienteActivo?.sellos ? 'sello-filled' : 'sello-empty'"
+            class="sello-btn" style="width:44px;height:44px;font-size:20px">
+            <span x-text="i <= clienteActivo?.sellos ? '🔖' : i"></span>
+          </button>
+        </template>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button @click="agregarSello(clienteActivo)" class="bg-caramel text-white py-3 rounded-xl font-bold text-sm hover:bg-yellow-700 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-plus"></i> Agregar Sello
+        </button>
+        <button @click="quitarSello(clienteActivo)" class="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm hover:bg-gray-200 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-minus"></i> Quitar Sello
+        </button>
+      </div>
+      <template x-if="clienteActivo?.sellos === clienteActivo?.maxSellos">
+        <div class="mt-4 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+          <p class="text-green-700 font-bold text-lg">🏆 ¡Cartilla Completada!</p>
+          <p class="text-green-600 text-sm mt-1">El cliente puede reclamar su premio</p>
+          <button @click="entregarPremio(clienteActivo)" class="mt-3 bg-green-500 text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-green-600 transition">
+            <i class="fa-solid fa-gift mr-1"></i> Entregar Premio & Reiniciar
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    sidebarOpen: true,
+    busqueda: '',
+    modalCartilla: false,
+    clienteActivo: null,
+    clientes: [
+      {id:1, nombre:'Valentina Rojas', telefono:'+56 9 7831 2244', email:'v.rojas@gmail.com', cartillaId:'#VR-041', sellos:8, maxSellos:10, color:'#C8872A'},
+      {id:2, nombre:'Camilo Herrera', telefono:'+56 9 6512 9983', email:'c.herrera@hotmail.com', cartillaId:'#CH-038', sellos:10, maxSellos:10, color:'#3B1F0E'},
+      {id:3, nombre:'Isabella Moreno', telefono:'+56 9 9210 5566', email:'isa.moreno@gmail.com', cartillaId:'#IM-037', sellos:5, maxSellos:10, color:'#E8929A'},
+      {id:4, nombre:'Rodrigo Fuentes', telefono:'+56 9 8843 1120', email:'rodri.f@gmail.com', cartillaId:'#RF-035', sellos:10, maxSellos:10, color:'#5B4FCF'},
+      {id:5, nombre:'Sofía Castillo', telefono:'+56 9 7123 4456', email:'sofia.c@outlook.com', cartillaId:'#SC-034', sellos:3, maxSellos:10, color:'#D97706'},
+      {id:6, nombre:'Andrea Vidal', telefono:'+56 9 6678 3312', email:'andrea.v@gmail.com', cartillaId:'#AV-033', sellos:9, maxSellos:10, color:'#059669'},
+      {id:7, nombre:'Tomás Bravo', telefono:'+56 9 5531 8874', email:'tomas.b@gmail.com', cartillaId:'#TB-032', sellos:8, maxSellos:10, color:'#7C3AED'},
+      {id:8, nombre:'Natalia Pinto', telefono:'+56 9 9901 2233', email:'nati.pinto@gmail.com', cartillaId:'#NP-031', sellos:8, maxSellos:10, color:'#DB2777'},
+      {id:9, nombre:'Felipe Morales', telefono:'+56 9 8812 5544', email:'f.morales@gmail.com', cartillaId:'#FM-029', sellos:2, maxSellos:10, color:'#0891B2'},
+      {id:10, nombre:'Carla Soto', telefono:'+56 9 7743 9900', email:'carla.soto@yahoo.com', cartillaId:'#CS-028', sellos:6, maxSellos:10, color:'#BE185D'},
+    ],
+    get clientesFiltrados() {
+      if (!this.busqueda) return this.clientes;
+      return this.clientes.filter(c => c.nombre.toLowerCase().includes(this.busqueda.toLowerCase()) || c.cartillaId.includes(this.busqueda));
+    },
+    verCartilla(c) {
+      this.clienteActivo = c;
+      this.modalCartilla = true;
+    },
+    toggleSello(c, i) {
+      if (i === c.sellos) {
+        c.sellos--;
+        Toastify({text:'➖ Sello quitado – ' + c.nombre, duration:2000, style:{background:'#6B7280'}}).showToast();
+      } else if (i === c.sellos + 1) {
+        c.sellos++;
+        if (c.sellos === c.maxSellos) {
+          Swal.fire({title:'🎉 ¡Cartilla Completa!', text: c.nombre + ' completó su cartilla. ¡Premio disponible!', icon:'success', confirmButtonColor:'#C8872A', timer:4000});
+        } else {
+          Toastify({text:'🔖 Sello ' + c.sellos + ' agregado – ' + c.nombre, duration:2000, style:{background:'#C8872A'}}).showToast();
+        }
+      }
+    },
+    agregarSello(c) {
+      if (c.sellos < c.maxSellos) {
+        c.sellos++;
+        if (c.sellos === c.maxSellos) {
+          Swal.fire({title:'🎉 ¡Cartilla Completa!', text: c.nombre + ' completó su cartilla. ¡Premio disponible!', icon:'success', confirmButtonColor:'#C8872A', timer:4000});
+        } else {
+          Toastify({text:'🔖 Sello agregado (' + c.sellos + '/' + c.maxSellos + ')', duration:2000, style:{background:'#C8872A'}}).showToast();
+        }
+      } else {
+        Toastify({text:'⚠️ La cartilla ya está completa', duration:2000, style:{background:'#D97706'}}).showToast();
+      }
+    },
+    quitarSello(c) {
+      if (c.sellos > 0) {
+        c.sellos--;
+        Toastify({text:'➖ Sello removido (' + c.sellos + '/' + c.maxSellos + ')', duration:2000, style:{background:'#6B7280'}}).showToast();
+      }
+    },
+    entregarPremio(c) {
+      Swal.fire({
+        title:'🏆 Premio Entregado',
+        html:'<p>Se registró la entrega del premio a <strong>' + c.nombre + '</strong>.<br>La cartilla fue reiniciada.</p>',
+        icon:'success', confirmButtonColor:'#C8872A', confirmButtonText:'Listo'
+      }).then(r => {
+        if (r.isConfirmed) {
+          c.sellos = 0;
+          this.modalCartilla = false;
+          Toastify({text:'✅ Cartilla reiniciada para ' + c.nombre, duration:3000, style:{background:'#059669'}}).showToast();
+        }
+      });
+    },
+    editarCliente(c) {
+      Swal.fire({
+        title:'Editar Cliente',
+        html:`<input id="en" class="swal2-input" value="${c.nombre}" placeholder="Nombre"><input id="et" class="swal2-input" value="${c.telefono}" placeholder="Teléfono">`,
+        showCancelButton:true, confirmButtonColor:'#C8872A', confirmButtonText:'Guardar'
+      }).then(r => {
+        if (r.isConfirmed) {
+          c.nombre = document.getElementById('en').value || c.nombre;
+          c.telefono = document.getElementById('et').value || c.telefono;
+          Toastify({text:'✅ Cliente actualizado', duration:2000, style:{background:'#059669'}}).showToast();
+        }
+      });
+    },
+    eliminarCliente(c) {
+      Swal.fire({
+        title:'¿Eliminar cliente?', text:'Esta acción no se puede deshacer', icon:'warning',
+        showCancelButton:true, confirmButtonColor:'#EF4444', confirmButtonText:'Eliminar', cancelButtonText:'Cancelar'
+      }).then(r => {
+        if (r.isConfirmed) {
+          this.clientes = this.clientes.filter(x => x.id !== c.id);
+          Toastify({text:'🗑️ Cliente eliminado', duration:2000, style:{background:'#EF4444'}}).showToast();
+        }
+      });
+    },
+    abrirNuevoCliente() {
+      Swal.fire({
+        title:'Nuevo Cliente',
+        html:`<input id="nn" class="swal2-input" placeholder="Nombre completo"><input id="nt" class="swal2-input" placeholder="Teléfono +56 9..."><input id="ne" class="swal2-input" placeholder="Email">`,
+        showCancelButton:true, confirmButtonColor:'#C8872A', confirmButtonText:'Registrar'
+      }).then(r => {
+        if (r.isConfirmed) {
+          const n = document.getElementById('nn').value;
+          if (!n) return;
+          const nc = {
+            id: Date.now(), nombre: n,
+            telefono: document.getElementById('nt').value || '+56 9 0000 0000',
+            email: document.getElementById('ne').value || '',
+            cartillaId: '#NW-' + (Math.floor(Math.random()*900)+100),
+            sellos: 0, maxSellos: 10,
+            color: ['#C8872A','#3B1F0E','#E8929A','#5B4FCF','#059669'][Math.floor(Math.random()*5)]
+          };
+          this.clientes.unshift(nc);
+          Toastify({text:'✅ Cliente registrado: ' + n, duration:3000, style:{background:'#059669'}}).showToast();
+        }
+      });
+    }
+  }
+}
+</script>
+</body>
+</html>

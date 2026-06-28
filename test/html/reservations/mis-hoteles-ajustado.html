@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bosque Verde — Mis Hoteles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{ink:'#1C2321',paper:'#F6F4EF',teal:{DEFAULT:'#0E4B43',light:'#157A6E',dark:'#0A332E'},gold:'#C99A3F',ok:'#1F9D6D',busy:'#D6473C',clean:'#E0A92D',off:'#6B6B63'},fontFamily:{display:['Fraunces','serif'],sans:['Inter','sans-serif'],dato:['"IBM Plex Mono"','monospace']}}}}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>body{font-family:'Inter',sans-serif;background:#F6F4EF;}[x-cloak]{display:none!important;}</style>
+</head>
+<body class="text-ink" x-data="misHoteles()" x-cloak>
+<div class="flex min-h-screen">
+
+  <aside :class="sidebarOpen?'w-64':'w-20'" class="bg-teal-dark text-paper flex flex-col transition-all duration-300 shrink-0">
+    <div class="flex items-center gap-3 px-5 py-6 border-b border-white/10">
+      <div class="w-9 h-9 rounded-lg bg-gold flex items-center justify-center font-display font-bold text-teal-dark shrink-0">BV</div>
+      <span x-show="sidebarOpen" x-cloak class="font-display text-lg font-semibold tracking-tight whitespace-nowrap">Bosque Verde</span>
+    </div>
+    <nav class="flex-1 px-3 py-6 space-y-1">
+      <a href="hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Dashboard</span>
+      </a>
+      <a href="mis-hoteles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10 text-white">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 21V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M16 21v-9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9M8 8h0M8 11h0M11 8h0"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Mis Hoteles</span>
+      </a>
+      <a href="reservas.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Reservas</span>
+      </a>
+      <a href="huespedes.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M14 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Huéspedes</span>
+      </a>
+      <button @click="toast('Reportes — próximamente')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/70 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V10M10 19V5M16 19v-7M21 19H3"/></svg>
+        <span x-show="sidebarOpen" x-cloak class="text-sm font-medium whitespace-nowrap">Reportes</span>
+      </button>
+    </nav>
+    <button @click="sidebarOpen=!sidebarOpen" class="mx-3 mb-5 flex items-center gap-3 px-3 py-2.5 rounded-lg text-paper/60 hover:bg-white/10 hover:text-white transition">
+      <svg class="w-5 h-5 shrink-0 transition-transform" :class="!sidebarOpen&&'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <span x-show="sidebarOpen" x-cloak class="text-sm whitespace-nowrap">Contraer menú</span>
+    </button>
+  </aside>
+
+  <div class="flex-1 min-w-0">
+    <main class="px-8 py-8 space-y-7">
+      <section class="flex items-start justify-between gap-5">
+        <div>
+          <a href="hoteles.html" class="inline-flex items-center gap-2 text-sm text-ink/50 hover:text-teal transition mb-3">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Volver al panel
+          </a>
+          <h1 class="font-display text-3xl font-semibold tracking-tight">Mis Hoteles</h1>
+          <p class="text-sm text-ink/50 mt-1"><span x-text="hoteles.length"></span> propiedades registradas</p>
+        </div>
+        <button @click="abrirFormulario(null)" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16M4 12h16"/></svg>
+          <span>Agregar hotel</span>
+        </button>
+      </section>
+
+      <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <template x-for="h in hoteles" :key="h.id">
+          <article @click="irHabitaciones(h)" class="bg-white rounded-2xl border border-ink/10 p-5 hover:shadow-lg hover:-translate-y-0.5 transition cursor-pointer group">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="font-dato text-[11px] tracking-[0.22em] uppercase text-teal mb-1" x-text="'Sucursal ' + String(h.id).padStart(2,'0')"></p>
+                <h2 class="font-display text-xl font-semibold leading-tight group-hover:text-teal transition" x-text="h.nombre"></h2>
+                <p class="text-sm text-ink/50 mt-1" x-text="h.ciudad"></p>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button @click.stop="abrirFormulario(h)" class="w-8 h-8 rounded-lg border border-ink/10 bg-paper/70 hover:bg-teal/10 hover:border-teal/30 hover:text-teal flex items-center justify-center transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.4-9.4a2 2 0 1 1 2.8 2.8L11.8 15H9v-2.8l8.6-8.6Z"/></svg>
+                </button>
+                <button @click.stop="eliminarHotel(h.id)" class="w-8 h-8 rounded-lg border border-ink/10 bg-paper/70 hover:bg-busy/10 hover:border-busy/30 hover:text-busy flex items-center justify-center transition">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-ink/10 space-y-3">
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Dirección</span>
+                <span class="text-sm text-right text-ink/70" x-text="h.direccion"></span>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Teléfono</span>
+                <span class="text-sm text-right text-ink/70" x-text="h.telefono"></span>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Email</span>
+                <span class="text-sm text-right text-ink/70 truncate max-w-[190px]" x-text="h.email"></span>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Documento</span>
+                <span class="font-dato text-sm text-right text-ink/70" x-text="h.tipoDocumento + ' ' + h.numeroDocumento"></span>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Horario</span>
+                <span class="font-dato text-sm text-right text-ink/70" x-text="h.checkIn + ' → ' + h.checkOut"></span>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-ink/35">Habitaciones</span>
+                <span class="font-dato text-sm text-right font-semibold text-teal" x-text="h.totalHabs"></span>
+              </div>
+            </div>
+
+            <p class="mt-5 text-sm text-ink/55 leading-relaxed" x-text="h.descripcion"></p>
+          </article>
+        </template>
+
+        <button @click="abrirFormulario(null)" class="border-2 border-dashed border-ink/20 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 hover:border-teal/40 hover:bg-teal/5 transition group min-h-[310px]">
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal flex items-center justify-center group-hover:bg-teal/20 transition">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16M4 12h16"/></svg>
+          </div>
+          <div class="text-center">
+            <p class="font-semibold text-ink/60 group-hover:text-teal transition">Agregar nueva propiedad</p>
+            <p class="text-sm text-ink/40 mt-1">Registra un nuevo hotel o sucursal</p>
+          </div>
+        </button>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div x-show="formAbierto" x-cloak class="fixed inset-0 z-40 flex">
+  <div @click="formAbierto=false" class="flex-1 bg-ink/40 backdrop-blur-sm"></div>
+  <div x-show="formAbierto" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="w-full max-w-lg bg-paper h-full overflow-y-auto shadow-2xl flex flex-col">
+    <div class="px-6 py-5 border-b border-ink/10 flex items-center justify-between sticky top-0 bg-paper z-10">
+      <h2 class="font-display text-xl font-semibold" x-text="editando ? 'Editar hotel' : 'Nuevo hotel'"></h2>
+      <button @click="formAbierto=false" class="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 p-6 space-y-5">
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Nombre del hotel <span class="text-busy">*</span></label>
+        <input x-model="form.nombre" type="text" placeholder="Hotel Bosque Verde" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Ciudad <span class="text-busy">*</span></label>
+        <input x-model="form.ciudad" type="text" placeholder="Lima · Miraflores" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Dirección</label>
+        <input x-model="form.direccion" type="text" placeholder="Av. Benavides 1240" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Teléfono</label>
+          <input x-model="form.telefono" type="text" placeholder="01 445-7800" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Email</label>
+          <input x-model="form.email" type="email" placeholder="recepcion@hotel.pe" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Documento</label>
+          <select x-model="form.tipoDocumento" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+            <option>RUC</option>
+            <option>DNI</option>
+            <option>CE</option>
+            <option>Pasaporte</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Número de documento</label>
+          <input x-model="form.numeroDocumento" type="text" placeholder="20601234567" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Check-in</label>
+          <input x-model="form.checkIn" type="time" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1.5">Check-out</label>
+          <input x-model="form.checkOut" type="time" class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5">Descripción</label>
+        <textarea x-model="form.descripcion" rows="4" placeholder="Breve descripción del hotel, servicios destacados y ubicación." class="w-full px-4 py-3 rounded-xl border border-ink/15 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-5 border-t border-ink/10 flex gap-3">
+      <button @click="formAbierto=false" class="flex-1 py-3 rounded-xl border border-ink/15 text-sm font-semibold hover:bg-ink/5 transition">Cancelar</button>
+      <button @click="guardarHotel()" class="flex-1 py-3 rounded-xl bg-teal text-paper text-sm font-semibold hover:bg-teal-light transition">
+        <span x-text="editando ? 'Guardar cambios' : 'Registrar hotel'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function misHoteles(){
+  return {
+    sidebarOpen: true,
+    formAbierto: false,
+    editando: false,
+    form: {},
+    hoteles: [
+      { id:1, nombre:'Hotel Bosque Verde', ciudad:'Lima · Miraflores', direccion:'Av. Benavides 1240', telefono:'01 445-7800', email:'recepcion@bosqueverde.pe', tipoDocumento:'RUC', numeroDocumento:'20601234567', checkIn:'14:00', checkOut:'12:00', totalHabs:18, descripcion:'Hotel boutique con jardines naturales, piscina y restaurante gourmet en el corazón de Miraflores.' },
+      { id:2, nombre:'Hotel Mirador Andino', ciudad:'Cusco · Centro Histórico', direccion:'Calle Hatunrumiyoc 380', telefono:'084 23-4500', email:'cusco@bosqueverde.pe', tipoDocumento:'RUC', numeroDocumento:'20601234567', checkIn:'15:00', checkOut:'11:00', totalHabs:12, descripcion:'Posada colonial restaurada frente a la Plaza de Armas, con vistas panorámicas a los Andes.' },
+      { id:3, nombre:'Hotel Costa Azul', ciudad:'Trujillo · Buenos Aires', direccion:'Jr. Los Laureles 560', telefono:'044 25-1200', email:'trujillo@bosqueverde.pe', tipoDocumento:'RUC', numeroDocumento:'20601234567', checkIn:'14:00', checkOut:'12:00', totalHabs:10, descripcion:'Hotel frente al malecón, con acceso rápido a la playa y al circuito turístico de Huanchaco.' }
+    ],
+    nextId: 4,
+
+    abrirFormulario(h){
+      if(h){
+        this.editando = true;
+        this.form = { ...h };
+      } else {
+        this.editando = false;
+        this.form = { nombre:'', ciudad:'', direccion:'', telefono:'', email:'', tipoDocumento:'RUC', numeroDocumento:'', checkIn:'14:00', checkOut:'12:00', totalHabs:0, descripcion:'' };
+      }
+      this.formAbierto = true;
+    },
+
+    guardarHotel(){
+      if(!this.form.nombre.trim() || !this.form.ciudad.trim()){
+        Toastify({ text:'Nombre y ciudad son obligatorios', duration:2500, gravity:'top', position:'right', style:{ background:'#D6473C' } }).showToast();
+        return;
+      }
+      if(this.editando){
+        const idx = this.hoteles.findIndex(h => h.id === this.form.id);
+        if(idx !== -1) this.hoteles[idx] = { ...this.form };
+        Toastify({ text:'Hotel actualizado correctamente', duration:2500, gravity:'top', position:'right', style:{ background:'#0E4B43' } }).showToast();
+      } else {
+        this.hoteles.push({ ...this.form, id: this.nextId++, totalHabs: 0 });
+        Toastify({ text:'Hotel registrado exitosamente', duration:2500, gravity:'top', position:'right', style:{ background:'#1F9D6D' } }).showToast();
+      }
+      this.formAbierto = false;
+    },
+
+    eliminarHotel(id){
+      const h = this.hoteles.find(x => x.id===id);
+      Swal.fire({ title:'¿Eliminar ' + h.nombre + '?', text:'Se eliminará la propiedad registrada.', icon:'warning', showCancelButton:true, confirmButtonText:'Sí, eliminar', cancelButtonText:'Cancelar', confirmButtonColor:'#D6473C', cancelButtonColor:'#6B6B63' }).then(r => {
+        if(r.isConfirmed){
+          this.hoteles = this.hoteles.filter(x => x.id !== id);
+          Toastify({ text:'Hotel eliminado', duration:2500, gravity:'top', position:'right', style:{ background:'#D6473C' } }).showToast();
+        }
+      });
+    },
+
+    irHabitaciones(h){
+      Toastify({ text:'Abriendo habitaciones de ' + h.nombre + '…', duration:900, gravity:'top', position:'right', style:{ background:'#0E4B43' } }).showToast();
+      setTimeout(() => { window.location.href = 'habitaciones.html?hotel=' + h.id; }, 550);
+    },
+
+    toast(msg){ Toastify({ text:msg, duration:2200, gravity:'top', position:'right', style:{ background:'#1C2321' } }).showToast(); }
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conecta — Bolsa de trabajo</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0B1120;
+    --ink-soft:#1C2433;
+    --mint:#16D9A3;
+    --mint-dim:#0F9A76;
+    --coral:#FF6B6B;
+    --bone:#F5F3EE;
+    --indigo:#7C7FF2;
+    --line:#26314A;
+  }
+  *{ -webkit-font-smoothing:antialiased; }
+  body{ font-family:'Inter',sans-serif; background:var(--bone); }
+  .font-display{ font-family:'Fraunces',serif; }
+  .font-mono{ font-family:'JetBrains Mono',monospace; }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#d8d3c7; border-radius:8px; }
+  .dark-scroll::-webkit-scrollbar-thumb{ background:#2c3650; }
+
+  [x-cloak]{ display:none !important; }
+
+  .sidebar-link{ position:relative; transition:all .18s ease; }
+  .sidebar-link:hover{ background:rgba(255,255,255,.06); }
+  .sidebar-link.active{ background:linear-gradient(90deg, rgba(22,217,163,.16), rgba(22,217,163,.02)); color:#fff; }
+  .sidebar-link.active::before{
+    content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 4px 4px 0; background:var(--mint);
+  }
+
+  .card-rise{ transition:transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease; }
+  .card-rise:hover{ transform:translateY(-3px); box-shadow:0 12px 28px -10px rgba(11,17,32,.18); }
+
+  .ticket{
+    background:#fff;
+    border-radius:18px;
+    position:relative;
+    box-shadow:0 1px 2px rgba(11,17,32,.04), 0 10px 30px -14px rgba(11,17,32,.12);
+  }
+  .ticket::before, .ticket::after{
+    content:''; position:absolute; width:18px; height:18px; background:var(--bone);
+    border-radius:50%; top:50%; transform:translateY(-50%);
+  }
+  .ticket::before{ left:-9px; }
+  .ticket::after{ right:-9px; }
+  .perf{
+    border-left:2px dashed #e4e0d4; height:100%;
+  }
+
+  .status-dot{ width:7px; height:7px; border-radius:999px; display:inline-block; }
+
+  .modal-enter{ animation: modalIn .22s cubic-bezier(.2,.8,.2,1); }
+  @keyframes modalIn{ from{ opacity:0; transform:translateY(12px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .backdrop-enter{ animation: fadeIn .18s ease; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+
+  .toast-enter{ animation: toastIn .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px) translateX(-50%);} to{opacity:1; transform:translateY(0) translateX(-50%);} }
+
+  .progress-bar{ transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+  .skel{ background:linear-gradient(90deg,#eee 25%,#f5f5f5 37%,#eee 63%); background-size:400% 100%; animation:skel 1.4s ease infinite; }
+  @keyframes skel{ 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+
+  .feed-card{ border:1px solid #ECE8DC; }
+
+  input:focus, select:focus, textarea:focus{ outline:none; box-shadow:0 0 0 3px rgba(22,217,163,.18); border-color:var(--mint-dim); }
+
+  .tab-underline{ position:relative; }
+  .tab-underline.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--ink); border-radius:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+
+<body x-data="conectaApp()" x-init="init()" class="text-[var(--ink)]">
+
+<!-- ============ APP SHELL ============ -->
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    class="fixed lg:static z-40 inset-y-0 left-0 w-72 bg-[var(--ink)] text-slate-300 flex flex-col transition-transform duration-300 dark-scroll overflow-y-auto">
+
+    <!-- Logo -->
+    <div class="px-6 pt-6 pb-5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-[var(--mint)] flex items-center justify-center shrink-0">
+          <i data-lucide="zap" class="w-5 h-5 text-[var(--ink)]"></i>
+        </div>
+        <div>
+          <p class="font-display text-xl text-white leading-none tracking-tight">Conecta</p>
+          <p class="text-[10px] font-mono text-slate-500 mt-1 tracking-wide">BOLSA · BETA</p>
+        </div>
+      </div>
+      <button @click="sidebarOpen=false" class="lg:hidden text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Role switch -->
+    <div class="mx-4 mb-5 p-1 bg-white/5 rounded-xl flex gap-1">
+      <button @click="setRole('reclutador')" :class="role==='reclutador' ? 'bg-[var(--indigo)] text-white shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1.5">
+        <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Reclutador
+      </button>
+      <button @click="setRole('candidato')" :class="role==='candidato' ? 'bg-[var(--mint)] text-[var(--ink)] shadow' : 'text-slate-400 hover:text-slate-200'" class="flex-1 text-xs font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-1.5">
+        <i data-lucide="user-round" class="w-3.5 h-3.5"></i> Candidato
+      </button>
+    </div>
+
+    <!-- Nav: RECLUTADOR -->
+    <nav x-show="role==='reclutador'" class="flex-1 px-3 space-y-0.5">
+      <p class="px-3 pt-2 pb-2 text-[10px] font-mono uppercase tracking-wider text-slate-600">Panel</p>
+      <template x-for="item in navReclutador" :key="item.id">
+        <button @click="goTo(item.id)" :class="view===item.id ? 'active text-white' : 'text-slate-400'" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+          <i :data-lucide="item.icon" class="w-[18px] h-[18px]"></i>
+          <span x-text="item.label"></span>
+          <span x-show="item.badge" x-text="item.badge" class="ml-auto text-[10px] font-mono bg-[var(--mint)]/15 text-[var(--mint)] px-1.5 py-0.5 rounded-md"></span>
+        </button>
+      </template>
+    </nav>
+
+    <!-- Nav: CANDIDATO -->
+    <nav x-show="role==='candidato'" x-cloak class="flex-1 px-3 space-y-0.5">
+      <p class="px-3 pt-2 pb-2 text-[10px] font-mono uppercase tracking-wider text-slate-600">Explorar</p>
+      <template x-for="item in navCandidato" :key="item.id">
+        <button @click="goTo(item.id)" :class="view===item.id ? 'active text-white' : 'text-slate-400'" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+          <i :data-lucide="item.icon" class="w-[18px] h-[18px]"></i>
+          <span x-text="item.label"></span>
+          <span x-show="item.badge" x-text="item.badge" class="ml-auto text-[10px] font-mono bg-[var(--mint)]/15 text-[var(--mint)] px-1.5 py-0.5 rounded-md"></span>
+        </button>
+      </template>
+    </nav>
+
+    <!-- Perfil pie -->
+    <div class="p-4 mt-auto border-t border-white/5">
+      <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition cursor-pointer">
+        <img :src="currentUser.avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/10" />
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-white truncate" x-text="currentUser.name"></p>
+          <p class="text-xs text-slate-500 truncate" x-text="currentUser.role"></p>
+        </div>
+        <i data-lucide="chevrons-up-down" class="w-4 h-4 text-slate-600 ml-auto"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- overlay móvil -->
+  <div x-show="sidebarOpen" @click="sidebarOpen=false" x-cloak x-transition.opacity class="fixed inset-0 bg-black/40 z-30 lg:hidden"></div>
+
+  <!-- ============ MAIN ============ -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- NAVBAR -->
+    <header class="h-16 shrink-0 bg-white/80 backdrop-blur border-b border-[#ECE8DC] flex items-center gap-4 px-4 lg:px-7 z-20">
+      <button @click="sidebarOpen=true" class="lg:hidden text-[var(--ink)]">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+
+      <div class="relative flex-1 max-w-md hidden sm:block">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" placeholder="Buscar candidatos, vacantes, plantillas…" class="w-full bg-[#F5F3EE] border border-transparent focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-sm transition" />
+      </div>
+
+      <div class="flex items-center gap-2 ml-auto">
+        <button @click="quickAction()" class="hidden md:flex items-center gap-2 bg-[var(--ink)] hover:bg-[var(--ink-soft)] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span x-text="role==='reclutador' ? 'Nueva vacante' : 'Subir CV'"></span>
+        </button>
+
+        <div class="relative">
+          <button @click="notifOpen = !notifOpen" class="relative w-10 h-10 rounded-xl hover:bg-[#F5F3EE] flex items-center justify-center transition">
+            <i data-lucide="bell" class="w-[18px] h-[18px] text-[var(--ink)]"></i>
+            <span class="absolute top-2 right-2.5 w-2 h-2 bg-[var(--coral)] rounded-full ring-2 ring-white"></span>
+          </button>
+          <div x-show="notifOpen" @click.outside="notifOpen=false" x-cloak x-transition class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-[#ECE8DC] p-2 z-50">
+            <p class="text-xs font-mono uppercase text-slate-400 px-3 py-2">Notificaciones</p>
+            <template x-for="n in notifications" :key="n.id">
+              <div class="flex gap-3 px-3 py-2.5 rounded-xl hover:bg-[#F5F3EE] cursor-pointer">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" :class="n.color">
+                  <i :data-lucide="n.icon" class="w-4 h-4 text-white"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-[var(--ink)] leading-snug" x-text="n.text"></p>
+                  <p class="text-xs text-slate-400 mt-0.5" x-text="n.time"></p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <img :src="currentUser.avatar" class="w-10 h-10 rounded-xl object-cover ring-1 ring-[#ECE8DC] cursor-pointer" />
+      </div>
+    </header>
+
+    <!-- BREADCRUMB / TITLE BAR -->
+    <div class="px-4 lg:px-7 pt-6 pb-2 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <p class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1" x-text="role==='reclutador' ? 'Panel reclutador' : 'Vista candidato'"></p>
+        <h1 class="font-display text-[28px] leading-tight" x-text="viewTitle"></h1>
+      </div>
+    </div>
+
+    <!-- CONTENT SCROLL -->
+    <main class="flex-1 overflow-y-auto px-4 lg:px-7 pb-10">
+
+      <!-- ================= RECLUTADOR: DASHBOARD ================= -->
+      <section x-show="role==='reclutador' && view==='dashboard'" x-cloak class="space-y-6 mt-4">
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <template x-for="kpi in kpis" :key="kpi.label">
+            <div class="card-rise bg-white rounded-2xl p-5 border border-[#ECE8DC]">
+              <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" :class="kpi.bg">
+                  <i :data-lucide="kpi.icon" class="w-[18px] h-[18px]" :class="kpi.iconColor"></i>
+                </div>
+                <span class="text-xs font-semibold flex items-center gap-0.5" :class="kpi.up ? 'text-[var(--mint-dim)]' : 'text-[var(--coral)]'">
+                  <i :data-lucide="kpi.up ? 'trending-up' : 'trending-down'" class="w-3.5 h-3.5"></i>
+                  <span x-text="kpi.delta"></span>
+                </span>
+              </div>
+              <p class="font-display text-3xl" x-text="kpi.value"></p>
+              <p class="text-xs text-slate-500 mt-1" x-text="kpi.label"></p>
+            </div>
+          </template>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-5">
+          <!-- Chart -->
+          <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-[#ECE8DC]">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <p class="font-display text-lg">Postulaciones por semana</p>
+                <p class="text-xs text-slate-400">Últimas 7 semanas · Vacante: Todas</p>
+              </div>
+              <span class="text-[10px] font-mono bg-[#F5F3EE] px-2.5 py-1 rounded-full text-slate-500">+18% vs anterior</span>
+            </div>
+            <div class="flex items-end gap-3 h-44">
+              <template x-for="(bar,i) in chartData" :key="i">
+                <div class="flex-1 flex flex-col items-center gap-2 group">
+                  <div class="w-full rounded-t-lg transition-all duration-500 group-hover:opacity-80 relative"
+                       :style="`height:${bar.v}%; background:${i===chartData.length-1 ? 'var(--mint)' : 'var(--ink)'}; opacity:${i===chartData.length-1?1:0.85}`">
+                  </div>
+                  <span class="text-[10px] font-mono text-slate-400" x-text="bar.label"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Pipeline -->
+          <div class="bg-white rounded-2xl p-6 border border-[#ECE8DC]">
+            <p class="font-display text-lg mb-5">Pipeline de selección</p>
+            <div class="space-y-4">
+              <template x-for="stage in pipeline" :key="stage.label">
+                <div>
+                  <div class="flex justify-between text-xs mb-1.5">
+                    <span class="font-medium text-[var(--ink)]" x-text="stage.label"></span>
+                    <span class="font-mono text-slate-400" x-text="stage.count"></span>
+                  </div>
+                  <div class="h-2 bg-[#F5F3EE] rounded-full overflow-hidden">
+                    <div class="h-full rounded-full progress-bar" :style="`width:${stage.pct}%; background:${stage.color}`"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div class="mt-6 pt-5 border-t border-[#ECE8DC]">
+              <p class="text-xs font-semibold text-slate-500 mb-3">Plantillas activas</p>
+              <div class="flex items-center gap-2 text-sm">
+                <i data-lucide="file-text" class="w-4 h-4 text-[var(--indigo)]"></i>
+                <span><b x-text="plantillas.length"></b> plantillas Word listas para usar</span>
+              </div>
+              <button @click="goTo('plantillas')" class="mt-3 text-xs font-semibold text-[var(--indigo)] hover:underline flex items-center gap-1">
+                Ver plantillas <i data-lucide="arrow-right" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent candidates strip -->
+        <div class="bg-white rounded-2xl border border-[#ECE8DC] p-6">
+          <div class="flex items-center justify-between mb-5">
+            <p class="font-display text-lg">Últimos perfiles recibidos</p>
+            <button @click="goTo('candidatos')" class="text-xs font-semibold text-[var(--ink)] hover:text-[var(--mint-dim)] flex items-center gap-1">Ver todos <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="c in candidatos.slice(0,3)" :key="c.id">
+              <div class="flex items-center gap-3 p-3 rounded-xl border border-[#ECE8DC] hover:border-[var(--mint)] transition cursor-pointer" @click="openProfile(c)">
+                <img :src="c.avatar" class="w-11 h-11 rounded-full object-cover" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold truncate" x-text="c.name"></p>
+                  <p class="text-xs text-slate-400 truncate" x-text="c.role"></p>
+                </div>
+                <span class="status-dot" :class="statusColor(c.status)"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= RECLUTADOR: CANDIDATOS (tabla) ================= -->
+      <section x-show="role==='reclutador' && view==='candidatos'" x-cloak class="mt-4">
+        <div class="bg-white rounded-2xl border border-[#ECE8DC] overflow-hidden">
+
+          <!-- Filtros -->
+          <div class="p-5 border-b border-[#ECE8DC] flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[200px]">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input x-model="filterText" type="text" placeholder="Filtrar por nombre o puesto…" class="w-full bg-[#F5F3EE] rounded-xl pl-10 pr-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <select x-model="filterStatus" class="bg-[#F5F3EE] rounded-xl px-3.5 py-2.5 text-sm border border-transparent">
+              <option value="">Todos los estados</option>
+              <option value="Nuevo">Nuevo</option>
+              <option value="En revisión">En revisión</option>
+              <option value="Aprobado">Aprobado</option>
+              <option value="Rechazado">Rechazado</option>
+            </select>
+            <button @click="openModal('crearCandidato')" class="flex items-center gap-2 bg-[var(--ink)] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition">
+              <i data-lucide="user-plus" class="w-4 h-4"></i> Añadir
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-[11px] font-mono uppercase tracking-wide text-slate-400 border-b border-[#ECE8DC]">
+                  <th class="px-5 py-3 font-medium">Candidato</th>
+                  <th class="px-5 py-3 font-medium">Puesto deseado</th>
+                  <th class="px-5 py-3 font-medium">Experiencia</th>
+                  <th class="px-5 py-3 font-medium">Estado</th>
+                  <th class="px-5 py-3 font-medium">Plantilla</th>
+                  <th class="px-5 py-3 font-medium text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="c in filteredCandidatos" :key="c.id">
+                  <tr class="border-b border-[#F5F3EE] hover:bg-[#FBFAF7] transition group">
+                    <td class="px-5 py-3.5">
+                      <div class="flex items-center gap-3">
+                        <img :src="c.avatar" class="w-9 h-9 rounded-full object-cover" />
+                        <div>
+                          <p class="font-semibold text-[var(--ink)]" x-text="c.name"></p>
+                          <p class="text-xs text-slate-400" x-text="c.email"></p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-slate-600" x-text="c.role"></td>
+                    <td class="px-5 py-3.5 text-slate-600" x-text="c.experience"></td>
+                    <td class="px-5 py-3.5">
+                      <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" :class="statusBadge(c.status)">
+                        <span class="status-dot" :class="statusColor(c.status)"></span>
+                        <span x-text="c.status"></span>
+                      </span>
+                    </td>
+                    <td class="px-5 py-3.5">
+                      <button @click="downloadWithTemplate(c)" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--indigo)] hover:bg-[var(--indigo)]/10 px-2.5 py-1.5 rounded-lg transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> .docx
+                      </button>
+                    </td>
+                    <td class="px-5 py-3.5">
+                      <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition">
+                        <button @click="openProfile(c)" title="Ver perfil" class="w-8 h-8 rounded-lg hover:bg-[#F5F3EE] flex items-center justify-center text-slate-500"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        <button @click="approve(c)" title="Aprobar" class="w-8 h-8 rounded-lg hover:bg-[var(--mint)]/15 flex items-center justify-center text-[var(--mint-dim)]"><i data-lucide="check" class="w-4 h-4"></i></button>
+                        <button @click="openModal('editarCandidato', c)" title="Editar" class="w-8 h-8 rounded-lg hover:bg-[#F5F3EE] flex items-center justify-center text-slate-500"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button @click="confirmDelete(c)" title="Eliminar" class="w-8 h-8 rounded-lg hover:bg-[var(--coral)]/10 flex items-center justify-center text-[var(--coral)]"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="filteredCandidatos.length===0">
+                  <td colspan="6" class="text-center py-12 text-slate-400 text-sm">No se encontraron candidatos con esos filtros.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación simulada -->
+          <div class="px-5 py-4 flex items-center justify-between border-t border-[#ECE8DC]">
+            <p class="text-xs text-slate-400">Mostrando <b x-text="filteredCandidatos.length"></b> de <b x-text="candidatos.length"></b> candidatos</p>
+            <div class="flex items-center gap-1">
+              <button class="w-8 h-8 rounded-lg border border-[#ECE8DC] flex items-center justify-center text-slate-400 hover:bg-[#F5F3EE]"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <button class="w-8 h-8 rounded-lg bg-[var(--ink)] text-white text-xs font-semibold">1</button>
+              <button class="w-8 h-8 rounded-lg border border-[#ECE8DC] text-xs font-semibold text-slate-500 hover:bg-[#F5F3EE]">2</button>
+              <button class="w-8 h-8 rounded-lg border border-[#ECE8DC] flex items-center justify-center text-slate-400 hover:bg-[#F5F3EE]"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= RECLUTADOR: VACANTES ================= -->
+      <section x-show="role==='reclutador' && view==='vacantes'" x-cloak class="mt-4">
+        <div class="bg-white rounded-2xl border border-[#ECE8DC] overflow-hidden">
+          <div class="p-5 border-b border-[#ECE8DC] flex items-center justify-between flex-wrap gap-3">
+            <div class="relative flex-1 min-w-[200px] max-w-sm">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" placeholder="Buscar vacante…" class="w-full bg-[#F5F3EE] rounded-xl pl-10 pr-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <button @click="openModal('crearVacante')" class="flex items-center gap-2 bg-[var(--ink)] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva vacante
+            </button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 p-5">
+            <template x-for="v in vacantes" :key="v.id">
+              <div class="card-rise feed-card rounded-2xl p-5 bg-white">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white font-display text-lg" :style="`background:${v.color}`" x-text="v.company[0]"></div>
+                    <div>
+                      <p class="font-semibold text-[var(--ink)]" x-text="v.title"></p>
+                      <p class="text-xs text-slate-400" x-text="v.company + ' · ' + v.location"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button @click="openModal('editarVacante', v)" class="w-8 h-8 rounded-lg hover:bg-[#F5F3EE] flex items-center justify-center text-slate-400"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button class="w-8 h-8 rounded-lg hover:bg-[var(--coral)]/10 flex items-center justify-center text-[var(--coral)]"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3 line-clamp-2" x-text="v.desc"></p>
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-[#F5F3EE]">
+                  <span class="text-xs font-mono bg-[#F5F3EE] px-2.5 py-1 rounded-full" x-text="v.tipo"></span>
+                  <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    <span x-text="v.postulantes + ' postulantes'"></span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= RECLUTADOR: PLANTILLAS WORD (feature diferenciadora) ================= -->
+      <section x-show="role==='reclutador' && view==='plantillas'" x-cloak class="mt-4 space-y-6">
+
+        <div class="bg-[var(--ink)] rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-56 h-56 bg-[var(--indigo)]/20 rounded-full blur-3xl"></div>
+          <div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div class="max-w-xl">
+              <span class="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider bg-white/10 px-2.5 py-1 rounded-full mb-3">
+                <i data-lucide="sparkles" class="w-3 h-3 text-[var(--mint)]"></i> Lo que hace único a Conecta
+              </span>
+              <h2 class="font-display text-2xl leading-snug mb-2">Tus plantillas Word, llenas automáticamente</h2>
+              <p class="text-slate-300 text-sm leading-relaxed">Sube tu formato de CV corporativo una sola vez. Cada candidato completa su perfil en Conecta, y tú descargas su información ya volcada en <b class="text-white">tu propia plantilla .docx</b> — lista para enviar a tu cliente o área interna.</p>
+            </div>
+            <button @click="openModal('subirPlantilla')" class="shrink-0 flex items-center gap-2 bg-[var(--mint)] text-[var(--ink)] font-semibold px-5 py-3 rounded-xl hover:brightness-95 transition">
+              <i data-lucide="upload" class="w-4 h-4"></i> Subir plantilla .docx
+            </button>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <template x-for="p in plantillas" :key="p.id">
+            <div class="ticket flex">
+              <div class="flex-1 p-5">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-10 h-10 rounded-lg bg-[var(--indigo)]/10 flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-5 h-5 text-[var(--indigo)]"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm truncate" x-text="p.name"></p>
+                    <p class="text-xs text-slate-400 font-mono" x-text="p.size + ' · .docx'"></p>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-500 mb-4" x-text="p.desc"></p>
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                  <template x-for="tag in p.campos" :key="tag">
+                    <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md" x-text="'{{'+tag+'}}'"></span>
+                  </template>
+                </div>
+              </div>
+              <div class="perf w-20 shrink-0 flex flex-col items-center justify-center gap-3 py-4">
+                <button title="Usar en exportación" class="w-9 h-9 rounded-full bg-[#F5F3EE] hover:bg-[var(--mint)]/20 flex items-center justify-center text-slate-500 hover:text-[var(--mint-dim)] transition"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
+                <button title="Editar campos" class="w-9 h-9 rounded-full bg-[#F5F3EE] hover:bg-slate-200 flex items-center justify-center text-slate-500 transition"><i data-lucide="settings-2" class="w-4 h-4"></i></button>
+                <button title="Eliminar" class="w-9 h-9 rounded-full bg-[#F5F3EE] hover:bg-[var(--coral)]/15 flex items-center justify-center text-slate-500 hover:text-[var(--coral)] transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Add new card -->
+          <button @click="openModal('subirPlantilla')" class="border-2 border-dashed border-[#E4E0D4] rounded-[18px] flex flex-col items-center justify-center gap-2 py-10 text-slate-400 hover:border-[var(--mint)] hover:text-[var(--mint-dim)] transition">
+            <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+            <span class="text-sm font-semibold">Subir nueva plantilla</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= CANDIDATO: FEED ================= -->
+      <section x-show="role==='candidato' && view==='feed'" x-cloak class="mt-4 grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-4">
+          <!-- compose-like filter bar -->
+          <div class="bg-white rounded-2xl border border-[#ECE8DC] p-4 flex items-center gap-3">
+            <img :src="currentUser.avatar" class="w-10 h-10 rounded-full object-cover" />
+            <button @click="goTo('perfil')" class="flex-1 text-left bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm text-slate-400 hover:bg-[#EFEBDF] transition">Completa tu perfil para destacar ante reclutadores…</button>
+          </div>
+
+          <template x-for="post in feed" :key="post.id">
+            <article class="feed-card bg-white rounded-2xl p-5">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white font-display text-lg shrink-0" :style="`background:${post.color}`" x-text="post.company[0]"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="font-semibold text-sm" x-text="post.company"></p>
+                    <span class="text-slate-300">·</span>
+                    <p class="text-xs text-slate-400" x-text="post.time"></p>
+                  </div>
+                  <p class="font-display text-lg mt-1" x-text="post.title"></p>
+                  <p class="text-sm text-slate-500 mt-1.5 leading-relaxed" x-text="post.desc"></p>
+                  <div class="flex flex-wrap gap-1.5 mt-3">
+                    <template x-for="tag in post.tags" :key="tag">
+                      <span class="text-xs font-medium bg-[#F5F3EE] text-slate-600 px-2.5 py-1 rounded-full" x-text="tag"></span>
+                    </template>
+                  </div>
+
+                  <div class="flex items-center justify-between mt-4 pt-4 border-t border-[#F5F3EE]">
+                    <div class="flex items-center gap-1">
+                      <button @click="reactPost(post,'descartar')" class="w-10 h-10 rounded-full border border-[#ECE8DC] hover:border-[var(--coral)] hover:bg-[var(--coral)]/5 flex items-center justify-center text-slate-400 hover:text-[var(--coral)] transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                      </button>
+                      <button @click="reactPost(post,'guardar')" class="w-10 h-10 rounded-full border border-[#ECE8DC] hover:border-[var(--indigo)] hover:bg-[var(--indigo)]/5 flex items-center justify-center text-slate-400 hover:text-[var(--indigo)] transition">
+                        <i data-lucide="bookmark" class="w-4 h-4"></i>
+                      </button>
+                      <button @click="reactPost(post,'like')" class="w-10 h-10 rounded-full border border-[#ECE8DC] hover:border-[var(--mint)] hover:bg-[var(--mint)]/10 flex items-center justify-center text-slate-400 hover:text-[var(--mint-dim)] transition">
+                        <i data-lucide="heart" class="w-4 h-4" :class="post.liked ? 'fill-[var(--mint)] text-[var(--mint)]' : ''"></i>
+                      </button>
+                    </div>
+                    <button @click="postular(post)" :disabled="post.postulado" class="text-sm font-semibold px-4 py-2 rounded-xl transition" :class="post.postulado ? 'bg-[var(--mint)]/15 text-[var(--mint-dim)] cursor-default' : 'bg-[var(--ink)] text-white hover:bg-[var(--ink-soft)]'">
+                      <span x-text="post.postulado ? '✓ Postulado' : 'Postularme'"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </template>
+        </div>
+
+        <!-- Right rail -->
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-[#ECE8DC] p-5">
+            <p class="font-display text-lg mb-1">Tu progreso</p>
+            <p class="text-xs text-slate-400 mb-4">Perfiles completos reciben 3x más vistas</p>
+            <div class="h-2 bg-[#F5F3EE] rounded-full overflow-hidden mb-2">
+              <div class="h-full bg-[var(--mint)] rounded-full progress-bar" style="width:62%"></div>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">62% completo</p>
+            <button @click="goTo('perfil')" class="w-full text-sm font-semibold bg-[#F5F3EE] hover:bg-[#EFEBDF] py-2.5 rounded-xl transition">Completar perfil</button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-[#ECE8DC] p-5">
+            <p class="font-display text-lg mb-4">Empresas que te vieron</p>
+            <div class="space-y-3">
+              <template x-for="c in vacantes.slice(0,4)" :key="c.id">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-display shrink-0" :style="`background:${c.color}`" x-text="c.company[0]"></div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium truncate" x-text="c.company"></p>
+                    <p class="text-xs text-slate-400 truncate" x-text="c.title"></p>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= CANDIDATO: BUSCAR EMPLEO ================= -->
+      <section x-show="role==='candidato' && view==='buscar'" x-cloak class="mt-4 space-y-5">
+        <div class="bg-white rounded-2xl border border-[#ECE8DC] p-5">
+          <div class="flex flex-wrap gap-3">
+            <div class="relative flex-1 min-w-[220px]">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input x-model="filterText" type="text" placeholder="Puesto, empresa o palabra clave…" class="w-full bg-[#F5F3EE] rounded-xl pl-10 pr-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <select class="bg-[#F5F3EE] rounded-xl px-3.5 py-2.5 text-sm border border-transparent">
+              <option>Cualquier ubicación</option>
+              <option>Remoto</option>
+              <option>Lima, PE</option>
+              <option>Moyobamba, PE</option>
+            </select>
+            <select class="bg-[#F5F3EE] rounded-xl px-3.5 py-2.5 text-sm border border-transparent">
+              <option>Cualquier modalidad</option>
+              <option>Tiempo completo</option>
+              <option>Medio tiempo</option>
+              <option>Freelance</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <template x-for="v in filteredVacantes" :key="v.id">
+            <div class="card-rise feed-card rounded-2xl p-5 bg-white">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white font-display text-lg shrink-0" :style="`background:${v.color}`" x-text="v.company[0]"></div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold" x-text="v.title"></p>
+                  <p class="text-xs text-slate-400" x-text="v.company + ' · ' + v.location"></p>
+                  <p class="text-xs text-slate-500 mt-2 line-clamp-2" x-text="v.desc"></p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-4 border-t border-[#F5F3EE]">
+                <span class="text-xs font-mono bg-[#F5F3EE] px-2.5 py-1 rounded-full" x-text="v.tipo"></span>
+                <button @click="postularVacante(v)" class="text-xs font-semibold bg-[var(--ink)] text-white px-3.5 py-2 rounded-lg hover:bg-[var(--ink-soft)] transition">Postularme</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- ================= CANDIDATO: MI PERFIL ================= -->
+      <section x-show="role==='candidato' && view==='perfil'" x-cloak class="mt-4 grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-[#ECE8DC] p-6 space-y-5">
+          <div class="flex items-center gap-4">
+            <img :src="currentUser.avatar" class="w-16 h-16 rounded-2xl object-cover" />
+            <div>
+              <p class="font-display text-xl" x-text="currentUser.name"></p>
+              <p class="text-sm text-slate-400">Diseñador/a UX Product · Moyobamba, PE</p>
+            </div>
+            <button class="ml-auto text-sm font-semibold bg-[#F5F3EE] hover:bg-[#EFEBDF] px-4 py-2 rounded-xl transition">Cambiar foto</button>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-semibold text-slate-500 block mb-1.5">Nombre completo</label>
+              <input type="text" value="Valeria Núñez Ríos" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-500 block mb-1.5">Puesto deseado</label>
+              <input type="text" value="Diseñadora UX/UI Senior" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-500 block mb-1.5">Años de experiencia</label>
+              <input type="text" value="5 años" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-500 block mb-1.5">Ubicación</label>
+              <input type="text" value="Moyobamba, San Martín" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 block mb-1.5">Resumen profesional</label>
+            <textarea rows="3" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-3 text-sm border border-transparent">Diseñadora de producto enfocada en investigación de usuarios y sistemas de diseño escalables para fintech y marketplaces.</textarea>
+          </div>
+          <button class="bg-[var(--ink)] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition">Guardar cambios</button>
+        </div>
+
+        <div class="space-y-5">
+          <div class="ticket p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <i data-lucide="file-text" class="w-4 h-4 text-[var(--indigo)]"></i>
+              <p class="font-semibold text-sm">Exportar mi perfil</p>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Elige la plantilla del reclutador y descarga tu CV con tus datos ya rellenados.</p>
+            <select class="w-full bg-[#F5F3EE] rounded-xl px-3.5 py-2.5 text-sm border border-transparent mb-3">
+              <template x-for="p in plantillas" :key="p.id">
+                <option x-text="p.name"></option>
+              </template>
+            </select>
+            <button @click="toast('CV generado con la plantilla seleccionada')" class="w-full flex items-center justify-center gap-2 bg-[var(--mint)] text-[var(--ink)] text-sm font-semibold py-2.5 rounded-xl hover:brightness-95 transition">
+              <i data-lucide="download" class="w-4 h-4"></i> Descargar .docx
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-[#ECE8DC] p-5">
+            <p class="font-semibold text-sm mb-3">Visibilidad del perfil</p>
+            <label class="flex items-center justify-between cursor-pointer">
+              <span class="text-sm text-slate-500">Visible para reclutadores</span>
+              <div x-data="{on:true}" @click="on=!on" class="w-11 h-6 rounded-full p-0.5 transition" :class="on ? 'bg-[var(--mint)]' : 'bg-slate-300'">
+                <div class="w-5 h-5 bg-white rounded-full shadow transition" :class="on ? 'translate-x-5' : ''"></div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= CANDIDATO: POSTULACIONES ================= -->
+      <section x-show="role==='candidato' && view==='postulaciones'" x-cloak class="mt-4">
+        <div class="bg-white rounded-2xl border border-[#ECE8DC] overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-[11px] font-mono uppercase tracking-wide text-slate-400 border-b border-[#ECE8DC]">
+                <th class="px-5 py-3 font-medium">Vacante</th>
+                <th class="px-5 py-3 font-medium">Empresa</th>
+                <th class="px-5 py-3 font-medium">Fecha</th>
+                <th class="px-5 py-3 font-medium">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(p,i) in misPostulaciones" :key="i">
+                <tr class="border-b border-[#F5F3EE] hover:bg-[#FBFAF7]">
+                  <td class="px-5 py-3.5 font-medium" x-text="p.title"></td>
+                  <td class="px-5 py-3.5 text-slate-500" x-text="p.company"></td>
+                  <td class="px-5 py-3.5 text-slate-500 font-mono text-xs" x-text="p.fecha"></td>
+                  <td class="px-5 py-3.5">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" :class="statusBadge(p.status)">
+                      <span class="status-dot" :class="statusColor(p.status)"></span>
+                      <span x-text="p.status"></span>
+                    </span>
+                  </td>
+                </tr>
+              </template>
+              <tr x-show="misPostulaciones.length===0">
+                <td colspan="4" class="text-center py-14 text-slate-400">
+                  <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                  Aún no te has postulado a ninguna vacante.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div x-show="toastMsg" x-cloak class="fixed bottom-6 left-1/2 z-[60] toast-enter">
+  <div class="bg-[var(--ink)] text-white text-sm font-medium px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5">
+    <i data-lucide="check-circle" class="w-4 h-4 text-[var(--mint)]"></i>
+    <span x-text="toastMsg"></span>
+  </div>
+</div>
+
+<!-- ============ MODAL: PERFIL DE CANDIDATO (ver / aprobar) ============ -->
+<div x-show="modal==='perfil'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="closeModal()" class="absolute inset-0 bg-[var(--ink)]/60 backdrop-enter"></div>
+  <div class="relative bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-enter" x-show="modal==='perfil'">
+    <template x-if="activeRecord">
+      <div>
+        <div class="p-6 border-b border-[#ECE8DC] flex items-start gap-4">
+          <img :src="activeRecord.avatar" class="w-16 h-16 rounded-2xl object-cover" />
+          <div class="flex-1">
+            <p class="font-display text-xl" x-text="activeRecord.name"></p>
+            <p class="text-sm text-slate-400" x-text="activeRecord.role"></p>
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full mt-2" :class="statusBadge(activeRecord.status)">
+              <span class="status-dot" :class="statusColor(activeRecord.status)"></span>
+              <span x-text="activeRecord.status"></span>
+            </span>
+          </div>
+          <button @click="closeModal()" class="text-slate-400 hover:text-[var(--ink)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div><p class="text-xs text-slate-400 mb-0.5">Correo</p><p class="font-medium" x-text="activeRecord.email"></p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5">Experiencia</p><p class="font-medium" x-text="activeRecord.experience"></p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5">Ubicación</p><p class="font-medium" x-text="activeRecord.location || 'Moyobamba, PE'"></p></div>
+            <div><p class="text-xs text-slate-400 mb-0.5">Disponibilidad</p><p class="font-medium">Inmediata</p></div>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 mb-2">Habilidades</p>
+            <div class="flex flex-wrap gap-1.5">
+              <template x-for="s in activeRecord.skills" :key="s">
+                <span class="text-xs font-medium bg-[#F5F3EE] px-2.5 py-1 rounded-full" x-text="s"></span>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="p-6 pt-0 flex flex-wrap gap-3">
+          <button @click="approve(activeRecord); closeModal()" class="flex-1 flex items-center justify-center gap-2 bg-[var(--mint)] text-[var(--ink)] font-semibold py-2.5 rounded-xl hover:brightness-95 transition"><i data-lucide="check" class="w-4 h-4"></i> Aprobar perfil</button>
+          <button @click="reject(activeRecord); closeModal()" class="flex-1 flex items-center justify-center gap-2 bg-[#F5F3EE] text-[var(--coral)] font-semibold py-2.5 rounded-xl hover:bg-[var(--coral)]/10 transition"><i data-lucide="x" class="w-4 h-4"></i> Rechazar</button>
+          <button @click="downloadWithTemplate(activeRecord)" class="flex items-center justify-center gap-2 bg-[var(--ink)] text-white font-semibold px-4 py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition"><i data-lucide="download" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<!-- ============ MODAL: CREAR / EDITAR CANDIDATO ============ -->
+<div x-show="modal==='crearCandidato' || modal==='editarCandidato'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="closeModal()" class="absolute inset-0 bg-[var(--ink)]/60 backdrop-enter"></div>
+  <div class="relative bg-white rounded-2xl w-full max-w-lg modal-enter">
+    <div class="p-6 border-b border-[#ECE8DC] flex items-center justify-between">
+      <p class="font-display text-xl" x-text="modal==='crearCandidato' ? 'Añadir candidato' : 'Editar candidato'"></p>
+      <button @click="closeModal()" class="text-slate-400 hover:text-[var(--ink)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form @submit.prevent="saveCandidato()" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Nombre completo <span class="text-[var(--coral)]">*</span></label>
+        <input x-model="formCandidato.name" type="text" required class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border" :class="formErrors.name ? 'border-[var(--coral)]' : 'border-transparent'" />
+        <p x-show="formErrors.name" class="text-xs text-[var(--coral)] mt-1">El nombre es obligatorio.</p>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Correo <span class="text-[var(--coral)]">*</span></label>
+        <input x-model="formCandidato.email" type="email" required class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border" :class="formErrors.email ? 'border-[var(--coral)]' : 'border-transparent'" />
+        <p x-show="formErrors.email" class="text-xs text-[var(--coral)] mt-1">Ingresa un correo válido.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1.5">Puesto deseado</label>
+          <input x-model="formCandidato.role" type="text" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1.5">Experiencia</label>
+          <input x-model="formCandidato.experience" type="text" placeholder="Ej. 3 años" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" @click="closeModal()" class="flex-1 bg-[#F5F3EE] font-semibold py-2.5 rounded-xl hover:bg-[#EFEBDF] transition">Cancelar</button>
+        <button type="submit" class="flex-1 bg-[var(--ink)] text-white font-semibold py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition" x-text="modal==='crearCandidato' ? 'Crear candidato' : 'Guardar cambios'"></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: CREAR / EDITAR VACANTE ============ -->
+<div x-show="modal==='crearVacante' || modal==='editarVacante'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="closeModal()" class="absolute inset-0 bg-[var(--ink)]/60 backdrop-enter"></div>
+  <div class="relative bg-white rounded-2xl w-full max-w-lg modal-enter">
+    <div class="p-6 border-b border-[#ECE8DC] flex items-center justify-between">
+      <p class="font-display text-xl" x-text="modal==='crearVacante' ? 'Nueva vacante' : 'Editar vacante'"></p>
+      <button @click="closeModal()" class="text-slate-400 hover:text-[var(--ink)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form @submit.prevent="saveVacante()" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Título del puesto <span class="text-[var(--coral)]">*</span></label>
+        <input x-model="formVacante.title" type="text" required class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border" :class="formErrors.title ? 'border-[var(--coral)]' : 'border-transparent'" />
+        <p x-show="formErrors.title" class="text-xs text-[var(--coral)] mt-1">El título es obligatorio.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1.5">Ubicación</label>
+          <input x-model="formVacante.location" type="text" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1.5">Modalidad</label>
+          <select x-model="formVacante.tipo" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border border-transparent">
+            <option>Tiempo completo</option>
+            <option>Medio tiempo</option>
+            <option>Remoto</option>
+            <option>Freelance</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Descripción</label>
+        <textarea x-model="formVacante.desc" rows="3" class="w-full bg-[#F5F3EE] rounded-xl px-4 py-3 text-sm border border-transparent"></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" @click="closeModal()" class="flex-1 bg-[#F5F3EE] font-semibold py-2.5 rounded-xl hover:bg-[#EFEBDF] transition">Cancelar</button>
+        <button type="submit" class="flex-1 bg-[var(--ink)] text-white font-semibold py-2.5 rounded-xl hover:bg-[var(--ink-soft)] transition" x-text="modal==='crearVacante' ? 'Publicar vacante' : 'Guardar cambios'"></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: SUBIR PLANTILLA WORD ============ -->
+<div x-show="modal==='subirPlantilla'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="closeModal()" class="absolute inset-0 bg-[var(--ink)]/60 backdrop-enter"></div>
+  <div class="relative bg-white rounded-2xl w-full max-w-lg modal-enter">
+    <div class="p-6 border-b border-[#ECE8DC] flex items-center justify-between">
+      <p class="font-display text-xl">Subir plantilla Word</p>
+      <button @click="closeModal()" class="text-slate-400 hover:text-[var(--ink)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form @submit.prevent="savePlantilla()" class="p-6 space-y-4">
+      <div @click="$refs.fileInput.click()" class="border-2 border-dashed border-[#E4E0D4] rounded-2xl p-8 text-center cursor-pointer hover:border-[var(--mint)] transition">
+        <i data-lucide="file-up" class="w-8 h-8 mx-auto text-[var(--indigo)] mb-2"></i>
+        <p class="text-sm font-semibold" x-text="formPlantilla.fileName || 'Arrastra tu archivo .docx aquí'"></p>
+        <p class="text-xs text-slate-400 mt-1">o haz clic para seleccionar (simulado)</p>
+        <input x-ref="fileInput" type="file" accept=".docx" class="hidden" @change="formPlantilla.fileName = $event.target.files[0]?.name || ''" />
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Nombre de la plantilla <span class="text-[var(--coral)]">*</span></label>
+        <input x-model="formPlantilla.name" type="text" required class="w-full bg-[#F5F3EE] rounded-xl px-4 py-2.5 text-sm border" :class="formErrors.plantillaName ? 'border-[var(--coral)]' : 'border-transparent'" />
+        <p x-show="formErrors.plantillaName" class="text-xs text-[var(--coral)] mt-1">Dale un nombre a tu plantilla.</p>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1.5">Campos a autocompletar</label>
+        <p class="text-xs text-slate-400 mb-2">Estos se mapean con los datos del perfil del candidato.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md">{{nombre}}</span>
+          <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md">{{puesto}}</span>
+          <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md">{{experiencia}}</span>
+          <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md">{{skills}}</span>
+          <span class="text-[10px] font-mono bg-[#F5F3EE] text-slate-500 px-2 py-1 rounded-md">{{correo}}</span>
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" @click="closeModal()" class="flex-1 bg-[#F5F3EE] font-semibold py-2.5 rounded-xl hover:bg-[#EFEBDF] transition">Cancelar</button>
+        <button type="submit" class="flex-1 bg-[var(--mint)] text-[var(--ink)] font-semibold py-2.5 rounded-xl hover:brightness-95 transition">Guardar plantilla</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: CONFIRMACIÓN ELIMINAR ============ -->
+<div x-show="modal==='confirmarEliminar'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div @click="closeModal()" class="absolute inset-0 bg-[var(--ink)]/60 backdrop-enter"></div>
+  <div class="relative bg-white rounded-2xl w-full max-w-sm p-6 text-center modal-enter">
+    <div class="w-14 h-14 rounded-2xl bg-[var(--coral)]/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="alert-triangle" class="w-7 h-7 text-[var(--coral)]"></i>
+    </div>
+    <p class="font-display text-xl mb-1">¿Eliminar registro?</p>
+    <p class="text-sm text-slate-500 mb-6">
+      Esta acción no se puede deshacer. Se eliminará a
+      <b x-text="activeRecord?.name"></b> de tu lista de candidatos.
+    </p>
+    <div class="flex gap-3">
+      <button @click="closeModal()" class="flex-1 bg-[#F5F3EE] font-semibold py-2.5 rounded-xl hover:bg-[#EFEBDF] transition">Cancelar</button>
+      <button @click="deleteCandidato()" class="flex-1 bg-[var(--coral)] text-white font-semibold py-2.5 rounded-xl hover:brightness-95 transition">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function conectaApp(){
+  return {
+    sidebarOpen:false,
+    notifOpen:false,
+    role:'reclutador',
+    view:'dashboard',
+    modal:null,
+    activeRecord:null,
+    filterText:'',
+    filterStatus:'',
+    toastMsg:'',
+
+    formCandidato:{name:'',email:'',role:'',experience:''},
+    formVacante:{title:'',location:'',tipo:'Tiempo completo',desc:''},
+    formPlantilla:{name:'',fileName:''},
+    formErrors:{},
+
+    navReclutador:[
+      {id:'dashboard', label:'Dashboard', icon:'layout-dashboard'},
+      {id:'candidatos', label:'Candidatos', icon:'users', badge:'24'},
+      {id:'vacantes', label:'Vacantes', icon:'briefcase'},
+      {id:'plantillas', label:'Plantillas Word', icon:'file-text', badge:'3'},
+    ],
+    navCandidato:[
+      {id:'feed', label:'Feed', icon:'layout-list'},
+      {id:'buscar', label:'Buscar empleo', icon:'search'},
+      {id:'postulaciones', label:'Mis postulaciones', icon:'send'},
+      {id:'perfil', label:'Mi perfil', icon:'user-round'},
+    ],
+
+    titles:{
+      dashboard:'Resumen general', candidatos:'Candidatos', vacantes:'Vacantes publicadas', plantillas:'Plantillas Word',
+      feed:'Vacantes para ti', buscar:'Buscar empleo', postulaciones:'Mis postulaciones', perfil:'Mi perfil'
+    },
+
+    get viewTitle(){ return this.titles[this.view] || ''; },
+
+    kpis:[
+      {label:'Candidatos nuevos', value:'128', delta:'+12%', up:true, icon:'user-plus', bg:'bg-[var(--mint)]/15', iconColor:'text-[var(--mint-dim)]'},
+      {label:'Vacantes activas', value:'14', delta:'+3%', up:true, icon:'briefcase', bg:'bg-[var(--indigo)]/15', iconColor:'text-[var(--indigo)]'},
+      {label:'Perfiles aprobados', value:'67', delta:'+8%', up:true, icon:'check-circle', bg:'bg-[var(--mint)]/15', iconColor:'text-[var(--mint-dim)]'},
+      {label:'Tasa de rechazo', value:'9%', delta:'-2%', up:false, icon:'x-circle', bg:'bg-[var(--coral)]/15', iconColor:'text-[var(--coral)]'},
+    ],
+    chartData:[
+      {label:'S1',v:45},{label:'S2',v:62},{label:'S3',v:38},{label:'S4',v:74},{label:'S5',v:55},{label:'S6',v:68},{label:'S7',v:90},
+    ],
+    pipeline:[
+      {label:'Postulados', count:128, pct:100, color:'var(--ink)'},
+      {label:'En revisión', count:64, pct:50, color:'var(--indigo)'},
+      {label:'Entrevista', count:31, pct:24, color:'#9B9EF5'},
+      {label:'Aprobados', count:18, pct:14, color:'var(--mint)'},
+    ],
+
+    candidatos:[
+      {id:1,name:'Valeria Núñez Ríos',email:'valeria.nunez@mail.com',role:'Diseñadora UX/UI Senior',experience:'5 años',status:'Aprobado',avatar:'https://i.pravatar.cc/100?img=47',skills:['Figma','Research','Design Systems','Prototipado']},
+      {id:2,name:'Jorge Salazar Tello',email:'jorge.salazar@mail.com',role:'Desarrollador Backend',experience:'3 años',status:'En revisión',avatar:'https://i.pravatar.cc/100?img=12',skills:['Node.js','PostgreSQL','Docker','AWS']},
+      {id:3,name:'Camila Torres Vega',email:'camila.torres@mail.com',role:'Product Manager',experience:'6 años',status:'Nuevo',avatar:'https://i.pravatar.cc/100?img=32',skills:['Roadmapping','Agile','SQL','A/B Testing']},
+      {id:4,name:'Diego Fernández Paz',email:'diego.fernandez@mail.com',role:'Analista de Marketing',experience:'2 años',status:'Rechazado',avatar:'https://i.pravatar.cc/100?img=15',skills:['SEO','Meta Ads','Analytics']},
+      {id:5,name:'Andrea López Quiroz',email:'andrea.lopez@mail.com',role:'Contadora Senior',experience:'8 años',status:'Aprobado',avatar:'https://i.pravatar.cc/100?img=44',skills:['NIIF','SAP','Tributación']},
+      {id:6,name:'Renzo Castillo Mori',email:'renzo.castillo@mail.com',role:'Desarrollador Frontend',experience:'4 años',status:'En revisión',avatar:'https://i.pravatar.cc/100?img=51',skills:['React','Tailwind','TypeScript']},
+      {id:7,name:'Fiorella Ramos Díaz',email:'fiorella.ramos@mail.com',role:'Reclutadora TI',experience:'3 años',status:'Nuevo',avatar:'https://i.pravatar.cc/100?img=29',skills:['Sourcing','Entrevistas','ATS']},
+      {id:8,name:'Martín Vargas Hidalgo',email:'martin.vargas@mail.com',role:'Diseñador Gráfico',experience:'2 años',status:'Aprobado',avatar:'https://i.pravatar.cc/100?img=8',skills:['Illustrator','Branding','Motion']},
+    ],
+
+    vacantes:[
+      {id:1,title:'Diseñador/a UX/UI Senior',company:'Bytewave Studio',location:'Remoto',tipo:'Tiempo completo',desc:'Liderar el sistema de diseño de nuestra plataforma fintech y mentorear a un equipo junior.',postulantes:34,color:'#7C7FF2'},
+      {id:2,title:'Desarrollador/a Backend Node.js',company:'Cusco Tech Labs',location:'Lima, PE',tipo:'Tiempo completo',desc:'Construir microservicios escalables para nuestro motor de pagos regional.',postulantes:51,color:'#16D9A3'},
+      {id:3,title:'Product Manager',company:'Andina Marketplace',location:'Remoto',tipo:'Tiempo completo',desc:'Definir el roadmap de la app de compradores y coordinar con diseño y tecnología.',postulantes:22,color:'#FF6B6B'},
+      {id:4,title:'Analista Contable',company:'Grupo Selva Norte',location:'Moyobamba, PE',tipo:'Medio tiempo',desc:'Apoyar el cierre mensual y la gestión tributaria de la empresa.',postulantes:9,color:'#0B1120'},
+      {id:5,title:'Especialista en Marketing Digital',company:'Raíz Agencia Creativa',location:'Remoto',tipo:'Freelance',desc:'Gestionar campañas de performance para clientes del sector retail.',postulantes:17,color:'#7C7FF2'},
+      {id:6,title:'Frontend Developer React',company:'Bytewave Studio',location:'Remoto',tipo:'Tiempo completo',desc:'Construir componentes reutilizables para nuestro design system interno.',postulantes:40,color:'#16D9A3'},
+    ],
+
+    feed:[
+      {id:1,company:'Bytewave Studio',title:'Diseñador/a UX/UI Senior',desc:'Buscamos a alguien apasionado por la investigación de usuarios y los sistemas de diseño escalables.',tags:['Remoto','Figma','5+ años'],time:'hace 2h',color:'#7C7FF2',liked:false,postulado:false},
+      {id:2,company:'Cusco Tech Labs',title:'Desarrollador/a Backend Node.js',desc:'Únete a un equipo distribuido construyendo el motor de pagos más rápido de la región.',tags:['Lima','Node.js','Híbrido'],time:'hace 5h',color:'#16D9A3',liked:true,postulado:false},
+      {id:3,company:'Andina Marketplace',title:'Product Manager',desc:'Lidera el roadmap de producto para más de 2M de usuarios activos mensuales.',tags:['Remoto','Agile','PM'],time:'hace 1 día',color:'#FF6B6B',liked:false,postulado:true},
+      {id:4,company:'Raíz Agencia Creativa',title:'Especialista en Marketing Digital',desc:'Gestiona campañas multicanal para marcas líderes del retail peruano.',tags:['Freelance','SEO','Ads'],time:'hace 2 días',color:'#7C7FF2',liked:false,postulado:false},
+    ],
+
+    plantillas:[
+      {id:1,name:'CV Corporativo — Plantilla A',size:'48 KB',desc:'Formato estándar para postulaciones internas de Bytewave Studio.',campos:['nombre','puesto','experiencia']},
+      {id:2,name:'Ficha técnica — TI',size:'62 KB',desc:'Incluye sección de stack tecnológico y certificaciones.',campos:['nombre','skills','correo']},
+      {id:3,name:'Resumen ejecutivo — Cliente final',size:'35 KB',desc:'Versión simplificada para enviar directamente al cliente.',campos:['nombre','puesto','correo']},
+    ],
+
+    misPostulaciones:[
+      {title:'Product Manager', company:'Andina Marketplace', fecha:'12 jun 2026', status:'En revisión'},
+      {title:'Diseñador/a UX/UI Senior', company:'Bytewave Studio', fecha:'08 jun 2026', status:'Nuevo'},
+      {title:'Frontend Developer React', company:'Bytewave Studio', fecha:'02 jun 2026', status:'Aprobado'},
+    ],
+
+    notifications:[
+      {id:1,text:'Camila Torres se postuló a Product Manager',time:'hace 10 min',icon:'user-plus',color:'bg-[var(--indigo)]'},
+      {id:2,text:'Tu plantilla "Ficha técnica" fue usada 5 veces hoy',time:'hace 1 h',icon:'file-text',color:'bg-[var(--mint-dim)]'},
+      {id:3,text:'Andrea López fue aprobada automáticamente',time:'hace 3 h',icon:'check',color:'bg-[var(--mint-dim)]'},
+    ],
+
+    get currentUser(){
+      return this.role==='reclutador'
+        ? {name:'Sofía Bardales', role:'Reclutadora · Bytewave Studio', avatar:'https://i.pravatar.cc/100?img=5'}
+        : {name:'Valeria Núñez', role:'Candidata', avatar:'https://i.pravatar.cc/100?img=47'};
+    },
+
+    get filteredCandidatos(){
+      return this.candidatos.filter(c=>{
+        const matchText = (c.name+c.role).toLowerCase().includes(this.filterText.toLowerCase());
+        const matchStatus = this.filterStatus ? c.status===this.filterStatus : true;
+        return matchText && matchStatus;
+      });
+    },
+    get filteredVacantes(){
+      return this.vacantes.filter(v=> (v.title+v.company).toLowerCase().includes(this.filterText.toLowerCase()) );
+    },
+
+    init(){
+      this.$nextTick(()=> lucide.createIcons());
+    },
+
+    setRole(r){
+      this.role = r;
+      this.view = r==='reclutador' ? 'dashboard' : 'feed';
+      this.filterText=''; this.filterStatus='';
+      this.$nextTick(()=> lucide.createIcons());
+    },
+    goTo(v){
+      this.view = v;
+      this.sidebarOpen = false;
+      this.$nextTick(()=> lucide.createIcons());
+    },
+    quickAction(){
+      if(this.role==='reclutador') this.openModal('crearVacante');
+      else this.toast('Función de subir CV simulada ✓');
+    },
+
+    openModal(name, record=null){
+      this.modal = name;
+      this.activeRecord = record;
+      this.formErrors = {};
+      if(name==='editarCandidato' && record){ this.formCandidato = {...record}; }
+      if(name==='crearCandidato'){ this.formCandidato = {name:'',email:'',role:'',experience:''}; }
+      if(name==='editarVacante' && record){ this.formVacante = {...record}; }
+      if(name==='crearVacante'){ this.formVacante = {title:'',location:'',tipo:'Tiempo completo',desc:''}; }
+      if(name==='subirPlantilla'){ this.formPlantilla = {name:'',fileName:''}; }
+      this.$nextTick(()=> lucide.createIcons());
+    },
+    closeModal(){ this.modal=null; this.activeRecord=null; this.formErrors={}; },
+
+    openProfile(c){ this.openModal('perfil', c); },
+
+    confirmDelete(c){ this.openModal('confirmarEliminar', c); },
+    deleteCandidato(){
+      this.candidatos = this.candidatos.filter(c=>c.id !== this.activeRecord.id);
+      this.toast('Candidato eliminado');
+      this.closeModal();
+    },
+
+    saveCandidato(){
+      const errs = {};
+      if(!this.formCandidato.name) errs.name = true;
+      if(!this.formCandidato.email || !this.formCandidato.email.includes('@')) errs.email = true;
+      this.formErrors = errs;
+      if(Object.keys(errs).length) return;
+
+      if(this.modal==='crearCandidato'){
+        const id = Math.max(...this.candidatos.map(c=>c.id)) + 1;
+        this.candidatos.push({
+          id, ...this.formCandidato, status:'Nuevo',
+          avatar:`https://i.pravatar.cc/100?img=${10+id}`, skills:['Por evaluar']
+        });
+        this.toast('Candidato creado correctamente');
+      } else {
+        const idx = this.candidatos.findIndex(c=>c.id===this.activeRecord.id);
+        this.candidatos[idx] = {...this.candidatos[idx], ...this.formCandidato};
+        this.toast('Cambios guardados');
+      }
+      this.closeModal();
+    },
+
+    saveVacante(){
+      const errs = {};
+      if(!this.formVacante.title) errs.title = true;
+      this.formErrors = errs;
+      if(Object.keys(errs).length) return;
+
+      if(this.modal==='crearVacante'){
+        const id = Math.max(...this.vacantes.map(v=>v.id)) + 1;
+        this.vacantes.push({id, ...this.formVacante, company:'Bytewave Studio', postulantes:0, color:'#7C7FF2'});
+        this.toast('Vacante publicada');
+      } else {
+        const idx = this.vacantes.findIndex(v=>v.id===this.activeRecord.id);
+        this.vacantes[idx] = {...this.vacantes[idx], ...this.formVacante};
+        this.toast('Vacante actualizada');
+      }
+      this.closeModal();
+    },
+
+    savePlantilla(){
+      const errs = {};
+      if(!this.formPlantilla.name) errs.plantillaName = true;
+      this.formErrors = errs;
+      if(Object.keys(errs).length) return;
+
+      const id = Math.max(...this.plantillas.map(p=>p.id)) + 1;
+      this.plantillas.push({
+        id, name:this.formPlantilla.name, size:'—',
+        desc:'Plantilla subida por el reclutador.', campos:['nombre','puesto','correo']
+      });
+      this.toast('Plantilla guardada y lista para usar');
+      this.closeModal();
+    },
+
+    approve(c){ c.status='Aprobado'; this.toast(c.name+' fue aprobado/a'); },
+    reject(c){ c.status='Rechazado'; this.toast(c.name+' fue rechazado/a'); },
+
+    downloadWithTemplate(c){
+      this.toast(`Generando .docx de ${c.name} con tu plantilla…`);
+    },
+
+    reactPost(post, type){
+      if(type==='like') post.liked = !post.liked;
+      if(type==='descartar'){ this.feed = this.feed.filter(p=>p.id!==post.id); this.toast('Vacante descartada del feed'); }
+      if(type==='guardar') this.toast('Vacante guardada');
+    },
+    postular(post){
+      post.postulado = true;
+      this.misPostulaciones.unshift({title:post.title, company:post.company, fecha:'19 jun 2026', status:'Nuevo'});
+      this.toast('Postulación enviada a '+post.company);
+    },
+    postularVacante(v){
+      this.misPostulaciones.unshift({title:v.title, company:v.company, fecha:'19 jun 2026', status:'Nuevo'});
+      this.toast('Postulación enviada a '+v.company);
+    },
+
+    statusColor(s){
+      return {
+        'Nuevo':'bg-[var(--indigo)]','En revisión':'bg-amber-400','Aprobado':'bg-[var(--mint)]','Rechazado':'bg-[var(--coral)]'
+      }[s] || 'bg-slate-300';
+    },
+    statusBadge(s){
+      return {
+        'Nuevo':'bg-[var(--indigo)]/10 text-[var(--indigo)]',
+        'En revisión':'bg-amber-50 text-amber-600',
+        'Aprobado':'bg-[var(--mint)]/15 text-[var(--mint-dim)]',
+        'Rechazado':'bg-[var(--coral)]/10 text-[var(--coral)]'
+      }[s] || 'bg-slate-100 text-slate-500';
+    },
+
+    toast(msg){
+      this.toastMsg = msg;
+      clearTimeout(this._t);
+      this._t = setTimeout(()=> this.toastMsg='', 2800);
+    }
+  }
+}
+</script>
+
+</body>
+</html>

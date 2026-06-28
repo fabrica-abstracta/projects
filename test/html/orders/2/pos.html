@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comanda — Punto de Venta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="app.js"></script>
+<style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="paper-grain min-h-screen font-sans" x-data="posApp()" x-init="init()">
+
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-[#1C1917] text-[#FAF6ED] border-b border-black/30">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="w-8 h-8 rounded-full border border-[#FAF6ED]/25 flex items-center justify-center hover:bg-[#FAF6ED]/10 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <div class="font-mono text-[10px] tracking-widest text-[#E85D2C]">MÓDULO 02</div>
+        <h1 class="font-display text-lg font-bold leading-none">Punto de Venta</h1>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="font-mono text-[10px] text-[#FAF6ED]/50 tracking-widest">LOCAL</label>
+      <select x-model="localId" @change="mesaId=''" class="focus-ring bg-[#FAF6ED]/10 border border-[#FAF6ED]/25 rounded px-3 py-1.5 text-sm font-medium">
+        <template x-for="l in db.locales" :key="l.id">
+          <option :value="l.id" x-text="l.nombre"></option>
+        </template>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 md:px-6 py-6 grid lg:grid-cols-[1fr_380px] gap-6">
+
+  <!-- Columna izquierda: tipo de pedido + catálogo -->
+  <section>
+
+    <!-- Tipo de pedido -->
+    <div class="ticket p-4 mb-5">
+      <div class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 mb-3">TIPO DE PEDIDO</div>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <button @click="origen='local'" :class="origen==='local' ? 'btn-slate' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="rounded px-3 py-2.5 text-sm font-semibold flex flex-col items-center gap-1 focus-ring">
+          <i data-lucide="utensils" class="w-4 h-4"></i> Mesa
+        </button>
+        <button @click="origen='llevar'; mesaId=''" :class="origen==='llevar' ? 'btn-sage' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="rounded px-3 py-2.5 text-sm font-semibold flex flex-col items-center gap-1 focus-ring">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i> Para llevar
+        </button>
+        <button @click="origen='online'; mesaId=''" :class="origen==='online' ? 'btn-ember' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="rounded px-3 py-2.5 text-sm font-semibold flex flex-col items-center gap-1 focus-ring">
+          <i data-lucide="smartphone" class="w-4 h-4"></i> Online
+        </button>
+      </div>
+
+      <template x-if="origen==='local'">
+        <div>
+          <div class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 mb-2">ELEGIR MESA — <span x-text="db.locales.find(l=>l.id===localId)?.nombre"></span></div>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="m in mesasDelLocal" :key="m.id">
+              <button @click="mesaId=m.id" :class="mesaId===m.id ? 'btn-slate' : 'bg-white border border-[#DDD3BE] text-[#1C1917]'" class="w-11 h-11 rounded-full font-mono font-bold text-sm focus-ring" x-text="m.numero"></button>
+            </template>
+          </div>
+        </div>
+      </template>
+      <template x-if="origen!=='local'">
+        <div>
+          <label class="font-mono text-[10px] tracking-widest text-[#3A342C]/60 block mb-1.5" x-text="origen==='online' ? 'CLIENTE (PEDIDO ONLINE)' : 'CLIENTE (PARA LLEVAR)'"></label>
+          <input x-model="cliente" type="text" placeholder="Nombre del cliente" class="focus-ring w-full max-w-sm border border-[#DDD3BE] rounded px-3 py-2 text-sm bg-white">
+        </div>
+      </template>
+    </div>
+
+    <!-- Filtros de categoría -->
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <button @click="catFiltro='todas'" :class="catFiltro==='todas' ? 'btn-ember' : 'bg-white border border-[#DDD3BE]'" class="rounded-full px-3.5 py-1.5 text-xs font-semibold font-mono tracking-wide focus-ring">TODAS</button>
+      <template x-for="c in db.categorias" :key="c">
+        <button @click="catFiltro=c" :class="catFiltro===c ? 'btn-ember' : 'bg-white border border-[#DDD3BE]'" class="rounded-full px-3.5 py-1.5 text-xs font-semibold font-mono tracking-wide focus-ring" x-text="c.toUpperCase()"></button>
+      </template>
+    </div>
+
+    <!-- Catálogo -->
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <template x-for="p in catalogoDisponible" :key="p.id">
+        <button @click="agregar(p)" class="ticket p-4 text-left hover:-translate-y-0.5 transition-transform focus-ring">
+          <div class="flex items-start justify-between mb-2">
+            <span class="badge badge-llevar" x-text="p.categoria"></span>
+            <i data-lucide="plus-circle" class="w-4 h-4 text-[#6F8F63]"></i>
+          </div>
+          <div class="font-semibold text-sm mb-1" x-text="p.nombre"></div>
+          <div class="text-xs text-[#3A342C]/55 mb-2 line-clamp-2" x-text="p.desc"></div>
+          <div class="font-mono text-sm font-bold" x-text="'S/ '+p.precio.toFixed(2)"></div>
+        </button>
+      </template>
+      <div x-show="catalogoDisponible.length===0" class="col-span-full text-center py-10 font-mono text-xs text-[#3A342C]/50">
+        Sin productos disponibles hoy en esta categoría para este local.
+      </div>
+    </div>
+  </section>
+
+  <!-- Columna derecha: ticket en construcción -->
+  <aside class="ticket p-5 h-fit lg:sticky lg:top-24">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="font-display text-lg font-bold">Comanda</h2>
+      <span class="badge" :class="origen==='online' ? 'badge-online' : origen==='llevar' ? 'badge-llevar' : 'badge-local'" x-text="origen==='online' ? 'ONLINE' : origen==='llevar' ? 'PARA LLEVAR' : 'MESA '+(mesaNumero||'—')"></span>
+    </div>
+    <div class="font-mono text-[11px] text-[#3A342C]/50 mb-4" x-text="db.locales.find(l=>l.id===localId)?.nombre"></div>
+
+    <div class="tear-line pt-3 space-y-3 max-h-[45vh] overflow-y-auto scrollbar-thin pr-1">
+      <template x-for="(it, idx) in carrito" :key="idx">
+        <div class="border-b border-dashed border-[#DDD3BE] pb-3 last:border-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex-1">
+              <div class="text-sm font-semibold" x-text="it.nombre"></div>
+              <input x-model="it.nota" type="text" placeholder="Nota: sin cebolla, extra queso..." class="focus-ring w-full mt-1 text-xs border border-[#DDD3BE] rounded px-2 py-1 bg-white/70">
+            </div>
+            <button @click="quitar(idx)" class="text-[#C44A1F] hover:opacity-70 shrink-0 mt-0.5"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+          </div>
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex items-center gap-2">
+              <button @click="it.cant=Math.max(1,it.cant-1)" class="w-6 h-6 rounded border border-[#DDD3BE] flex items-center justify-center hover:bg-[#E9E1CC] focus-ring">−</button>
+              <span class="font-mono text-sm w-4 text-center" x-text="it.cant"></span>
+              <button @click="it.cant++" class="w-6 h-6 rounded border border-[#DDD3BE] flex items-center justify-center hover:bg-[#E9E1CC] focus-ring">+</button>
+            </div>
+            <span class="font-mono text-sm font-semibold" x-text="'S/ '+(it.precio*it.cant).toFixed(2)"></span>
+          </div>
+        </div>
+      </template>
+      <div x-show="carrito.length===0" class="text-center py-8 font-mono text-xs text-[#3A342C]/45">Toca productos del catálogo para agregarlos aquí.</div>
+    </div>
+
+    <div class="tear-line pt-3 mt-3 space-y-1.5">
+      <div class="flex justify-between text-sm text-[#3A342C]/70"><span>Subtotal</span><span class="font-mono" x-text="'S/ '+subtotal.toFixed(2)"></span></div>
+      <div class="flex justify-between text-sm text-[#3A342C]/70"><span>IGV (18%)</span><span class="font-mono" x-text="'S/ '+igv.toFixed(2)"></span></div>
+      <div class="flex justify-between font-display text-lg font-bold pt-1"><span>Total</span><span class="font-mono" x-text="'S/ '+total.toFixed(2)"></span></div>
+    </div>
+
+    <button @click="enviarACocina()" :disabled="!puedeEnviar" :class="puedeEnviar ? 'btn-ember' : 'bg-[#DDD3BE] text-[#3A342C]/50 cursor-not-allowed'" class="w-full rounded py-3 mt-5 text-sm font-bold flex items-center justify-center gap-2 focus-ring">
+      <i data-lucide="send" class="w-4 h-4"></i> Enviar a cocina
+    </button>
+    <p x-show="!puedeEnviar" class="text-center font-mono text-[10px] text-[#3A342C]/45 mt-2" x-text="carrito.length===0 ? 'Agrega al menos un producto' : origen==='local' ? 'Selecciona una mesa' : 'Ingresa el nombre del cliente'"></p>
+
+    <div x-show="confirmado" x-cloak x-transition class="mt-4 bg-[#6F8F63]/12 border border-[#6F8F63]/35 rounded p-3 text-center">
+      <div class="font-mono text-xs font-bold text-[#57724E]" x-text="'✓ '+ultimoId+' enviado a cocina'"></div>
+    </div>
+  </aside>
+
+</main>
+
+<script>
+function posApp(){
+  return {
+    db:{locales:[],mesas:[],categorias:[],productos:[],pedidos:[]},
+    localId:'L1', mesaId:'', origen:'local', cliente:'',
+    catFiltro:'todas', carrito:[], confirmado:false, ultimoId:'',
+    hoyIdx:(new Date().getDay()+6)%7,
+    init(){
+      this.db = loadDB();
+      this.localId = this.db.locales[0].id;
+      lucide.createIcons();
+    },
+    get mesasDelLocal(){ return this.db.mesas.filter(m=>m.localId===this.localId); },
+    get mesaNumero(){ const m=this.db.mesas.find(x=>x.id===this.mesaId); return m?m.numero:null; },
+    get catalogoDisponible(){
+      return this.db.productos.filter(p =>
+        (this.catFiltro==='todas' || p.categoria===this.catFiltro) &&
+        p.stockPorLocal[this.localId] && p.stockPorLocal[this.localId][this.hoyIdx]
+      );
+    },
+    agregar(p){
+      const existente = this.carrito.find(i=>i.prodId===p.id && !i.nota);
+      if(existente){ existente.cant++; return; }
+      this.carrito.push({prodId:p.id, nombre:p.nombre, precio:p.precio, cant:1, nota:''});
+      this.confirmado=false;
+      this.$nextTick(()=>lucide.createIcons());
+    },
+    quitar(idx){ this.carrito.splice(idx,1); },
+    get subtotal(){ return this.carrito.reduce((s,i)=>s+i.precio*i.cant,0); },
+    get igv(){ return this.subtotal*0.18; },
+    get total(){ return this.subtotal+this.igv; },
+    get puedeEnviar(){
+      if(this.carrito.length===0) return false;
+      if(this.origen==='local') return !!this.mesaId;
+      return this.cliente.trim().length>0;
+    },
+    enviarACocina(){
+      if(!this.puedeEnviar) return;
+      const id = genOrderId(this.db);
+      const pedido = {
+        id, localId:this.localId, origen:this.origen,
+        mesaId: this.origen==='local' ? this.mesaId : undefined,
+        cliente: this.origen!=='local' ? this.cliente : undefined,
+        items: this.carrito.map(i=>({prodId:i.prodId, cant:i.cant, nota:i.nota})),
+        estado:'nuevo', hora: Date.now()
+      };
+      this.db.pedidos.push(pedido);
+      saveDB(this.db);
+      this.ultimoId = id;
+      this.confirmado = true;
+      this.carrito = [];
+      this.cliente = '';
+      this.mesaId = '';
+      setTimeout(()=> this.confirmado=false, 4000);
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded', ()=> lucide.createIcons());
+</script>
+</body>
+</html>

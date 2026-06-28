@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTO · Cocina</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  body{ background:var(--carbon-950); }
+  .board{ scroll-snap-type:x proximity; }
+  .col{ scroll-snap-align:start; }
+  .comanda{ cursor:grab; }
+  .comanda:active{ cursor:grabbing; }
+  @media (max-width:768px){ .col{ min-width:86vw; } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="resto-topbar sticky top-0 z-40">
+  <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[var(--copper)] flex items-center justify-center">
+        <i class="fa-solid fa-fire text-[var(--carbon-950)] text-sm"></i>
+      </div>
+      <span class="f-display text-lg tracking-widest">RESTO</span>
+    </div>
+    <nav class="flex items-center gap-6 text-sm f-display tracking-wide">
+      <a href="index.html" class="nav-link pb-1">Panel</a>
+      <a href="productos.html" class="nav-link pb-1">Productos</a>
+      <a href="pos.html" class="nav-link pb-1">Punto de Venta</a>
+      <a href="cocina.html" class="nav-link active pb-1">Cocina</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-[1600px] mx-auto px-4 md:px-6 py-6">
+  <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+    <div>
+      <p class="f-mono text-xs text-[var(--copper)] tracking-widest mb-1" id="local-label">LOCAL</p>
+      <h1 class="f-display text-2xl md:text-3xl text-[var(--cream)]">Pase de cocina</h1>
+    </div>
+    <div class="flex items-center gap-3 text-[var(--cream)]/60 text-xs f-mono">
+      <i class="fa-solid fa-hand-pointer"></i> Arrastra la comanda a la siguiente columna
+      <span class="hidden md:inline">·</span>
+      <span id="reloj" class="hidden md:inline"></span>
+    </div>
+  </div>
+
+  <!-- Board horizontal tipo carrusel -->
+  <div class="board flex gap-4 overflow-x-auto pb-4" id="board">
+    <!-- columnas inyectadas por JS -->
+  </div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+  const ESTADOS = [
+    { key:'pendiente',   label:'Pendiente',      icon:'fa-hourglass-start', cls:'col-pendiente' },
+    { key:'preparacion', label:'En preparación',  icon:'fa-fire-burner',     cls:'col-preparacion' },
+    { key:'listo',       label:'Listo para pase', icon:'fa-bell',            cls:'col-listo' },
+    { key:'entregado',   label:'Entregado',       icon:'fa-check-double',    cls:'col-entregado' },
+  ];
+
+  function tickReloj(){ document.getElementById('reloj').textContent = new Date().toLocaleTimeString('es-PE'); }
+  tickReloj(); setInterval(tickReloj, 1000);
+
+  function tiempoTranscurrido(ts){
+    const min = Math.floor((Date.now() - ts) / 60000);
+    if(min < 1) return 'recién';
+    if(min < 60) return min + ' min';
+    return Math.floor(min/60) + 'h ' + (min%60) + 'm';
+  }
+
+  function comandaCard(p){
+    const urgente = (Date.now() - p.creado) > 15*60000 && p.estado !== 'entregado';
+    const modIcon = p.modalidad === 'mesa' ? 'fa-utensils' : 'fa-bag-shopping';
+    const canalIcon = p.canal === 'online' ? 'fa-globe' : 'fa-store';
+    return `
+      <div draggable="true" data-id="${p.id}" class="comanda ticket-edge bg-[var(--paper)] rounded-lg p-4 mb-3 border-l-4 ${urgente ? 'border-[var(--ember)]' : 'border-[var(--copper)]'} shadow">
+        <div class="flex items-center justify-between mb-2">
+          <span class="f-mono text-xs text-[var(--ink-soft)]">#${p.id.slice(-5)}</span>
+          <span class="f-mono text-xs ${urgente ? 'text-[var(--ember)] font-semibold' : 'text-[var(--ink-soft)]'}"><i class="fa-regular fa-clock"></i> ${tiempoTranscurrido(p.creado)}</span>
+        </div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="badge badge-preparacion"><i class="fa-solid ${modIcon}"></i> ${p.modalidad === 'mesa' ? (p.mesa || 'Mesa') : 'Para llevar'}</span>
+          <span class="badge badge-entregado"><i class="fa-solid ${canalIcon}"></i> ${p.canal}</span>
+        </div>
+        <ul class="text-sm space-y-1 mb-2">
+          ${p.items.map(it => `
+            <li class="flex justify-between gap-2">
+              <span>${it.emoji || ''} ${it.cantidad}× ${it.nombre}</span>
+            </li>
+            ${it.caracteristicas && it.caracteristicas.length ? `<li class="text-xs text-[var(--copper-dark)] -mt-1">${it.caracteristicas.join(', ')}</li>` : ''}
+            ${it.nota ? `<li class="text-xs text-[var(--ink-soft)] italic -mt-1">"${it.nota}"</li>` : ''}
+          `).join('')}
+        </ul>
+        <p class="text-xs text-[var(--ink-soft)] border-t border-[var(--line)] pt-2">${p.cliente || ''}</p>
+      </div>
+    `;
+  }
+
+  function render(){
+    const localId = RESTO_DB.getLocalActivo();
+    const loc = RESTO_DB.getLocales().find(l => l.id === localId);
+    document.getElementById('local-label').textContent = loc ? loc.nombre.toUpperCase() : '';
+
+    const pedidos = RESTO_DB.getPedidos(localId).sort((a,b) => a.creado - b.creado);
+    const board = document.getElementById('board');
+    board.innerHTML = ESTADOS.map(est => {
+      const items = pedidos.filter(p => p.estado === est.key);
+      return `
+        <div class="col kanban-col ${est.cls} rounded-xl w-[320px] shrink-0 flex flex-col max-h-[calc(100vh-190px)]">
+          <div class="p-4 flex items-center justify-between text-[var(--cream)]">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid ${est.icon}"></i>
+              <h2 class="f-display tracking-wide text-sm">${est.label}</h2>
+            </div>
+            <span class="f-mono text-xs bg-[var(--carbon-800)] px-2 py-0.5 rounded-full">${items.length}</span>
+          </div>
+          <div class="drop-zone flex-1 overflow-y-auto px-3 pb-3" data-estado="${est.key}">
+            ${items.length ? items.map(comandaCard).join('') : `<p class="text-center text-[var(--cream)]/30 text-sm py-8 f-display">Vacío</p>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    attachDnD();
+  }
+
+  function attachDnD(){
+    let draggedId = null;
+    document.querySelectorAll('.comanda').forEach(card => {
+      card.addEventListener('dragstart', () => { draggedId = card.dataset.id; card.classList.add('dragging'); });
+      card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+      // soporte táctil simple: doble tap avanza de estado
+      card.addEventListener('dblclick', () => avanzarEstado(card.dataset.id));
+    });
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drop-hover'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drop-hover'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drop-hover');
+        if(draggedId){
+          RESTO_DB.actualizarEstado(draggedId, zone.dataset.estado);
+          render();
+        }
+      });
+    });
+  }
+
+  function avanzarEstado(id){
+    const idx = ESTADOS.findIndex(e => e.key === RESTO_DB.getPedidos().find(p => p.id===id)?.estado);
+    if(idx >= 0 && idx < ESTADOS.length - 1){
+      RESTO_DB.actualizarEstado(id, ESTADOS[idx+1].key);
+      render();
+    }
+  }
+
+  render();
+  setInterval(render, 15000); // refresca cronómetros
+</script>
+</body>
+</html>

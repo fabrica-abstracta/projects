@@ -1,0 +1,99 @@
+[
+  {
+    "name": "Principal",
+    "elements": [
+      {
+        "label": "Dashboard",
+        "href": "/resumen",
+        "icon": "layout-dashboard",
+        "description": "Resumen general del negocio"
+      }
+    ]
+  },
+  {
+    "name": "Inventario",
+    "elements": [
+      {
+        "label": "Productos",
+        "href": "/productos",
+        "icon": "package",
+        "description": "Catálogo de productos, marcas, categorías y stock"
+      },
+      {
+        "label": "Vencimientos",
+        "href": "/vencimientos",
+        "icon": "calendar-clock",
+        "description": "Control de entradas de stock y fechas de vencimiento"
+      },
+      {
+        "label": "Punto de venta",
+        "href": "/punto-venta",
+        "icon": "shopping-cart",
+        "description": "Venta rápida de productos del gimnasio"
+      }
+    ]
+  },
+  {
+    "name": "Gestión",
+    "elements": [
+      {
+        "label": "Clientes",
+        "href": "/clientes",
+        "icon": "users-round",
+        "description": "Registro, consulta y gestión de clientes"
+      },
+      {
+        "label": "Planes",
+        "href": "/planes",
+        "icon": "tags",
+        "description": "Catálogo de planes y precios"
+      },
+      {
+        "label": "Membresías",
+        "href": "/membresias",
+        "icon": "credit-card",
+        "description": "Vigencias, pagos y renovaciones"
+      },
+      {
+        "label": "Asistencias",
+        "href": "/asistencias",
+        "icon": "log-in",
+        "description": "Control de entradas, asistencias y visitas"
+      },
+      {
+        "label": "Ventas",
+        "href": "/ventas",
+        "icon": "bar-chart-3",
+        "description": "Caja, movimientos, pagos y reportes"
+      }
+    ]
+  },
+  {
+    "name": "Equipo y accesos",
+    "elements": [
+      {
+        "label": "Usuarios",
+        "href": "/usuarios",
+        "icon": "users",
+        "description": "Colaboradores internos y accesos"
+      },
+      {
+        "label": "Permisos",
+        "href": "/permisos",
+        "icon": "shield-check",
+        "description": "Roles, permisos y seguridad"
+      }
+    ]
+  },
+  {
+    "name": "Sistema",
+    "elements": [
+      {
+        "label": "Configuraciones",
+        "href": "/configuraciones",
+        "icon": "settings",
+        "description": "Parámetros generales del sistema"
+      }
+    ]
+  }
+]

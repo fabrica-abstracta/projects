@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brasa · Mostrador</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+        colors: {
+          char:  { 900:'#1B1815', 800:'#26221D', 700:'#332E27', 600:'#4A433C', 500:'#6B635A' },
+          paper: { 50:'#FBF8F0', 100:'#F5EFDF', 200:'#EDE3C8' },
+          line:  '#E5DAC0',
+          ember: { 500:'#FF4500', 600:'#E03D00', 700:'#B83200', 50:'#FFF0E8' },
+          ok:    { 500:'#2F7A4F', 50:'#EBF5EE' },
+          wait:  { 500:'#C98A1E', 50:'#FBF1DF' },
+          info:  { 500:'#2D5FA8', 50:'#EAF1FB' },
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family:'Inter',sans-serif; background:#1B1815; }
+  .font-display { font-family:'Fraunces','serif'; font-optical-sizing:auto; }
+  .font-num { font-family:'JetBrains Mono',monospace; }
+  [data-view]{ display:none; }
+  [data-view].active{ display:block; }
+  [data-view].active.view-flex{ display:flex !important; }
+
+  .scrollbar-thin::-webkit-scrollbar{ width:6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb{ background:#D9CCA8; border-radius:3px; }
+  .scrollbar-thin::-webkit-scrollbar-track{ background:transparent; }
+
+  /* ticket de cocina: borde perforado superior e inferior */
+  .ticket{
+    background:#FBF8F0;
+    position:relative;
+  }
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    height:11px;
+    background-image: radial-gradient(circle at 9px 5.5px, transparent 5.5px, #FBF8F0 5.6px);
+    background-size: 18px 11px;
+    background-repeat: repeat-x;
+  }
+  .ticket::before{ top:-10px; transform:rotate(180deg); background-image: radial-gradient(circle at 9px 5.5px, transparent 5.5px, #1B1815 5.6px); }
+  .ticket::after{ bottom:-10px; background-image: radial-gradient(circle at 9px 5.5px, transparent 5.5px, #1B1815 5.6px); }
+
+  .tab-btn{ position:relative; }
+  .tab-btn.active::after{
+    content:""; position:absolute; left:14px; right:14px; bottom:-1px; height:2px; background:#FF4500;
+  }
+
+  .modal-backdrop{ animation:fadeIn .15s ease-out; }
+  .modal-panel{ animation:riseIn .2s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  @keyframes riseIn{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+
+  .toast-enter{ animation:toastIn .25s cubic-bezier(.2,.8,.2,1); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(-10px) scale(.96)} to{opacity:1; transform:translateY(0) scale(1)} }
+
+  .stamp-pulse{ animation:stampPulse 1.6s ease-in-out infinite; }
+  @keyframes stampPulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:#3A332B; border-radius:4px; }
+
+  textarea:focus, input:focus{ outline:none; }
+  .focus-ring:focus{ outline:2px solid #FF4500; outline-offset:2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body class="text-char-900 antialiased h-screen overflow-hidden">
+
+<div class="h-screen flex flex-col">
+
+  <!-- ============ RAIL SUPERIOR (no sidebar) ============ -->
+  <header class="h-16 shrink-0 bg-char-900 flex items-center px-5 gap-6 border-b border-char-700">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-full bg-ember-500 flex items-center justify-center shrink-0">
+        <i data-lucide="flame" class="w-4.5 h-4.5 text-char-900" style="width:18px;height:18px"></i>
+      </div>
+      <span class="font-display font-semibold text-[17px] text-paper-50 tracking-tight">Brasa</span>
+    </div>
+
+    <nav class="flex items-end gap-1 h-full ml-2">
+      <button onclick="showView('mostrador')" data-nav="mostrador" class="tab-btn h-full flex items-center gap-2 px-4 text-[13px] font-semibold text-paper-100/60">
+        <i data-lucide="square-plus" class="w-4 h-4"></i> Mostrador
+      </button>
+      <button onclick="showView('cocina')" data-nav="cocina" class="tab-btn h-full flex items-center gap-2 px-4 text-[13px] font-semibold text-paper-100/60">
+        <i data-lucide="chef-hat" class="w-4 h-4"></i> Cola de cocina
+        <span id="cocina-badge" class="font-num text-[10px] font-bold bg-ember-500 text-char-900 rounded px-1.5 py-0.5 leading-none">3</span>
+      </button>
+      <button onclick="showView('productos')" data-nav="productos" class="tab-btn h-full flex items-center gap-2 px-4 text-[13px] font-semibold text-paper-100/60">
+        <i data-lucide="beef" class="w-4 h-4"></i> Productos
+      </button>
+      <button onclick="showView('cierre')" data-nav="cierre" class="tab-btn h-full flex items-center gap-2 px-4 text-[13px] font-semibold text-paper-100/60">
+        <i data-lucide="banknote" class="w-4 h-4"></i> Cierre del día
+      </button>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-3">
+      <div class="text-right leading-tight hidden sm:block">
+        <p class="font-num text-[11px] text-paper-100/40 uppercase tracking-wider" id="rail-clock">—</p>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-char-700 flex items-center justify-center text-[11px] font-bold text-paper-100">JP</div>
+    </div>
+  </header>
+
+  <!-- ============ MOSTRADOR (vista principal: POS) ============ -->
+  <section data-view="mostrador" class="active view-flex flex-1 overflow-hidden flex min-h-0">
+
+    <!-- catálogo -->
+    <div class="flex-1 flex flex-col bg-paper-50 overflow-hidden">
+      <div class="px-6 pt-5 pb-3 flex items-center justify-between shrink-0">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-char-500">Tomar pedido</p>
+          <h1 class="font-display font-semibold text-2xl text-char-900 -mt-0.5">¿Qué se sirve?</h1>
+        </div>
+        <div class="flex items-center gap-2 bg-white border border-line rounded-full px-3 py-1.5">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-char-500"></i>
+          <input id="search-box" oninput="filterCatalog()" placeholder="Buscar producto…" class="text-[13px] bg-transparent w-36 placeholder:text-char-500/60">
+        </div>
+      </div>
+
+      <div class="flex gap-2 px-6 pb-3 overflow-x-auto shrink-0" id="pos-categories"></div>
+
+      <div class="flex-1 overflow-y-auto scrollbar-thin px-6 pb-6" id="pos-catalog-wrap">
+        <div class="grid grid-cols-3 gap-3" id="pos-catalog"></div>
+      </div>
+    </div>
+
+    <!-- ticket / carrito -->
+    <div class="w-[360px] shrink-0 bg-char-900 flex flex-col px-5 py-6 overflow-hidden min-h-0">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-paper-100/50">Ticket en curso</p>
+        <span class="font-num text-[12px] font-bold text-ember-500">#<span id="next-order-num">1043</span></span>
+      </div>
+
+      <div class="ticket px-5 pt-7 pb-6 mb-4 flex-1 overflow-y-auto scrollbar-thin min-h-0">
+        <div class="flex gap-2 mb-4">
+          <button onclick="setOrderType('local')" data-ordertype="local" class="ordertype-btn flex-1 text-[12px] font-bold py-2 rounded border-2 border-char-900 transition-colors">En sala</button>
+          <button onclick="setOrderType('llevar')" data-ordertype="llevar" class="ordertype-btn flex-1 text-[12px] font-bold py-2 rounded border-2 border-char-900 transition-colors">Para llevar</button>
+        </div>
+        <input id="pos-customer" type="text" placeholder="Nombre o N° de mesa" class="w-full text-[13px] font-medium border-b-2 border-dashed border-char-900/30 pb-2 mb-4 bg-transparent placeholder:text-char-500/50 focus-ring">
+
+        <div id="pos-cart">
+          <p class="text-[13px] text-char-500 text-center py-10 leading-relaxed" id="pos-cart-empty">El ticket está en blanco.<br>Toca un producto para empezar.</p>
+        </div>
+      </div>
+
+      <div class="border-t-2 border-dashed border-paper-100/15 pt-4">
+        <div class="flex items-baseline justify-between mb-4">
+          <span class="text-[12px] font-semibold text-paper-100/50 uppercase tracking-wide">Total <span id="pos-count" class="font-num">· 0 items</span></span>
+          <span class="font-display font-semibold text-3xl text-paper-50" id="pos-total">S/0.00</span>
+        </div>
+        <button onclick="confirmOrder()" class="w-full bg-ember-500 hover:bg-ember-600 active:scale-[.99] text-char-900 text-[14px] font-bold py-3.5 rounded-lg transition-all flex items-center justify-center gap-2">
+          <i data-lucide="flame" class="w-4 h-4"></i> Enviar a cocina
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COLA DE COCINA ============ -->
+  <section data-view="cocina" class="flex-1 overflow-y-auto scrollbar-thin bg-char-900">
+    <div class="px-8 py-6 flex items-center justify-between sticky top-0 bg-char-900/95 backdrop-blur z-10 border-b border-char-700">
+      <div>
+        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-paper-100/40">En tiempo real</p>
+        <h1 class="font-display font-semibold text-2xl text-paper-50 -mt-0.5">Cola de cocina</h1>
+      </div>
+      <div class="flex items-center gap-2" id="filtros-pedidos">
+        <button data-filter="todos" onclick="filterOrders('todos')" class="filter-btn text-[12px] font-bold px-3.5 py-1.5 rounded-full border-2">Todos</button>
+        <button data-filter="local" onclick="filterOrders('local')" class="filter-btn text-[12px] font-bold px-3.5 py-1.5 rounded-full border-2">Mostrador</button>
+        <button data-filter="online" onclick="filterOrders('online')" class="filter-btn text-[12px] font-bold px-3.5 py-1.5 rounded-full border-2">Portal web</button>
+      </div>
+    </div>
+    <div class="p-8 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" id="orders-list"></div>
+  </section>
+
+  <!-- ============ PRODUCTOS ============ -->
+  <section data-view="productos" class="flex-1 overflow-y-auto scrollbar-thin bg-paper-50">
+    <div class="px-8 py-6 flex items-center justify-between sticky top-0 bg-paper-50/95 backdrop-blur z-10 border-b border-line">
+      <div>
+        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-char-500">Carta</p>
+        <h1 class="font-display font-semibold text-2xl text-char-900 -mt-0.5">Productos</h1>
+      </div>
+      <button class="flex items-center gap-1.5 text-[13px] font-bold bg-char-900 text-paper-50 px-4 py-2.5 rounded-lg hover:bg-char-800">
+        <i data-lucide="plus" class="w-4 h-4"></i> Añadir producto
+      </button>
+    </div>
+    <div class="p-8">
+      <div class="bg-white border border-line rounded-xl overflow-hidden">
+        <table class="w-full text-[13px]">
+          <thead>
+            <tr class="border-b border-line text-left text-[11px] text-char-500 font-bold uppercase tracking-wide">
+              <th class="px-5 py-3">Producto</th>
+              <th class="px-5 py-3">Categoría</th>
+              <th class="px-5 py-3">Precio</th>
+              <th class="px-5 py-3">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="products-table" class="divide-y divide-line"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CIERRE DEL DÍA ============ -->
+  <section data-view="cierre" class="flex-1 overflow-y-auto scrollbar-thin bg-paper-50">
+    <div class="px-8 py-6 sticky top-0 bg-paper-50/95 backdrop-blur z-10 border-b border-line">
+      <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-char-500">Caja</p>
+      <h1 class="font-display font-semibold text-2xl text-char-900 -mt-0.5">Cierre del día</h1>
+    </div>
+
+    <div class="p-8 max-w-6xl">
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="bg-white border border-line rounded-xl p-5">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-char-500 mb-2">Ventas de hoy</p>
+          <p class="font-display font-semibold text-3xl text-char-900">S/842<span class="text-lg text-char-500">.50</span></p>
+          <p class="text-[12px] text-ok-500 font-semibold mt-1.5 flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i> +12% vs ayer</p>
+        </div>
+        <div class="bg-white border border-line rounded-xl p-5">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-char-500 mb-2">Pedidos hoy</p>
+          <p class="font-display font-semibold text-3xl text-char-900">37</p>
+          <p class="text-[12px] text-char-500 mt-1.5">24 mostrador · 13 portal</p>
+        </div>
+        <div class="bg-white border border-line rounded-xl p-5">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-char-500 mb-2">En cocina ahora</p>
+          <p class="font-display font-semibold text-3xl text-ember-600">3</p>
+          <p class="text-[12px] text-char-500 mt-1.5">pendientes de preparar</p>
+        </div>
+        <div class="bg-white border border-line rounded-xl p-5">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-char-500 mb-2">Ticket promedio</p>
+          <p class="font-display font-semibold text-3xl text-char-900">S/22<span class="text-lg text-char-500">.77</span></p>
+          <p class="text-[12px] text-char-500 mt-1.5">últimos 30 pedidos</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <div class="col-span-2 bg-white border border-line rounded-xl">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+            <h2 class="text-[13px] font-bold">Pedidos entregados</h2>
+            <button onclick="showView('cocina')" class="text-[12px] font-bold text-ember-600 hover:text-ember-700">Ver cola de cocina →</button>
+          </div>
+          <table class="w-full text-[13px]">
+            <thead>
+              <tr class="text-left text-[11px] text-char-500 font-bold uppercase tracking-wide">
+                <th class="px-5 py-2.5">Pedido</th><th class="px-5 py-2.5">Cliente</th><th class="px-5 py-2.5">Origen</th><th class="px-5 py-2.5">Hora</th><th class="px-5 py-2.5 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="sales-table" class="divide-y divide-line"></tbody>
+          </table>
+        </div>
+
+        <div class="bg-white border border-line rounded-xl">
+          <div class="px-5 py-4 border-b border-line">
+            <h2 class="text-[13px] font-bold">Más vendidos hoy</h2>
+          </div>
+          <div class="p-5 space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="font-num text-[11px] font-bold text-char-500 w-4">01</span>
+              <p class="text-[13px] flex-1 font-semibold">Clásica Brasa</p><span class="font-num text-[12px] text-char-500">14</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-num text-[11px] font-bold text-char-500 w-4">02</span>
+              <p class="text-[13px] flex-1 font-semibold">Doble Cheddar</p><span class="font-num text-[12px] text-char-500">11</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-num text-[11px] font-bold text-char-500 w-4">03</span>
+              <p class="text-[13px] flex-1 font-semibold">Papas con queso</p><span class="font-num text-[12px] text-char-500">9</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-num text-[11px] font-bold text-char-500 w-4">04</span>
+              <p class="text-[13px] flex-1 font-semibold">BBQ Bacon</p><span class="font-num text-[12px] text-char-500">7</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ MODAL: DETALLE / AVANZAR PEDIDO ============ -->
+<div id="modal-order-detail" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="modal-backdrop absolute inset-0 bg-char-900/60" onclick="closeModal('modal-order-detail')"></div>
+  <div class="modal-panel relative ticket px-7 pt-9 pb-7 w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl">
+    <button onclick="closeModal('modal-order-detail')" class="absolute top-4 right-5 text-char-500 hover:text-char-900">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+    <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-char-500" id="od-origin-label">Pedido en mostrador</p>
+    <h2 class="font-num font-bold text-2xl text-char-900 mb-1" id="od-id">#0000</h2>
+    <div class="flex items-center gap-4 text-[12px] text-char-600 mb-4 pb-4 border-b-2 border-dashed border-char-900/15">
+      <span class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5"></i><span id="od-customer">—</span></span>
+      <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span id="od-time">—</span></span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto scrollbar-thin" id="od-items"></div>
+
+    <div class="border-t-2 border-dashed border-char-900/15 pt-4 mt-2">
+      <div class="flex items-baseline justify-between mb-4">
+        <span class="text-[12px] font-bold text-char-500 uppercase tracking-wide">Total</span>
+        <span class="font-display font-semibold text-2xl text-char-900" id="od-total">S/0.00</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="advanceStatus()" id="od-advance-btn" class="flex-1 bg-char-900 hover:bg-char-800 text-paper-50 text-[13px] font-bold py-3 rounded-lg transition-colors">Marcar como listo</button>
+        <button onclick="closeModal('modal-order-detail')" class="px-4 border-2 border-char-900/15 text-[13px] font-bold rounded-lg hover:bg-char-900/5">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: PERSONALIZAR PRODUCTO ============ -->
+<div id="modal-customize" class="fixed inset-0 z-[60] hidden items-center justify-center p-4">
+  <div class="modal-backdrop absolute inset-0 bg-char-900/60" onclick="closeModal('modal-customize')"></div>
+  <div class="modal-panel relative bg-paper-50 rounded-2xl w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
+    <div class="px-6 py-5 border-b border-line flex items-start justify-between shrink-0">
+      <div>
+        <h3 class="font-display font-semibold text-xl text-char-900" id="cz-name">Producto</h3>
+        <p class="text-[12px] text-char-500 mt-0.5 font-num" id="cz-price">S/0.00 base</p>
+      </div>
+      <button onclick="closeModal('modal-customize')" class="text-char-500 hover:text-char-900">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto scrollbar-thin px-6 py-4 space-y-5" id="cz-options"></div>
+
+    <div class="px-6 py-4 border-t border-line shrink-0">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-[13px] font-semibold text-char-600">Cantidad</span>
+        <div class="flex items-center gap-2 ml-auto">
+          <button onclick="czQty(-1)" class="w-8 h-8 rounded-full border-2 border-line flex items-center justify-center hover:bg-paper-100"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+          <span id="cz-qty" class="w-6 text-center font-num font-bold text-[15px]">1</span>
+          <button onclick="czQty(1)" class="w-8 h-8 rounded-full border-2 border-line flex items-center justify-center hover:bg-paper-100"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+        </div>
+      </div>
+      <textarea id="cz-notes" placeholder="Nota especial (ej: sin cebolla, bien cocido…)" rows="2" class="w-full text-[13px] border-2 border-line rounded-lg px-3 py-2 mb-3 bg-white focus-ring resize-none placeholder:text-char-500/60"></textarea>
+      <button onclick="addToCart()" class="w-full bg-char-900 hover:bg-char-800 text-paper-50 text-[14px] font-bold py-3.5 rounded-lg transition-colors" id="cz-add-btn">Añadir al ticket — S/0.00</button>
+    </div>
+  </div>
+</div>
+
+<!-- toast -->
+<div id="toast" class="hidden fixed top-5 right-5 z-[70] bg-char-900 text-paper-50 text-[13px] font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 border border-char-700"></div>
+
+<script>
+lucide.createIcons();
+
+/* ================= DATA ================= */
+const PRODUCTS = [
+  { id:'p1', name:'Clásica Brasa', cat:'Hamburguesas', price:14.50, desc:'Carne 150g, queso, lechuga, tomate', options:[
+      { group:'Término de la carne', type:'single', required:true, choices:['Medio','3/4','Bien cocido'] },
+      { group:'Extras', type:'multi', choices:[{n:'Queso extra',p:3},{n:'Tocino',p:4},{n:'Huevo frito',p:2.5},{n:'Doble carne',p:7}] },
+      { group:'Quitar ingredientes', type:'multi', choices:[{n:'Sin cebolla',p:0},{n:'Sin tomate',p:0},{n:'Sin lechuga',p:0}] },
+  ]},
+  { id:'p2', name:'Doble Cheddar', cat:'Hamburguesas', price:18.90, desc:'Doble carne, doble cheddar, BBQ', options:[
+      { group:'Término de la carne', type:'single', required:true, choices:['Medio','3/4','Bien cocido'] },
+      { group:'Extras', type:'multi', choices:[{n:'Tocino',p:4},{n:'Cebolla caramelizada',p:3},{n:'Jalapeños',p:2}] },
+  ]},
+  { id:'p3', name:'BBQ Bacon', cat:'Hamburguesas', price:19.50, desc:'Carne 200g, tocino, salsa BBQ ahumada', options:[
+      { group:'Término de la carne', type:'single', required:true, choices:['Medio','3/4','Bien cocido'] },
+      { group:'Extras', type:'multi', choices:[{n:'Queso extra',p:3},{n:'Aros de cebolla',p:3.5}] },
+  ]},
+  { id:'p4', name:'Veggie Garden', cat:'Hamburguesas', price:16.00, desc:'Hamburguesa de vegetales, palta, hummus', options:[
+      { group:'Extras', type:'multi', choices:[{n:'Queso vegano',p:3.5},{n:'Palta extra',p:3}] },
+  ]},
+  { id:'p5', name:'Papas clásicas', cat:'Acompañamientos', price:6.50, desc:'Porción regular', options:[
+      { group:'Tamaño', type:'single', required:true, choices:['Regular','Grande (+S/3)'] },
+  ]},
+  { id:'p6', name:'Papas con queso', cat:'Acompañamientos', price:9.90, desc:'Con queso cheddar fundido', options:[] },
+  { id:'p7', name:'Aros de cebolla', cat:'Acompañamientos', price:8.50, desc:'Crujientes, salsa ranch', options:[] },
+  { id:'p8', name:'Gaseosa 500ml', cat:'Bebidas', price:5.00, desc:'Coca-Cola, Sprite, Inca Kola', options:[
+      { group:'Sabor', type:'single', required:true, choices:['Coca-Cola','Sprite','Inca Kola'] },
+  ]},
+  { id:'p9', name:'Limonada natural', cat:'Bebidas', price:7.00, desc:'Hecha al momento', options:[] },
+  { id:'p10', name:'Milkshake', cat:'Bebidas', price:11.00, desc:'Vainilla, chocolate o fresa', options:[
+      { group:'Sabor', type:'single', required:true, choices:['Vainilla','Chocolate','Fresa'] },
+  ]},
+];
+
+let orderSeq = 1042;
+let ORDERS = [
+  { id:'#1042', origin:'online', customer:'María Castro', time:'13:42', status:'pendiente',
+    items:[
+      { name:'Doble Cheddar', qty:1, price:18.90, notes:'Término: 3/4 · Extra: Tocino (+4.00)' },
+      { name:'Papas con queso', qty:1, price:9.90, notes:'' },
+      { name:'Gaseosa 500ml', qty:2, price:5.00, notes:'Sabor: Inca Kola' },
+    ]},
+  { id:'#1041', origin:'local', customer:'Mesa 4', time:'13:38', status:'preparando',
+    items:[
+      { name:'Clásica Brasa', qty:2, price:14.50, notes:'Término: Medio · Sin cebolla' },
+      { name:'Papas clásicas', qty:2, price:6.50, notes:'Tamaño: Grande (+3.00)' },
+      { name:'Limonada natural', qty:2, price:7.00, notes:'' },
+    ]},
+  { id:'#1040', origin:'online', customer:'Renzo Aguilar', time:'13:31', status:'pendiente',
+    items:[
+      { name:'BBQ Bacon', qty:1, price:19.50, notes:'Término: Bien cocido · Extra: Queso extra (+3.00), Aros de cebolla (+3.50)' },
+      { name:'Milkshake', qty:1, price:11.00, notes:'Sabor: Chocolate' },
+    ]},
+  { id:'#1039', origin:'local', customer:'Mesa 2', time:'13:20', status:'listo',
+    items:[
+      { name:'Veggie Garden', qty:1, price:16.00, notes:'Extra: Palta extra (+3.00)' },
+      { name:'Aros de cebolla', qty:1, price:8.50, notes:'' },
+    ]},
+  { id:'#1038', origin:'online', customer:'Lucía Fernández', time:'13:05', status:'entregado',
+    items:[
+      { name:'Clásica Brasa', qty:3, price:14.50, notes:'Término: 3/4' },
+      { name:'Papas clásicas', qty:3, price:6.50, notes:'Tamaño: Regular' },
+      { name:'Gaseosa 500ml', qty:3, price:5.00, notes:'Sabor: Coca-Cola' },
+    ]},
+];
+
+const STATUS_META = {
+  pendiente:  { label:'Pendiente',   block:'bg-wait-500',  soft:'bg-wait-50 text-wait-500 border-wait-500/30' },
+  preparando: { label:'En fuego',    block:'bg-info-500',  soft:'bg-info-50 text-info-500 border-info-500/30' },
+  listo:      { label:'Listo',       block:'bg-ok-500',    soft:'bg-ok-50 text-ok-500 border-ok-500/30' },
+  entregado:  { label:'Entregado',   block:'bg-char-600',  soft:'bg-char-700/40 text-paper-100/50 border-char-600' },
+};
+const NEXT_STATUS = { pendiente:'preparando', preparando:'listo', listo:'entregado' };
+const ADVANCE_LABEL = { pendiente:'Empezar a preparar', preparando:'Marcar como listo', listo:'Marcar como entregado' };
+
+/* ================= RELOJ ================= */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('rail-clock').textContent = now.toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ================= NAV ================= */
+function showView(view){
+  document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(el => {
+    if(el.dataset.nav === view){ el.classList.add('active','text-paper-50'); el.classList.remove('text-paper-100/60'); }
+    else { el.classList.remove('active','text-paper-50'); el.classList.add('text-paper-100/60'); }
+  });
+  if(view === 'cocina') renderOrders();
+  if(view === 'productos') renderProducts();
+  if(view === 'cierre') renderSales();
+}
+
+function closeModal(id){ const m=document.getElementById(id); m.classList.remove('flex'); m.classList.add('hidden'); }
+function openModal(id){ const m=document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+
+/* ================= COLA DE COCINA ================= */
+let currentFilter = 'todos';
+function filterOrders(f){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    if(b.dataset.filter===f){ b.classList.add('bg-ember-500','text-char-900','border-ember-500'); b.classList.remove('border-char-600','text-paper-100/60'); }
+    else { b.classList.remove('bg-ember-500','text-char-900','border-ember-500'); b.classList.add('border-char-600','text-paper-100/60'); }
+  });
+  renderOrders();
+}
+function renderOrders(){
+  if(!document.querySelector('.filter-btn.bg-ember-500')) filterOrders('todos');
+  let list = ORDERS;
+  if(currentFilter !== 'todos') list = list.filter(o => o.origin === currentFilter);
+  const order = { pendiente:0, preparando:1, listo:2, entregado:3 };
+  list = [...list].sort((a,b)=>order[a.status]-order[b.status]);
+
+  document.getElementById('orders-list').innerHTML = list.map(o=>{
+    const meta = STATUS_META[o.status];
+    const total = orderTotal(o);
+    const itemsPreview = o.items.slice(0,3).map(i=>`${i.qty}× ${i.name}`).join(' · ') + (o.items.length>3?` +${o.items.length-3}`:'');
+    const urgent = o.status === 'pendiente';
+    return `
+    <div onclick="openOrderDetail('${o.id}')" class="rounded-xl overflow-hidden cursor-pointer border ${urgent ? 'border-wait-500/50' : 'border-char-700'} bg-char-800 hover:border-ember-500/60 transition-colors">
+      <div class="h-1.5 ${meta.block}"></div>
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-num font-bold text-[15px] text-paper-50">${o.id}</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${meta.soft}">${meta.label}</span>
+        </div>
+        <p class="text-[13px] font-semibold text-paper-100/90 mb-0.5">${o.customer}</p>
+        <p class="text-[12px] text-paper-100/40 mb-3 leading-relaxed">${itemsPreview}</p>
+        <div class="flex items-center justify-between text-[12px]">
+          <span class="flex items-center gap-1 text-paper-100/40"><i data-lucide="${o.origin==='online'?'globe':'store'}" class="w-3 h-3"></i>${o.origin==='online'?'Portal web':'Mostrador'} · ${o.time}</span>
+          <span class="font-num font-bold text-paper-50">S/${total.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || `<p class="text-[13px] text-paper-100/40 text-center py-16 col-span-full">No hay pedidos en esta categoría.</p>`;
+  lucide.createIcons();
+  updateBadge();
+}
+function updateBadge(){
+  const n = ORDERS.filter(o=>o.status==='pendiente'||o.status==='preparando').length;
+  const badge = document.getElementById('cocina-badge');
+  badge.textContent = n;
+  badge.style.display = n>0 ? 'inline-block' : 'none';
+}
+function orderTotal(o){ return o.items.reduce((s,i)=>s+i.price*i.qty,0); }
+
+let activeOrderId = null;
+function openOrderDetail(id){
+  const o = ORDERS.find(x=>x.id===id);
+  if(!o) return;
+  activeOrderId = id;
+  document.getElementById('od-id').textContent = o.id;
+  document.getElementById('od-origin-label').innerHTML = `<span class="inline-flex items-center gap-1"><i data-lucide="${o.origin==='online'?'globe':'store'}" class="w-3.5 h-3.5"></i>${o.origin==='online'?'Pedido del portal web':'Pedido en mostrador'}</span>`;
+  document.getElementById('od-customer').textContent = o.customer;
+  document.getElementById('od-time').textContent = o.time;
+
+  document.getElementById('od-items').innerHTML = o.items.map(i=>`
+    <div class="flex gap-3 py-3 border-b border-char-900/10 last:border-0">
+      <span class="font-num text-[13px] font-bold text-char-500 w-7">${i.qty}×</span>
+      <div class="flex-1">
+        <p class="text-[14px] font-semibold text-char-900">${i.name}</p>
+        ${i.notes ? `<p class="text-[12px] text-char-600 mt-0.5">${i.notes}</p>` : ''}
+      </div>
+      <span class="font-num text-[13px] font-semibold text-char-700">S/${(i.price*i.qty).toFixed(2)}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('od-total').textContent = `S/${orderTotal(o).toFixed(2)}`;
+
+  const btn = document.getElementById('od-advance-btn');
+  if(o.status === 'entregado'){
+    btn.textContent = 'Pedido entregado'; btn.disabled = true;
+    btn.classList.add('opacity-40','cursor-not-allowed');
+  } else {
+    btn.textContent = ADVANCE_LABEL[o.status]; btn.disabled = false;
+    btn.classList.remove('opacity-40','cursor-not-allowed');
+  }
+  lucide.createIcons();
+  openModal('modal-order-detail');
+}
+function advanceStatus(){
+  const o = ORDERS.find(x=>x.id===activeOrderId);
+  if(!o || !NEXT_STATUS[o.status]) return;
+  o.status = NEXT_STATUS[o.status];
+  showToast(`${o.id} → ${STATUS_META[o.status].label}`);
+  closeModal('modal-order-detail');
+  renderOrders();
+}
+
+/* ================= PRODUCTOS ================= */
+function renderProducts(){
+  document.getElementById('products-table').innerHTML = PRODUCTS.map(p=>`
+    <tr class="hover:bg-paper-100/60">
+      <td class="px-5 py-3.5"><p class="font-semibold text-[13px]">${p.name}</p><p class="text-[12px] text-char-500">${p.desc}</p></td>
+      <td class="px-5 py-3.5 text-[13px] text-char-600">${p.cat}</td>
+      <td class="px-5 py-3.5 font-num text-[13px] font-semibold">S/${p.price.toFixed(2)}</td>
+      <td class="px-5 py-3.5"><span class="text-[11px] font-bold px-2 py-1 rounded-full bg-ok-50 text-ok-500 border border-ok-500/30">Disponible</span></td>
+    </tr>
+  `).join('');
+}
+
+/* ================= CIERRE / VENTAS ================= */
+function renderSales(){
+  const closed = ORDERS.filter(o=>o.status==='entregado');
+  document.getElementById('sales-table').innerHTML = closed.map(o=>`
+    <tr class="hover:bg-paper-100/60">
+      <td class="px-5 py-3 font-num font-semibold text-[13px]">${o.id}</td>
+      <td class="px-5 py-3 text-[13px]">${o.customer}</td>
+      <td class="px-5 py-3 text-[13px] text-char-500">${o.origin==='online'?'Portal web':'Mostrador'}</td>
+      <td class="px-5 py-3 font-num text-[13px] text-char-500">${o.time}</td>
+      <td class="px-5 py-3 font-num text-[13px] font-semibold text-right">S/${orderTotal(o).toFixed(2)}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="5" class="text-center text-[13px] text-char-500 py-10">Aún no hay ventas cerradas hoy.</td></tr>`;
+}
+
+/* ================= POS: MOSTRADOR ================= */
+let cart = [];
+let orderType = 'local';
+
+function setOrderType(t){
+  orderType = t;
+  document.querySelectorAll('.ordertype-btn').forEach(b=>{
+    if(b.dataset.ordertype===t){ b.classList.add('bg-char-900','text-paper-50'); }
+    else { b.classList.remove('bg-char-900','text-paper-50'); }
+  });
+}
+function renderCategories(){
+  const cats = [...new Set(PRODUCTS.map(p=>p.cat))];
+  document.getElementById('pos-categories').innerHTML = cats.map((c,idx)=>`
+    <button onclick="renderCatalog('${c}')" data-cat="${c}" class="cat-btn shrink-0 text-[12px] font-bold px-4 py-2 rounded-full border-2 ${idx===0 ? 'bg-char-900 text-paper-50 border-char-900' : 'border-line text-char-600'}">${c}</button>
+  `).join('');
+}
+function renderCatalog(cat){
+  document.querySelectorAll('.cat-btn').forEach(b=>{
+    if(b.dataset.cat===cat){ b.classList.add('bg-char-900','text-paper-50','border-char-900'); b.classList.remove('border-line','text-char-600'); }
+    else { b.classList.remove('bg-char-900','text-paper-50','border-char-900'); b.classList.add('border-line','text-char-600'); }
+  });
+  document.getElementById('search-box').value = '';
+  const items = PRODUCTS.filter(p=>p.cat===cat);
+  paintCatalog(items);
+}
+function filterCatalog(){
+  const q = document.getElementById('search-box').value.trim().toLowerCase();
+  if(!q){ const activeCat = document.querySelector('.cat-btn.bg-char-900'); renderCatalog(activeCat ? activeCat.dataset.cat : PRODUCTS[0].cat); return; }
+  document.querySelectorAll('.cat-btn').forEach(b=>{ b.classList.remove('bg-char-900','text-paper-50','border-char-900'); b.classList.add('border-line','text-char-600'); });
+  paintCatalog(PRODUCTS.filter(p=>p.name.toLowerCase().includes(q)));
+}
+function paintCatalog(items){
+  document.getElementById('pos-catalog').innerHTML = items.map(p=>`
+    <button onclick="openCustomize('${p.id}')" class="text-left border border-line rounded-xl p-4 bg-white hover:border-ember-500 hover:shadow-md active:scale-[.98] transition-all">
+      <p class="font-semibold text-[14px] mb-1 text-char-900">${p.name}</p>
+      <p class="text-[12px] text-char-500 mb-3 leading-snug">${p.desc}</p>
+      <p class="font-num font-bold text-[14px] text-ember-600">S/${p.price.toFixed(2)}</p>
+    </button>
+  `).join('') || `<p class="text-[13px] text-char-500 col-span-full text-center py-10">Sin resultados para esa búsqueda.</p>`;
+}
+
+let czProduct = null, czQuantity = 1;
+function openCustomize(productId){
+  czProduct = PRODUCTS.find(p=>p.id===productId);
+  czQuantity = 1;
+  document.getElementById('cz-name').textContent = czProduct.name;
+  document.getElementById('cz-price').textContent = `S/${czProduct.price.toFixed(2)} base`;
+  document.getElementById('cz-notes').value = '';
+
+  document.getElementById('cz-options').innerHTML = czProduct.options.map((g,gi)=>`
+    <div>
+      <p class="text-[11px] font-bold text-char-500 mb-2 uppercase tracking-wide">${g.group}${g.required?' <span class="text-ember-500">*</span>':''}</p>
+      <div class="space-y-1.5" data-group="${gi}">
+        ${g.choices.map((c,ci)=>{
+          const isObj = typeof c === 'object';
+          const label = isObj ? c.n : c;
+          const extra = isObj && c.p ? c.p : 0;
+          const inputType = g.type==='single' ? 'radio' : 'checkbox';
+          return `
+          <label class="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-line hover:bg-paper-100 cursor-pointer text-[13px] bg-white">
+            <input type="${inputType}" name="cz-group-${gi}" value="${ci}" data-extra="${extra}" onchange="updateCzPrice()" class="accent-ember-500 w-4 h-4">
+            <span class="flex-1">${label}</span>
+            ${extra ? `<span class="font-num text-[12px] text-char-500">+S/${extra.toFixed(2)}</span>` : ''}
+          </label>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('') || `<p class="text-[13px] text-char-500">Este producto no tiene opciones adicionales.</p>`;
+
+  document.getElementById('cz-qty').textContent = czQuantity;
+  updateCzPrice();
+  openModal('modal-customize');
+}
+function czQty(delta){
+  czQuantity = Math.max(1, czQuantity+delta);
+  document.getElementById('cz-qty').textContent = czQuantity;
+  updateCzPrice();
+}
+function getCzExtrasTotal(){
+  let extra = 0;
+  document.querySelectorAll('#cz-options input:checked').forEach(inp=>extra+=parseFloat(inp.dataset.extra||0));
+  return extra;
+}
+function updateCzPrice(){
+  const unit = czProduct.price + getCzExtrasTotal();
+  document.getElementById('cz-add-btn').textContent = `Añadir al ticket — S/${(unit*czQuantity).toFixed(2)}`;
+}
+function addToCart(){
+  for(let gi=0; gi<czProduct.options.length; gi++){
+    const g = czProduct.options[gi];
+    if(g.required){
+      const checked = document.querySelector(`input[name="cz-group-${gi}"]:checked`);
+      if(!checked){ showToast(`Selecciona: ${g.group}`, true); return; }
+    }
+  }
+  let notesParts = [];
+  czProduct.options.forEach((g,gi)=>{
+    const checks = document.querySelectorAll(`input[name="cz-group-${gi}"]:checked`);
+    if(checks.length){
+      const labels = Array.from(checks).map(inp=>{
+        const c = g.choices[parseInt(inp.value)];
+        const isObj = typeof c === 'object';
+        const label = isObj ? c.n : c;
+        const extra = isObj && c.p ? ` (+${c.p.toFixed(2)})` : '';
+        return label+extra;
+      });
+      notesParts.push(`${g.group}: ${labels.join(', ')}`);
+    }
+  });
+  const customNote = document.getElementById('cz-notes').value.trim();
+  if(customNote) notesParts.push(customNote);
+
+  const unitPrice = czProduct.price + getCzExtrasTotal();
+  cart.push({ name:czProduct.name, qty:czQuantity, price:unitPrice, notes:notesParts.join(' · ') });
+
+  closeModal('modal-customize');
+  renderCart();
+  showToast(`${czProduct.name} añadido al ticket`);
+}
+function removeFromCart(idx){ cart.splice(idx,1); renderCart(); }
+function renderCart(){
+  const container = document.getElementById('pos-cart');
+  if(cart.length === 0){
+    container.innerHTML = `<p class="text-[13px] text-char-500 text-center py-10 leading-relaxed" id="pos-cart-empty">El ticket está en blanco.<br>Toca un producto para empezar.</p>`;
+  } else {
+    container.innerHTML = cart.map((item,idx)=>`
+      <div class="flex items-start gap-2 py-2.5 border-b border-dashed border-char-900/12">
+        <span class="font-num text-[13px] font-bold text-char-700 w-6 shrink-0">${item.qty}×</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-semibold text-char-900 leading-tight">${item.name}</p>
+          ${item.notes ? `<p class="text-[11px] text-char-600 mt-0.5 leading-snug">${item.notes}</p>` : ''}
+        </div>
+        <span class="font-num text-[13px] font-semibold text-char-900 shrink-0">S/${(item.price*item.qty).toFixed(2)}</span>
+        <button onclick="removeFromCart(${idx})" class="text-char-500/50 hover:text-ember-600 shrink-0 mt-0.5">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+  const totalItems = cart.reduce((s,i)=>s+i.qty,0);
+  const totalPrice = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('pos-count').textContent = `· ${totalItems} items`;
+  document.getElementById('pos-total').textContent = `S/${totalPrice.toFixed(2)}`;
+  document.getElementById('next-order-num').textContent = orderSeq+1;
+  lucide.createIcons();
+}
+function confirmOrder(){
+  if(cart.length===0){ showToast('Añade al menos un producto', true); return; }
+  orderSeq++;
+  const customerName = document.getElementById('pos-customer').value.trim() || (orderType==='local' ? 'Mesa sin nombre' : 'Cliente sin nombre');
+  const now = new Date();
+  const time = now.toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit' });
+  ORDERS.unshift({ id:`#${orderSeq}`, origin:'local', customer:customerName, time, status:'pendiente', items:[...cart] });
+
+  cart = [];
+  document.getElementById('pos-customer').value = '';
+  renderCart();
+  showToast(`Pedido #${orderSeq} enviado a cocina`);
+  showView('cocina');
+}
+
+/* ================= TOAST ================= */
+function showToast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<i data-lucide="${isError?'alert-circle':'flame'}" class="w-4 h-4 ${isError?'text-red-400':'text-ember-500'}"></i> ${msg}`;
+  t.classList.remove('hidden'); t.classList.add('toast-enter');
+  lucide.createIcons();
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.add('hidden'), 2600);
+}
+
+/* ================= INIT ================= */
+renderCategories();
+renderCatalog('Hamburguesas');
+renderCart();
+filterOrders('todos');
+showView('mostrador');
+</script>
+</body>
+</html>
